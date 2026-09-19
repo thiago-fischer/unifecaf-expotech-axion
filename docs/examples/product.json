@@ -1,0 +1,20 @@
+{
+  "name": "Produto A",
+  "steps": [
+    {
+      "sequence": 1,
+      "machine_id": 2,
+      "processing_time_seconds": 10
+    },
+    {
+      "sequence": 2,
+      "machine_id": 1,
+      "processing_time_seconds": 15
+    },
+    {
+      "sequence": 3,
+      "machine_id": 3,
+      "processing_time_seconds": 8
+    }
+  ]
+}

@@ -1,8 +1,10 @@
 # SPEC-0001 — Estrutura inicial do backend e cadastro de máquinas
 
-> **Status:** Rascunho para discussão
+> **Status:** Aprovada para implementação
 >
 > **Data:** 21/09/2026
+>
+> **Aprovação do escopo:** 21/09/2026, pelo responsável solicitante, nesta revisão
 >
 > **Implementação:** Não iniciada
 
@@ -14,9 +16,10 @@ as máquinas que representam as estações de processamento da maquete.
 Essa entrega disponibilizará os identificadores de máquinas que serão
 referenciados pelas etapas dos produtos na SPEC-0002, ainda a ser elaborada.
 
-As regras e contratos abaixo são propostas deste rascunho. As decisões
-arquiteturais já aceitas permanecem como referência; este documento não
-aprova automaticamente novas escolhas de tecnologia ou de domínio.
+O escopo, as regras, os contratos e os critérios de aceite abaixo foram
+aprovados para implementação. As decisões arquiteturais aceitas permanecem
+como referência. Alterações posteriores de escopo devem ser registradas
+e revisadas; esta aprovação não representa conclusão ou validação da entrega.
 
 ## 2. Referências e decisões existentes
 
@@ -30,8 +33,9 @@ aprova automaticamente novas escolhas de tecnologia ou de domínio.
   schemas Pydantic separados e migrations Alembic.
 - [Guia de contribuição](../../CONTRIBUTING.md): colaboração e validação.
 
-As tecnologias acima estão aceitas. O status de rascunho desta spec se refere
-às regras, ao contrato e aos detalhes de implementação ainda em revisão.
+As tecnologias acima estão aceitas. Os detalhes de ferramentas ainda não
+fixados serão definidos e documentados durante a implementação, respeitando
+essas decisões e o escopo aprovado.
 
 ## 3. Escopo
 
@@ -73,7 +77,7 @@ O cadastro não determina a posição física, a sequência das operações ou
 o estado operacional da máquina. Esses conceitos serão tratados nas specs
 correspondentes quando forem necessários.
 
-### Modelo proposto
+### Modelo
 
 | Campo | Tipo | Origem | Descrição |
 |---|---|---|---|
@@ -92,7 +96,7 @@ Exemplo de registro retornado:
 O ID do exemplo é ilustrativo. Clientes devem utilizar o ID retornado pela
 API, sem presumir que IDs sejam consecutivos ou indiquem posição na maquete.
 
-## 5. Regras propostas
+## 5. Regras
 
 | Código | Regra |
 |---|---|
@@ -101,14 +105,14 @@ API, sem presumir que IDs sejam consecutivos ou indiquem posição na maquete.
 | RN-03 | O nome normalizado deve conter entre 1 e 100 caracteres. Nomes vazios ou compostos apenas por espaços são inválidos. |
 | RN-04 | O ID é gerado pelo backend/banco e não pode ser informado no cadastro. |
 | RN-05 | Rejeitar campos de entrada não previstos, incluindo `id`, `status` e tempo de processamento. |
-| RN-06 | Nesta proposta, nomes repetidos são permitidos; a identidade da máquina é seu ID. Essa escolha precisa ser confirmada na revisão. |
+| RN-06 | Nomes repetidos são permitidos; a identidade da máquina é seu ID. |
 | RN-07 | Uma criação bem-sucedida deve persistir antes de retornar sucesso. Entradas inválidas não podem criar registros. |
 | RN-08 | Consultar um ID válido que não existe deve retornar recurso não encontrado. |
 
 Não estabelecer uma quantidade fixa de máquinas nem inserir máquinas
 automaticamente na inicialização. Um banco recém-preparado começa vazio.
 
-## 6. Contrato HTTP proposto
+## 6. Contrato HTTP
 
 As rotas desta entrega não possuem prefixo de versão.
 
@@ -151,7 +155,7 @@ Cada POST válido cria um registro com ID próprio, inclusive se o nome repetir.
 ]
 ```
 
-Sem registros, retorna `200 OK` com `[]`. A proposta inicial não inclui
+Sem registros, retorna `200 OK` com `[]`. Esta entrega não inclui
 paginação, filtros ou busca, considerando o pequeno catálogo da maquete.
 
 ### 6.3. Consultar máquina
@@ -176,7 +180,7 @@ Para um ID válido inexistente, retornar `404 Not Found`:
   ou em sucesso. Devem produzir erro de servidor e registro para diagnóstico,
   sem expor SQL, stack traces ou caminhos internos ao cliente.
 
-## 7. Organização proposta
+## 7. Organização
 
 ```text
 backend/
@@ -243,7 +247,7 @@ Usar rotas/dependências síncronas para esse fluxo de acesso ao banco.
 
 - Criar por migration Alembic uma tabela `machines`, com `id` como chave
   primária e `name` obrigatório, alinhada ao model SQLAlchemy.
-- Proposta de configuração: variável `AXION_DATABASE_PATH`, com padrão local
+- Configuração: variável `AXION_DATABASE_PATH`, com padrão local
   `backend/data/axion.db`, resolvido em relação ao módulo e não ao diretório
   de onde o terminal foi aberto.
 - Documentar como substituir o caminho do banco e preparar seu diretório.
@@ -283,7 +287,13 @@ A migration inicial deve possuir `upgrade()` para criar `machines` e
 testar `alembic downgrade base` somente em banco descartável.
 Essa reversão não faz parte da inicialização normal da aplicação.
 
-## 9. Critérios de aceite propostos
+## 9. Critérios de aceite
+
+A aprovação desta spec autoriza sua implementação. Os itens abaixo só
+devem ser marcados após implementação e verificação, com evidências dos
+testes ou validações registradas no Pull Request. A entrega estará concluída
+quando todos os critérios forem atendidos e a revisão prevista no guia de
+contribuição for realizada.
 
 - [ ] CA-01: A partir de um clone limpo, o README permite instalar dependências,
   preparar o banco e iniciar o backend localmente.
@@ -317,7 +327,7 @@ Essa reversão não faz parte da inicialização normal da aplicação.
 
 ## 10. Plano de implementação e validação
 
-1. Revisar as propostas de domínio e selecionar as ferramentas pendentes.
+1. Selecionar e documentar as versões e ferramentas de desenvolvimento pendentes.
 2. Criar o módulo, dependências, configuração e ponto de entrada FastAPI.
 3. Implementar o model SQLAlchemy, configurar Alembic, revisar a migration
    inicial e implementar o repository.
@@ -333,17 +343,17 @@ existir. Os comandos Alembic descritos aqui são o fluxo planejado e ainda
 dependem da criação do backend. Nenhuma migration ou teste de backend foi
 executado apenas pela elaboração deste documento.
 
-## 11. Pontos para revisão
+## 11. Decisões aprovadas e detalhes de implementação
 
-| Ponto | Proposta deste rascunho / pendência |
+| Ponto | Definição |
 |---|---|
 | Identidade | ID inteiro gerado pelo banco; nome apenas para exibição |
-| Nomes duplicados | Permitir inicialmente; confirmar se isso atende à operação da maquete |
+| Nomes duplicados | Permitidos nesta entrega |
 | Limite do nome | 100 caracteres após remover espaços das extremidades |
 | Listagem | Array completo, ordenado por ID, sem paginação inicial |
-| Ferramentas | Definir versão mínima de Python, gerenciador, versões de dependências e ferramentas de testes/lint |
-| Configuração | Confirmar `AXION_DATABASE_PATH` e padrão local proposto |
+| Ferramentas | Definir e documentar na implementação a versão mínima de Python, gerenciador, versões de dependências e ferramentas de testes/lint |
+| Configuração | `AXION_DATABASE_PATH`, com padrão local `backend/data/axion.db`, conforme seção 8 |
 
-Mudanças arquiteturais relevantes resultantes dessa revisão devem ser registradas
+Mudanças arquiteturais relevantes durante a implementação devem ser registradas
 em ADR. A implementação da SPEC-0002 deverá usar os IDs deste catálogo para
 validar as máquinas referenciadas nas etapas dos produtos.

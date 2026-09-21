@@ -2,7 +2,12 @@
 
 O **Axion** é uma plataforma para planejamento, otimização e acompanhamento de uma linha de produção inteligente em escala reduzida.
 
-O sistema permite cadastrar produtos, criar ordens de produção, otimizar a sequência das operações e acompanhar a execução física em uma maquete automatizada.
+O sistema tem como objetivo cadastrar produtos, criar ordens de produção, otimizar a sequência das operações e acompanhar a execução física em uma maquete automatizada.
+
+**Implementado:** backend local com cadastro, listagem e consulta de máquinas,
+SQLite e migrations Alembic, conforme a SPEC-0001. Veja os comandos de instalação,
+execução e testes no [README do backend](backend/README.md).
+As demais funcionalidades descritas abaixo permanecem planejadas.
 
 A proposta integra software, dispositivos embarcados, inteligência computacional, rastreabilidade, observabilidade e segurança de rede.
 
@@ -14,7 +19,7 @@ Quando a sequência de produção não é bem planejada, podem surgir problemas 
 
 O Axion busca resolver esse problema por meio de um sistema capaz de planejar automaticamente a produção, considerando os produtos solicitados, suas quantidades, as etapas produtivas, o tempo de processamento em cada máquina e a disponibilidade dos recursos.
 
-## Principais funcionalidades
+## Funcionalidades planejadas
 
 - Cadastro de produtos e etapas produtivas.
 - Criação de produtos personalizados.

@@ -181,7 +181,9 @@ SQLAlchemy 2.x será o ORM, com acesso síncrono no MVP; Pydantic definirá
 os schemas de entrada e saída, separados dos models de persistência.
 Alembic será utilizado para criar e evoluir a estrutura do banco por migrations
 versionadas, conforme a [ADR-005](adr/0005-sqlalchemy-pydantic-alembic.md).
-Essas escolhas estão definidas, mas sua implementação ainda não foi iniciada.
+Essas escolhas estão implementadas no catálogo de máquinas da SPEC-0001,
+com cadastro e consulta via API local. Consulte o [backend](../backend/README.md).
+As demais funcionalidades permanecem planejadas.
 
 As tecnologias específicas do frontend e a configuração definitiva do firmware
 permanecem em definição.

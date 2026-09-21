@@ -6,7 +6,7 @@
 >
 > **Aprovação do escopo:** 21/09/2026, pelo responsável solicitante, nesta revisão
 >
-> **Implementação:** Não iniciada
+> **Implementação:** Implementada e validada localmente; revisão por outro integrante pendente
 
 ## 1. Objetivo
 
@@ -295,34 +295,34 @@ testes ou validações registradas no Pull Request. A entrega estará concluída
 quando todos os critérios forem atendidos e a revisão prevista no guia de
 contribuição for realizada.
 
-- [ ] CA-01: A partir de um clone limpo, o README permite instalar dependências,
+- [x] CA-01: A partir de um clone limpo, o README permite instalar dependências,
   preparar o banco e iniciar o backend localmente.
-- [ ] CA-02: A documentação OpenAPI apresenta as três rotas, schemas e respostas previstas.
-- [ ] CA-03: Cadastrar um nome válido retorna `201`, um ID positivo e o nome normalizado.
-- [ ] CA-04: Nomes com 1 e 100 caracteres após normalização são aceitos.
-- [ ] CA-05: Nome ausente, nulo, vazio, somente espaços, de tipo incorreto ou
+- [x] CA-02: A documentação OpenAPI apresenta as três rotas, schemas e respostas previstas.
+- [x] CA-03: Cadastrar um nome válido retorna `201`, um ID positivo e o nome normalizado.
+- [x] CA-04: Nomes com 1 e 100 caracteres após normalização são aceitos.
+- [x] CA-05: Nome ausente, nulo, vazio, somente espaços, de tipo incorreto ou
   acima de 100 caracteres retorna `422` e não cria registro.
-- [ ] CA-06: Enviar campos extras, incluindo um ID definido pelo cliente,
+- [x] CA-06: Enviar campos extras, incluindo um ID definido pelo cliente,
   retorna `422` e não cria registro.
-- [ ] CA-07: Dois cadastros com o mesmo nome recebem IDs distintos, conforme RN-06.
-- [ ] CA-08: Listar um banco vazio retorna `[]`; após cadastros, retorna os
+- [x] CA-07: Dois cadastros com o mesmo nome recebem IDs distintos, conforme RN-06.
+- [x] CA-08: Listar um banco vazio retorna `[]`; após cadastros, retorna os
   registros em ordem crescente de ID.
-- [ ] CA-09: Consultar uma máquina cadastrada retorna `200` com seus dados;
+- [x] CA-09: Consultar uma máquina cadastrada retorna `200` com seus dados;
   consultar ID positivo inexistente retorna `404` com o contrato definido.
-- [ ] CA-10: Consultar com ID zero, negativo ou não inteiro retorna `422`.
-- [ ] CA-11: Uma máquina continua disponível depois de reiniciar a aplicação
+- [x] CA-10: Consultar com ID zero, negativo ou não inteiro retorna `422`.
+- [x] CA-11: Uma máquina continua disponível depois de reiniciar a aplicação
   usando o mesmo arquivo SQLite.
-- [ ] CA-12: `alembic upgrade head` prepara um banco vazio; repetir o comando
+- [x] CA-12: `alembic upgrade head` prepara um banco vazio; repetir o comando
   na mesma revisão preserva os registros e não duplica a estrutura.
-- [ ] CA-13: Uma falha de persistência não retorna `201`, não deixa gravação
+- [x] CA-13: Uma falha de persistência não retorna `201`, não deixa gravação
   parcial e não expõe detalhes internos na resposta.
-- [ ] CA-14: Testes utilizam banco isolado e podem ser executados sem hardware.
-- [ ] CA-15: Controllers, services e repositories respeitam a separação da ADR-004.
-- [ ] CA-16: Em banco descartável, a migration inicial permite executar
+- [x] CA-14: Testes utilizam banco isolado e podem ser executados sem hardware.
+- [x] CA-15: Controllers, services e repositories respeitam a separação da ADR-004.
+- [x] CA-16: Em banco descartável, a migration inicial permite executar
   upgrade, downgrade até base e novo upgrade com sucesso.
-- [ ] CA-17: A API e o Alembic utilizam o mesmo banco quando o caminho é
+- [x] CA-17: A API e o Alembic utilizam o mesmo banco quando o caminho é
   sobrescrito; o teste não altera o banco de desenvolvimento.
-- [ ] CA-18: Os testes de integração preparam seu banco pelas migrations e
+- [x] CA-18: Os testes de integração preparam seu banco pelas migrations e
   validam que o model consegue ler e gravar na estrutura criada por elas.
 
 ## 10. Plano de implementação e validação
@@ -338,10 +338,34 @@ contribuição for realizada.
 7. Revisar o diff, a documentação e abrir Pull Request conforme CONTRIBUTING.md.
 
 Os comandos de instalação, configuração inicial do Alembic, preparação,
-execução e testes deverão constar em `backend/README.md` quando a implementação
-existir. Os comandos Alembic descritos aqui são o fluxo planejado e ainda
-dependem da criação do backend. Nenhuma migration ou teste de backend foi
-executado apenas pela elaboração deste documento.
+execução e testes estão documentados em [backend/README.md](../../backend/README.md).
+
+### Evidências da implementação — 21/09/2026
+
+- CA-01: instalação com `uv sync --locked --python 3.12`, criação do diretório
+  e `alembic upgrade head` em cópia limpa, sem ambiente virtual anterior.
+  Uvicorn iniciado e consultado por HTTP real em endereço local.
+- CA-02 a CA-10 e CA-13: `test_machine_api.py` cobre OpenAPI, contratos,
+  limites, campos extras, IDs, duplicidade e falhas simuladas de flush,
+  commit e consulta; `test_machine_service.py` valida regras fora de HTTP
+  e rollback após flush, incluindo reutilização da sessão.
+- CA-11: testes com duas instâncias da aplicação e smoke test HTTP com
+  encerramento e reinicialização de processos Uvicorn usando o mesmo arquivo.
+- CA-12, CA-16 e CA-17: `test_migrations.py` verifica repetição de upgrade,
+  preservação dos registros, downgrade/base, novo upgrade, configuração
+  compartilhada e independência do diretório de execução.
+- CA-14 e CA-18: fixtures aplicam migrations em arquivos temporários isolados;
+  os testes de integração leem e gravam com o model sobre essas tabelas.
+- CA-15: revisão local das camadas; controllers chamam services, repositories
+  concentram consultas e flush, services controlam commit/rollback.
+- Resultado: **43 testes passaram em Python 3.12.13 e 3.13.13**;
+  `ruff check .`, `ruff format --check .` e coerência Alembic/model passaram.
+  Dois avisos de depreciação das dependências de teste estão documentados no
+  README do backend. Nenhuma validação em hardware foi realizada.
+
+Os critérios marcados representam verificação local. A conclusão da entrega
+continua dependendo da revisão de outro integrante no Pull Request, conforme
+CONTRIBUTING.md.
 
 ## 11. Decisões aprovadas e detalhes de implementação
 
@@ -351,7 +375,7 @@ executado apenas pela elaboração deste documento.
 | Nomes duplicados | Permitidos nesta entrega |
 | Limite do nome | 100 caracteres após remover espaços das extremidades |
 | Listagem | Array completo, ordenado por ID, sem paginação inicial |
-| Ferramentas | Definir e documentar na implementação a versão mínima de Python, gerenciador, versões de dependências e ferramentas de testes/lint |
+| Ferramentas | Python 3.12+, uv e uv.lock; pytest/HTTPX e Ruff; versões documentadas no README do backend |
 | Configuração | `AXION_DATABASE_PATH`, com padrão local `backend/data/axion.db`, conforme seção 8 |
 
 Mudanças arquiteturais relevantes durante a implementação devem ser registradas

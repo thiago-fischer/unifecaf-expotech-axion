@@ -44,6 +44,9 @@ Não trate alternativas em estudo como requisitos já aprovados.
 - Backend e otimização em Python.
 - API HTTP com FastAPI.
 - SQLite como banco de dados inicial.
+- SQLAlchemy 2.x como ORM, com acesso síncrono no MVP.
+- Pydantic para schemas de entrada e saída, separados dos models SQLAlchemy.
+- Alembic para migrations versionadas; seguir a ADR-005.
 - Frontend separado do backend.
 - Grafana previsto para visualização de métricas.
 
@@ -61,7 +64,7 @@ Evite abstrações sem necessidade concreta.
 
 ## Decisões ainda em aberto
 
-Consulte a documentação antes de escolher frontend, ORM, algoritmo de
+Consulte a documentação antes de escolher frontend, algoritmo de
 otimização, protocolo de comunicação, identificação das peças ou cloud.
 
 Quando a tarefa exigir uma dessas escolhas, documente a justificativa
@@ -76,8 +79,9 @@ e seu status. Não apresente uma proposta como decisão aceita.
 - Use type hints no código Python.
 - Mantenha as alterações focadas no objetivo da tarefa.
 - Preserve alterações locais que não pertençam à tarefa.
-- Torne a estrutura do banco reproduzível por migrations,
-  scripts SQL ou mecanismo equivalente.
+- Torne a estrutura do banco reproduzível por migrations Alembic.
+- Revise migrations geradas automaticamente e preserve revisões já integradas.
+- Não substitua migrations por `create_all()` na inicialização da API.
 - Atualize a documentação quando modificar o comportamento do sistema.
 
 ## Validação

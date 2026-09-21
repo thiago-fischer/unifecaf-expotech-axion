@@ -1,8 +1,10 @@
 # Axion — Linha de Produção Inteligente
 
-> **Versão do documento:** 0.2  
-> **Status:** Em definição  
-> **Última atualização:** 15/09/2026
+> **Versão do documento:** 0.3
+>
+> **Status:** Em definição
+>
+> **Última atualização:** 21/09/2026
 
 ## Histórico de versões
 
@@ -10,6 +12,7 @@
 |---|---|---|
 | 0.1 | 11/09/2026 | Definição inicial do conceito, otimização industrial, maquete e requisitos gerais. |
 | 0.2 | 15/09/2026 | Definição do transporte horizontal por fuso, retirada da transformação física do MVP, inclusão de produtos configuráveis pelo usuário, displays nas máquinas e rastreabilidade/QA das matérias-primas. |
+| 0.3 | 21/09/2026 | Alinhamento às ADRs aceitas e definição de SQLAlchemy, Pydantic e Alembic para persistência, contratos da API e migrations. |
 
 ## 1. Visão Geral
 
@@ -173,7 +176,17 @@ Os dispositivos embarcados, utilizando Arduino, ESP32 ou tecnologia equivalente,
 
 O sistema também contará com persistência de dados para armazenamento das informações relacionadas à produção.
 
-As tecnologias específicas utilizadas no frontend, backend, banco de dados e firmware serão definidas posteriormente.
+O backend utilizará Python e FastAPI, com SQLite como banco inicial.
+SQLAlchemy 2.x será o ORM, com acesso síncrono no MVP; Pydantic definirá
+os schemas de entrada e saída, separados dos models de persistência.
+Alembic será utilizado para criar e evoluir a estrutura do banco por migrations
+versionadas, conforme a [ADR-005](adr/0005-sqlalchemy-pydantic-alembic.md).
+Essas escolhas estão implementadas no catálogo de máquinas da SPEC-0001,
+com cadastro e consulta via API local. Consulte o [backend](../backend/README.md).
+As demais funcionalidades permanecem planejadas.
+
+As tecnologias específicas do frontend e a configuração definitiva do firmware
+permanecem em definição.
 
 ## 10. Observabilidade e Métricas
 
@@ -211,7 +224,10 @@ O sistema possuirá uma arquitetura documentada que represente a integração en
 
 Padrões de projeto serão utilizados onde houver justificativa arquitetural.
 
-A arquitetura definitiva e os padrões empregados serão definidos conforme a solução evoluir.
+O monorepo e a arquitetura em camadas do backend estão definidos nas ADRs
+003 e 004. Controllers tratam HTTP, services concentram regras de negócio,
+repositories acessam o banco, models representam a persistência e schemas
+definem os contratos da API. Os demais detalhes evoluirão conforme a solução.
 
 ## 13. Open Source e Colaboração
 
@@ -242,9 +258,8 @@ Neste estágio do projeto permanecem em definição:
 - tecnologia de identificação e rastreabilidade;
 - protocolo de comunicação entre dispositivos;
 - vulnerabilidade de rede que será estudada;
-- tecnologias de frontend e backend;
-- banco de dados;
-- arquitetura definitiva;
+- tecnologia de frontend;
+- detalhes de integração entre os componentes;
 - plataforma de cloud;
 - estratégia de CI/CD;
 - ferramentas e bibliotecas específicas.

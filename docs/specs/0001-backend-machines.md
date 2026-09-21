@@ -8,7 +8,7 @@
 >
 > **Implementação:** Catálogo de máquinas implementado e validado localmente;
 > complemento de inicialização pelo `main.py` com Uvicorn implementado e validado
-> em terminal. Validação pelo Run do PyCharm e revisão por outro integrante pendentes.
+> em terminal e confirmado pelo solicitante no PyCharm. Revisão por outro integrante pendente.
 
 ### Registro de revisão — inicialização com Uvicorn
 
@@ -396,12 +396,12 @@ contribuição for realizada.
 - [x] CA-21: Alterar um arquivo Python observado pelo servidor provoca recarga;
   a API volta a responder e preserva os registros no mesmo SQLite. Encerrar
   e reiniciar pelo novo ponto de entrada também preserva esses registros.
-- [ ] CA-22: O README permite iniciar o servidor pelo Run do PyCharm usando
+- [x] CA-22: O README permite iniciar o servidor pelo Run do PyCharm usando
   o módulo `app.main`, o interpretador do backend e o diretório de trabalho
   indicado, sem ajustes manuais de `PYTHONPATH`.
 - [x] CA-23: A CLI Uvicorn existente continua funcional; iniciar ou recarregar
   pelo novo ponto de entrada não aplica migrations, cria tabelas ou insere dados.
-- [ ] CA-24: Testes automatizados, lint e formatação do backend continuam
+- [x] CA-24: Testes automatizados, lint e formatação do backend continuam
   passando após o complemento; evidências da execução real, recarga e PyCharm
   são registradas separadamente das evidências anteriores.
 
@@ -432,7 +432,8 @@ execução e testes estão documentados em [backend/README.md](../../backend/REA
    ponto de entrada, recarga, reinício, persistência e execução pelo PyCharm.
    Usar o mesmo caminho de banco na migration e no servidor.
 5. Registrar as evidências no Pull Request e marcar CA-19 a CA-24 somente
-   após verificação. CA-22 e a parte de validação na IDE de CA-24 permanecem pendentes.
+   após verificação. CA-22 e a parte de validação na IDE de CA-24 foram concluídos
+   com a confirmação de funcionamento pelo solicitante.
 
 ### Evidências do complemento Uvicorn
 
@@ -461,10 +462,12 @@ execução e testes estão documentados em [backend/README.md](../../backend/REA
   registra essa limitação e a opção de emulação de terminal do PyCharm como
   alternativa a verificar, sem afirmar que já foi testada na IDE.
 - CA-22 e CA-24: instruções da IDE documentadas; execução como módulo sem
-  `PYTHONPATH` validada em terminal. A interface do PyCharm não estava
-  acessível às ferramentas desta sessão; o clique em Run ainda não foi validado.
-  CA-24 permanece desmarcado por incluir essa evidência, embora testes,
-  lint e formatação tenham passado. Nenhuma validação em hardware foi realizada.
+  `PYTHONPATH` validada em terminal. Após a entrega, o solicitante confirmou
+  nesta conversa: "testei aqui e funcionou da forma que esperava".
+  A validação na IDE é relatada pelo solicitante, não executada pelo agente;
+  o uso da opção de emulação de terminal não foi informado. Essa confirmação
+  conclui a pendência da IDE, junto aos testes, lint e formatação já executados.
+  Nenhuma validação em hardware foi realizada.
 
 ### Evidências da implementação — 21/09/2026
 
@@ -490,8 +493,7 @@ execução e testes estão documentados em [backend/README.md](../../backend/REA
   README do backend. Nenhuma validação em hardware foi realizada.
 
 Os critérios marcados representam verificação local. A conclusão da entrega
-continua dependendo da validação no PyCharm (CA-22 e parte de CA-24)
-e da revisão de outro integrante no Pull Request, conforme
+continua dependendo da revisão de outro integrante no Pull Request, conforme
 CONTRIBUTING.md.
 
 ## 11. Decisões aprovadas e detalhes de implementação

@@ -79,8 +79,9 @@ local, a recarga funcionou em terminal interativo, mas ficou aguardando o
 processo anterior quando iniciada por subprocesso com saída redirecionada.
 Se ocorrer no Run, experimente **Emulate terminal in output console**, opção
 descrita na [documentação do PyCharm](https://www.jetbrains.com/help/pycharm/run-debug-configuration-python.html),
-ou execute o comando na aba Terminal. A execução pelo botão Run e essa opção
-ainda precisam de validação manual na IDE.
+ou execute o comando na aba Terminal. O solicitante confirmou nesta entrega
+que a execução no PyCharm funcionou como esperado; o uso específico da opção
+de emulação de terminal não foi informado.
 
 ## Configuração do banco
 

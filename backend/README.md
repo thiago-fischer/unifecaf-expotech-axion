@@ -27,7 +27,7 @@ cd backend
 uv sync --locked --python 3.12
 New-Item -ItemType Directory -Force data | Out-Null
 uv run --locked alembic upgrade head
-uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+uv run --locked python -m app.main
 ```
 
 No Linux/macOS, substitua a criação de diretório por `mkdir -p data`.
@@ -35,10 +35,52 @@ Não é necessário ativar o ambiente virtual: `uv run` usa `backend/.venv`.
 Documentação interativa: [Swagger UI](http://127.0.0.1:8000/docs).
 Contrato: [OpenAPI](http://127.0.0.1:8000/openapi.json).
 
+O módulo `app.main` inicia o Uvicorn em `127.0.0.1:8000` com recarga automática
+quando arquivos Python mudam. Esse modo é destinado ao desenvolvimento local.
+Encerre pelo terminal com `Ctrl+C`. A CLI continua disponível como alternativa:
+
+```powershell
+uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Executar `python -m app.main` inicia o servidor; importar `app.main` apenas
+disponibiliza a aplicação e sua fábrica, sem iniciar o Uvicorn.
+
 O padrão é `backend/data/axion.db`, sempre relativo ao módulo, independentemente
 do diretório do terminal. A API não cria tabelas nem aplica migrations ao iniciar.
 Um banco recém-preparado começa vazio. Repetir `alembic upgrade head` preserva
 os registros. Dados persistem após encerrar e reiniciar o servidor.
+
+## Execução no PyCharm
+
+Prepare o ambiente e aplique as migrations conforme a seção anterior.
+Em **Run → Edit Configurations**, adicione uma configuração **Python**:
+
+| Campo | Valor |
+|---|---|
+| Nome | Axion backend |
+| Execução | Module name |
+| Módulo | `app.main` |
+| Working directory | Caminho local da pasta `backend/` |
+| Python interpreter | `backend/.venv/Scripts/python.exe` no Windows |
+| Environment variables | `AXION_DATABASE_PATH`, se usar banco diferente do padrão |
+
+Selecione essa configuração e clique em **Run**. Use **Stop** para encerrar.
+O caminho do banco deve ser o mesmo usado ao executar Alembic. Em Linux/macOS,
+o interpretador fica em `backend/.venv/bin/python`.
+
+Use a execução como módulo com diretório `backend/`; não é necessário configurar
+`PYTHONPATH`. Configurações pessoais da IDE e caminhos absolutos locais não
+devem ser versionados. O botão Run diretamente no arquivo pode criar uma
+configuração de script; nesse caso, selecione a configuração por módulo acima.
+
+No Windows, a recarga do Uvicorn depende de sinais do console. Na validação
+local, a recarga funcionou em terminal interativo, mas ficou aguardando o
+processo anterior quando iniciada por subprocesso com saída redirecionada.
+Se ocorrer no Run, experimente **Emulate terminal in output console**, opção
+descrita na [documentação do PyCharm](https://www.jetbrains.com/help/pycharm/run-debug-configuration-python.html),
+ou execute o comando na aba Terminal. A execução pelo botão Run e essa opção
+ainda precisam de validação manual na IDE.
 
 ## Configuração do banco
 

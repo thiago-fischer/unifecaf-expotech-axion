@@ -6,7 +6,18 @@
 >
 > **Aprovação do escopo:** 21/09/2026, pelo responsável solicitante, nesta revisão
 >
-> **Implementação:** Implementada e validada localmente; revisão por outro integrante pendente
+> **Implementação:** Catálogo de máquinas implementado e validado localmente;
+> complemento de inicialização pelo `main.py` com Uvicorn implementado e validado
+> em terminal. Validação pelo Run do PyCharm e revisão por outro integrante pendentes.
+
+### Registro de revisão — inicialização com Uvicorn
+
+Complemento autorizado pelo responsável solicitante nesta revisão: explicitar
+a inicialização local do servidor no `app/main.py` existente e sua execução
+pelo terminal e pelo PyCharm. Uvicorn já consta nas dependências e a execução
+pela CLI já foi validada. A execução por `python -m app.main` é o acréscimo
+implementado neste complemento; as evidências anteriores não validam esse novo
+caminho. Suas evidências estão registradas separadamente na seção 10.
 
 ## 1. Objetivo
 
@@ -44,6 +55,8 @@ essas decisões e o escopo aprovado.
 - Estrutura mínima do módulo `backend/`.
 - Declaração de dependências e instruções para execução local.
 - Aplicação FastAPI e registro das rotas de máquinas.
+- Inicialização local com Uvicorn pelo `app/main.py` existente, com instruções
+  para terminal e configuração de execução no PyCharm.
 - Configuração do caminho do banco SQLite.
 - Model SQLAlchemy e schemas Pydantic separados.
 - Criação reproduzível da estrutura do banco com migration inicial Alembic.
@@ -223,7 +236,10 @@ Não criar antecipadamente módulos de produtos ou outras funcionalidades.
 
 ### Responsabilidades
 
-- `main.py`: compor a aplicação e registrar as rotas.
+- `main.py`: compor a aplicação, registrar as rotas e iniciar o Uvicorn somente
+  quando executado como programa, sob `if __name__ == "__main__":`.
+  Importar `app.main` deve continuar disponibilizando `app` e `create_app()`
+  sem abrir uma porta ou iniciar processos do servidor.
 - `config.py`: centralizar a configuração, incluindo o caminho do SQLite.
 - Controller: receber a entrada, chamar o service e mapear resultados/erros
   para HTTP. Não executar consultas ao banco.
@@ -287,6 +303,54 @@ A migration inicial deve possuir `upgrade()` para criar `machines` e
 testar `alembic downgrade base` somente em banco descartável.
 Essa reversão não faz parte da inicialização normal da aplicação.
 
+### Inicialização local com Uvicorn
+
+Complementar `backend/app/main.py`, preservando `app` e `create_app()`.
+Não criar `server.py` nem outra spec para esse complemento. A chamada
+`uvicorn.run()` deve ficar protegida por `if __name__ == "__main__":`,
+utilizando a referência de importação `"app.main:app"`, host `127.0.0.1`,
+porta `8000` e `reload=True` para desenvolvimento local.
+
+O modo com recarga não constitui configuração de produção. Deploy, workers,
+Docker e exposição em rede permanecem fora desta entrega.
+
+O fluxo implementado e documentado a partir da raiz do repositório,
+no PowerShell, é:
+
+```powershell
+cd backend
+uv sync --locked --python 3.12
+New-Item -ItemType Directory -Force data | Out-Null
+uv run --locked alembic upgrade head
+uv run --locked python -m app.main
+```
+
+A execução pela CLI já existente deverá continuar funcionando:
+
+```powershell
+uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+As duas formas devem disponibilizar `/docs`, `/openapi.json` e as três rotas
+de máquinas em `http://127.0.0.1:8000`, usando a configuração compartilhada de
+banco. Iniciar ou recarregar o servidor não deve aplicar migrations, criar
+tabelas nem inserir registros. A preparação do banco permanece explícita.
+
+Documentar no README do backend uma configuração Python do PyCharm:
+
+| Campo | Valor |
+|---|---|
+| Execução | Módulo (`Module name`) |
+| Módulo | `app.main` |
+| Diretório de trabalho | Caminho local da pasta `backend/` |
+| Interpretador no Windows | `backend/.venv/Scripts/python.exe` |
+| Variáveis de ambiente | `AXION_DATABASE_PATH`, somente se houver sobrescrita |
+
+O botão Run dessa configuração deverá iniciar o servidor. O fluxo documentado
+usa execução como módulo, sem exigir executar `app/main.py` como arquivo avulso
+ou modificar manualmente o `PYTHONPATH`. Não versionar caminhos absolutos da
+máquina do desenvolvedor nem configurações pessoais da IDE.
+
 ## 9. Critérios de aceite
 
 A aprovação desta spec autoriza sua implementação. Os itens abaixo só
@@ -324,6 +388,22 @@ contribuição for realizada.
   sobrescrito; o teste não altera o banco de desenvolvimento.
 - [x] CA-18: Os testes de integração preparam seu banco pelas migrations e
   validam que o model consegue ler e gravar na estrutura criada por elas.
+- [x] CA-19: Com banco preparado, `uv run --locked python -m app.main`, a partir
+  de `backend/`, inicia o Uvicorn em `127.0.0.1:8000`; `/docs`, `/openapi.json`
+  e as três rotas de máquinas respondem conforme o contrato.
+- [x] CA-20: Importar `app.main` disponibiliza `app` e `create_app()` sem iniciar
+  o Uvicorn, abrir porta ou disparar processos de recarga.
+- [x] CA-21: Alterar um arquivo Python observado pelo servidor provoca recarga;
+  a API volta a responder e preserva os registros no mesmo SQLite. Encerrar
+  e reiniciar pelo novo ponto de entrada também preserva esses registros.
+- [ ] CA-22: O README permite iniciar o servidor pelo Run do PyCharm usando
+  o módulo `app.main`, o interpretador do backend e o diretório de trabalho
+  indicado, sem ajustes manuais de `PYTHONPATH`.
+- [x] CA-23: A CLI Uvicorn existente continua funcional; iniciar ou recarregar
+  pelo novo ponto de entrada não aplica migrations, cria tabelas ou insere dados.
+- [ ] CA-24: Testes automatizados, lint e formatação do backend continuam
+  passando após o complemento; evidências da execução real, recarga e PyCharm
+  são registradas separadamente das evidências anteriores.
 
 ## 10. Plano de implementação e validação
 
@@ -339,6 +419,52 @@ contribuição for realizada.
 
 Os comandos de instalação, configuração inicial do Alembic, preparação,
 execução e testes estão documentados em [backend/README.md](../../backend/README.md).
+
+### Plano do complemento Uvicorn
+
+1. Acrescentar ao `app/main.py` o bloco protegido de inicialização descrito na
+   seção 8, mantendo a composição da aplicação e o ciclo de vida existentes.
+2. Atualizar o README com a execução por módulo e a configuração do PyCharm,
+   preservando as instruções da CLI e a etapa explícita de migrations.
+3. Verificar a importação sem inicialização do servidor e executar testes,
+   lint e formatação pertinentes.
+4. Em banco descartável preparado por Alembic, validar HTTP real pelo novo
+   ponto de entrada, recarga, reinício, persistência e execução pelo PyCharm.
+   Usar o mesmo caminho de banco na migration e no servidor.
+5. Registrar as evidências no Pull Request e marcar CA-19 a CA-24 somente
+   após verificação. CA-22 e a parte de validação na IDE de CA-24 permanecem pendentes.
+
+### Evidências do complemento Uvicorn
+
+- `app/main.py` inicia o servidor sob guarda `__main__`, preservando a fábrica
+  e a aplicação importável. O README documenta a execução por módulo e a IDE.
+- **44 testes passaram** no ambiente do backend com Python 3.13.13, incluindo
+  um novo teste que importa a aplicação em processo isolado, impede chamada
+  a `uvicorn.run()` e verifica que nenhum arquivo de banco foi criado.
+  Ruff (lint e formatação) passou. Permanecem os dois avisos de depreciação
+  das dependências de teste já documentados.
+- CA-19: `uv run --locked python -m app.main` executado em terminal na pasta
+  `backend/`, com `AXION_DATABASE_PATH` apontando para banco descartável.
+  `/docs`, `/openapi.json`, POST, listagem e consulta individual validados
+  por HTTP real; nome normalizado e resposta `201` conferidos.
+- CA-21: em cópia descartável do código, alterar `app/main.py` encerrou o
+  processo anterior e iniciou outro, confirmado pelos logs e IDs de processo.
+  Após a recarga, a API preservou o único cadastro. Encerramento com `Ctrl+C`
+  e reinício por módulo também preservaram o cadastro.
+- CA-23: iniciar e recarregar sem migrations manteve o arquivo SQLite ausente.
+  Depois da preparação explícita com Alembic, recarga e reinício preservaram
+  os dados sem inserir registros adicionais. A CLI anterior foi executada
+  novamente e consultou o mesmo registro persistido.
+- Limitação observada: no Windows, a tentativa por subprocesso com saída
+  redirecionada detectou a alteração, mas aguardou o encerramento do processo
+  anterior. A recarga passou ao repetir em terminal interativo. O README
+  registra essa limitação e a opção de emulação de terminal do PyCharm como
+  alternativa a verificar, sem afirmar que já foi testada na IDE.
+- CA-22 e CA-24: instruções da IDE documentadas; execução como módulo sem
+  `PYTHONPATH` validada em terminal. A interface do PyCharm não estava
+  acessível às ferramentas desta sessão; o clique em Run ainda não foi validado.
+  CA-24 permanece desmarcado por incluir essa evidência, embora testes,
+  lint e formatação tenham passado. Nenhuma validação em hardware foi realizada.
 
 ### Evidências da implementação — 21/09/2026
 
@@ -364,7 +490,8 @@ execução e testes estão documentados em [backend/README.md](../../backend/REA
   README do backend. Nenhuma validação em hardware foi realizada.
 
 Os critérios marcados representam verificação local. A conclusão da entrega
-continua dependendo da revisão de outro integrante no Pull Request, conforme
+continua dependendo da validação no PyCharm (CA-22 e parte de CA-24)
+e da revisão de outro integrante no Pull Request, conforme
 CONTRIBUTING.md.
 
 ## 11. Decisões aprovadas e detalhes de implementação
@@ -376,6 +503,7 @@ CONTRIBUTING.md.
 | Limite do nome | 100 caracteres após remover espaços das extremidades |
 | Listagem | Array completo, ordenado por ID, sem paginação inicial |
 | Ferramentas | Python 3.12+, uv e uv.lock; pytest/HTTPX e Ruff; versões documentadas no README do backend |
+| Servidor local | Uvicorn; inicialização em `app/main.py` sob guarda `__main__`, referência `app.main:app`, host `127.0.0.1`, porta `8000` e recarga para desenvolvimento |
 | Configuração | `AXION_DATABASE_PATH`, com padrão local `backend/data/axion.db`, conforme seção 8 |
 
 Mudanças arquiteturais relevantes durante a implementação devem ser registradas

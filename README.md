@@ -48,6 +48,11 @@ Funcionalidades previstas:
 
 Camada responsável pelas regras do sistema e pela integração entre os componentes.
 
+Tecnologias definidas para implementação: **Python e FastAPI**, **Pydantic**
+para os schemas da API, **SQLAlchemy 2.x** para persistência em **SQLite**
+e **Alembic** para migrations. O acesso ao banco será síncrono no MVP.
+Veja a [ADR-005](docs/adr/0005-sqlalchemy-pydantic-alembic.md).
+
 Responsabilidades previstas:
 
 - gerenciamento de produtos;

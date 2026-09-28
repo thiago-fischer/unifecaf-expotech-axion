@@ -294,6 +294,9 @@ execução do workflow no GitHub Actions.
   disparada pelo evento `pull_request` e concluída com sucesso em 16 segundos.
 - O job `Tests (Python 3.12)` e todas as suas etapas concluíram com sucesso,
   incluindo instalação pelo lockfile e execução da suíte completa.
+- Execução [Backend CI #2](https://github.com/thiago-fischer/unifecaf-expotech-axion/actions/runs/36372380753)
+  concluída com sucesso após incluir a etapa que confirma que os testes não
+  deixaram alterações no repositório.
 - A configuração executada possui `permissions: contents: read`, não referencia
   secrets e usa actions fixadas pelos SHAs verificados.
 - Permanecem pendentes as validações de push na `main`, execução manual, falhas

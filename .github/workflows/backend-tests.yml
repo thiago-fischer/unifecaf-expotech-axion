@@ -49,3 +49,6 @@ jobs:
 
       - name: Run backend tests
         run: uv run --locked pytest -q
+
+      - name: Verify repository remains clean
+        run: test -z "$(git status --porcelain)"

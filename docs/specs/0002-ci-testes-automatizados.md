@@ -6,8 +6,9 @@
 >
 > **Aprovação do escopo:** 27/09/2026, pelo responsável solicitante, nesta revisão
 >
-> **Implementação:** Workflow e documentação implementados e validados localmente;
-> execução no GitHub Actions pendente nesta revisão
+> **Implementação:** Workflow e documentação implementados; validações local e
+> em Pull Request no GitHub Actions concluídas. Validação do push na `main` pendente
+> do merge, que exige revisão de outro integrante
 
 ## 1. Objetivo
 
@@ -218,30 +219,30 @@ Os critérios permanecem desmarcados até a implementação e a execução real 
 GitHub Actions. Validação somente local não comprova os eventos ou permissões do
 serviço hospedado.
 
-- [ ] CA-01: O workflow é sintaticamente válido e aparece na aba Actions.
-- [ ] CA-02: Um PR destinado à `main` inicia o check `Tests (Python 3.12)`.
+- [x] CA-01: O workflow é sintaticamente válido e aparece na aba Actions.
+- [x] CA-02: Um PR destinado à `main` inicia o check `Tests (Python 3.12)`.
 - [ ] CA-03: Um push na `main` inicia o mesmo workflow.
 - [ ] CA-04: A execução manual pode ser iniciada pela interface do GitHub.
-- [ ] CA-05: Em um commit válido, o ambiente é preparado pelo lockfile e toda a
+- [x] CA-05: Em um commit válido, o ambiente é preparado pelo lockfile e toda a
   suíte existente passa em runner Linux com Python 3.12.
 - [ ] CA-06: Alterar intencionalmente um teste para falhar deixa o check vermelho
   e impede que a execução seja interpretada como sucesso.
 - [ ] CA-07: Remover ou desatualizar o lockfile faz a etapa de sincronização falhar.
-- [ ] CA-08: O comando local documentado executa a mesma suíte completa da CI.
-- [ ] CA-09: A suíte usa somente bancos e arquivos temporários, sem alterar o banco
+- [x] CA-08: O comando local documentado executa a mesma suíte completa da CI.
+- [x] CA-09: A suíte usa somente bancos e arquivos temporários, sem alterar o banco
   de desenvolvimento, acessar serviços externos ou depender de hardware.
-- [ ] CA-10: Os testes de API, service, migrations e inicialização existentes são
+- [x] CA-10: Os testes de API, service, migrations e inicialização existentes são
   coletados e executados no workflow.
-- [ ] CA-11: O workflow declara permissões somente de leitura e não usa secrets.
-- [ ] CA-12: As actions externas estão fixadas por SHA completo e identificadas
+- [x] CA-11: O workflow declara permissões somente de leitura e não usa secrets.
+- [x] CA-12: As actions externas estão fixadas por SHA completo e identificadas
   por versão em comentário.
 - [ ] CA-13: Dois commits sucessivos no mesmo PR cancelam a execução obsoleta sem
   cancelar workflows de outros módulos.
 - [ ] CA-14: Um PR apenas de documentação também recebe conclusão do check, sem
   ficar indefinidamente pendente.
-- [ ] CA-15: O workflow não altera arquivos versionados e o diretório de trabalho
+- [x] CA-15: O workflow não altera arquivos versionados e o diretório de trabalho
   permanece limpo ao final da validação.
-- [ ] CA-16: Nenhuma validação em hardware é necessária ou alegada nesta entrega.
+- [x] CA-16: Nenhuma validação em hardware é necessária ou alegada nesta entrega.
 
 ## 10. Plano de implementação
 
@@ -284,6 +285,20 @@ push, a concorrência e o nome do check exigem observação no GitHub.
 Essas evidências não validam os gatilhos, o runner Linux, as permissões efetivas,
 a concorrência nem o resultado do check hospedado. Esses itens dependem da
 execução do workflow no GitHub Actions.
+
+### Evidências no GitHub Actions — 28/09/2026
+
+- Pull Request [#3](https://github.com/thiago-fischer/unifecaf-expotech-axion/pull/3)
+  aberto da branch `chore/backend-ci` para `main`.
+- Execução [Backend CI #1](https://github.com/thiago-fischer/unifecaf-expotech-axion/actions/runs/36372257311)
+  disparada pelo evento `pull_request` e concluída com sucesso em 16 segundos.
+- O job `Tests (Python 3.12)` e todas as suas etapas concluíram com sucesso,
+  incluindo instalação pelo lockfile e execução da suíte completa.
+- A configuração executada possui `permissions: contents: read`, não referencia
+  secrets e usa actions fixadas pelos SHAs verificados.
+- Permanecem pendentes as validações de push na `main`, execução manual, falhas
+  intencionais, cancelamento concorrente e PR contendo apenas documentação.
+  O push na `main` depende de merge após a revisão obrigatória de outro integrante.
 
 ## 12. Evolução planejada, não aprovada nesta spec
 

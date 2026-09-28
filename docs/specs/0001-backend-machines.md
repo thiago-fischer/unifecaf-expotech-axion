@@ -25,7 +25,7 @@ Criar a base executável do backend do Axion e permitir cadastrar e consultar
 as máquinas que representam as estações de processamento da maquete.
 
 Essa entrega disponibilizará os identificadores de máquinas que serão
-referenciados pelas etapas dos produtos na SPEC-0002, ainda a ser elaborada.
+referenciados pelas etapas dos produtos em uma spec futura, ainda a ser elaborada.
 
 O escopo, as regras, os contratos e os critérios de aceite abaixo foram
 aprovados para implementação. As decisões arquiteturais aceitas permanecem
@@ -509,5 +509,5 @@ CONTRIBUTING.md.
 | Configuração | `AXION_DATABASE_PATH`, com padrão local `backend/data/axion.db`, conforme seção 8 |
 
 Mudanças arquiteturais relevantes durante a implementação devem ser registradas
-em ADR. A implementação da SPEC-0002 deverá usar os IDs deste catálogo para
-validar as máquinas referenciadas nas etapas dos produtos.
+em ADR. A futura spec de produtos deverá usar os IDs deste catálogo para validar
+as máquinas referenciadas nas etapas dos produtos.

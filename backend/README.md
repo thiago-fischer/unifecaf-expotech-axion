@@ -178,3 +178,22 @@ Nenhum teste depende da maquete; essa validação não comprova integração fí
 As versões transitivas atuais emitem dois avisos de depreciação no TestClient
 (HTTPX e alias BlockingPortal do AnyIO). Eles não impedem os testes e não são
 suprimidos; a atualização das dependências de teste pode ser feita separadamente.
+
+## Integração contínua
+
+O workflow `Backend CI`, em `.github/workflows/backend-tests.yml`, executa a
+suíte completa do backend em Python 3.12 nos Pull Requests destinados à `main`,
+nos pushes para `main` e por acionamento manual no GitHub Actions. O check possui
+o nome estável `Tests (Python 3.12)`.
+
+A CI usa `uv` e o `uv.lock` versionado. O comando de testes é o mesmo da
+validação local:
+
+```powershell
+uv run --locked pytest -q
+```
+
+A suíte é predominantemente de integração: usa bancos SQLite temporários,
+migrations Alembic, `TestClient` e um subprocesso controlado. Ela não acessa o
+banco de desenvolvimento, serviços externos ou a maquete. Esta etapa não realiza
+deploy, não utiliza secrets e não valida integração com hardware.

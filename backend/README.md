@@ -1,8 +1,8 @@
 # Backend do Axion
 
-Implementação da SPEC-0001: cadastro, listagem e consulta de máquinas. Execução
-local, sem autenticação e sem comunicação com hardware. Produtos, ordens,
-otimização e estado operacional permanecem planejados.
+Implementação das SPEC-0001 e SPEC-0003: cadastro, listagem e consulta de máquinas
+e produtos com etapas produtivas. Execução local, sem autenticação e sem
+comunicação com hardware. Ordens, otimização e estado operacional permanecem planejados.
 
 ## Ferramentas
 
@@ -128,7 +128,51 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/machines -ContentType 
 Invoke-RestMethod http://127.0.0.1:8000/machines
 ```
 
-## Organização
+## Produtos e etapas (SPEC-0003)
+
+| Operação | Resultado |
+|---|---|
+| `POST /products` | `201`, produto com ID, nome normalizado e receita completa |
+| `GET /products` | `200`, produtos por ID e etapas por sequência; `[]` se vazio |
+| `GET /products/{product_id}` | `200`, produto com receita; `404` se inexistente |
+
+O nome segue as regras das máquinas (1 a 100 caracteres normalizados, duplicados
+permitidos). `steps` deve ser uma lista não vazia. Cada etapa exige `sequence`,
+`machine_id` e `processing_time_seconds`: inteiros JSON positivos, sem coerção
+de strings, booleanos ou decimais. Campos extras e nulos são rejeitados.
+As sequências devem formar exatamente 1 a N; arrays fora de ordem são aceitos
+e retornados ordenados. Uma máquina pode aparecer em várias etapas.
+
+Obtenha IDs reais cadastrando ou consultando máquinas. Exemplo PowerShell,
+com o banco preparado por `alembic upgrade head` e a API em execução:
+
+```powershell
+$machine = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/machines -ContentType 'application/json; charset=utf-8' -Body '{"name":"Estação A"}'
+$body = @{ name = 'Produto A'; steps = @(
+    @{ sequence = 1; machine_id = $machine.id; processing_time_seconds = 10 }
+    @{ sequence = 2; machine_id = $machine.id; processing_time_seconds = 15 }
+) } | ConvertTo-Json -Depth 4
+$product = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/products -ContentType 'application/json; charset=utf-8' -Body $body
+Invoke-RestMethod http://127.0.0.1:8000/products
+Invoke-RestMethod "http://127.0.0.1:8000/products/$($product.id)"
+```
+
+Erros estruturais retornam `422` com `detail` no formato FastAPI/Pydantic.
+Sequências inválidas retornam `422` com
+`{"detail":"As sequências das etapas devem ser únicas e consecutivas, de 1 a N."}`.
+Máquinas ausentes retornam `422` com
+`{"detail":"Uma ou mais máquinas das etapas não existem.","machine_ids":[9,12]}`;
+os IDs ausentes são ordenados e não repetidos. A estrutura é validada primeiro,
+depois a sequência e por último as referências. IDs de produto inválidos
+retornam `422`; positivos ausentes retornam
+`404` com `{"detail":"Produto não encontrado."}`.
+
+Produto e etapas são gravados na mesma transação; falhas fazem rollback.
+Erros SQLAlchemy retornam `500` genérico, com diagnóstico somente no log.
+Cadastrar uma receita não inicia produção nem cria unidades físicas.
+Não há edição, exclusão, versionamento, paginação ou produtos de demonstração.
+
+## Organização das camadas
 
 `controllers` traduz HTTP e chama `services`; services validam as regras e
 controlam commit/rollback; `repositories` consultam e executam flush.
@@ -156,6 +200,15 @@ Versione model e migration juntos. Quem recebe a revisão pelo Git apenas
 aplica `upgrade head`. Não modifique revisões já integradas.
 A revisão inicial `77be86445d30` cria `machines`, com chave primária inteira
 e nome obrigatório. Foi gerada por autogenerate e revisada.
+
+A revisão `d8e063d489f1`, gerada por autogenerate e revisada, cria `products`
+e `product_steps`, preservando as máquinas existentes. Etapas têm chave
+composta `(product_id, sequence)`, CHECKs de sequência e duração positivas
+e referências a produtos e máquinas. Todas as conexões do engine compartilhado
+(API, Alembic e testes) habilitam `PRAGMA foreign_keys=ON`.
+`uv run --locked alembic downgrade 77be86445d30` remove receitas e produtos,
+preservando máquinas; use somente em banco descartável. Novo upgrade recria
+as tabelas vazias e não recupera receitas removidas.
 
 `uv run --locked alembic downgrade base` remove a tabela e todos os seus dados:
 execute somente em banco descartável. Os testes verificam upgrade, repetição,

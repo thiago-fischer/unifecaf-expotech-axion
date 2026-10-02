@@ -1,10 +1,10 @@
 # SPEC-0003 — Cadastro de produtos e etapas produtivas
 
-> **Status:** Proposta para revisão
+> **Status:** Implementada; revisão de PR pendente
 >
 > **Data:** 29/09/2026
 >
-> **Implementação:** Não iniciada. Este documento especifica a entrega planejada.
+> **Implementação:** Concluída em 02/10/2026, com validação local automatizada.
 
 ## 1. Objetivo
 
@@ -16,9 +16,9 @@ Essa entrega fornecerá os produtos que poderão ser referenciados por futuras
 ordens de produção. Criar um produto apenas registra sua receita; não inicia
 produção, não reserva máquinas e não cria unidades físicas.
 
-As regras e os contratos novos abaixo são propostas para revisão. As decisões
-arquiteturais já aceitas permanecem obrigatórias. Criar esta spec não representa
-aprovação de seu escopo nem implementação da funcionalidade.
+As regras e os contratos abaixo foram implementados por solicitação do responsável.
+As ADRs aceitas permanecem obrigatórias; a revisão por outro integrante no PR
+continua necessária antes do merge.
 
 ## 2. Referências e contexto atual
 
@@ -92,7 +92,7 @@ O tempo pertence à etapa do produto, conforme a SPEC-0001; não à máquina.
 
 A identidade da etapa é o par `(product_id, sequence)`. `product_id` é definido
 internamente pelo produto criado; não é enviado no corpo nem repetido em cada
-etapa da resposta. Não haverá ID independente de etapa nesta proposta.
+etapa da resposta. Não há ID independente de etapa nesta entrega.
 
 Uma máquina pode aparecer em várias etapas, inclusive consecutivas, com tempos
 diferentes. A sequência indica precedência dentro da receita, sem determinar
@@ -210,7 +210,7 @@ ou stack traces ao cliente. Não converter qualquer erro de banco em `422`.
 
 ## 7. Organização
 
-Extensão prevista da estrutura existente, não indicação de arquivos já criados:
+Arquivos adicionados à estrutura existente nesta entrega:
 
 ```text
 backend/
@@ -261,7 +261,7 @@ implementação, encadear a revisão ao head efetivo e revisar a compatibilidade
   A continuidade da sequência é validada pelo service sobre a receita completa.
 - Garantir que as chaves estrangeiras sejam efetivamente habilitadas em cada
   conexão SQLite (`PRAGMA foreign_keys=ON`), na API, no Alembic e nos testes.
-  O `build_engine` atual ainda não configura essa ativação.
+  Essa ativação está implementada no `build_engine` compartilhado.
 - Carregar e retornar etapas ordenadas explicitamente, sem depender da ordem
   física de inserção ou leitura do banco.
 - Preservar máquinas e seus IDs ao aplicar a nova revisão em banco existente.
@@ -274,44 +274,44 @@ implementação, encadear a revisão ao head efetivo e revisar a compatibilidade
 
 ## 9. Critérios de aceite
 
-Todos os itens permanecem pendentes até implementação e verificação. Registrar
+Itens verificados localmente por testes automatizados e revisão das camadas. Registrar
 as evidências no PR; o merge exige revisão de outro integrante.
 
-- [ ] CA-01: OpenAPI apresenta as três rotas, schemas e respostas previstas.
-- [ ] CA-02: Cadastro válido retorna `201`, ID positivo, nome normalizado e
+- [x] CA-01: OpenAPI apresenta as três rotas, schemas e respostas previstas.
+- [x] CA-02: Cadastro válido retorna `201`, ID positivo, nome normalizado e
   etapas completas; uma receita com apenas uma etapa é aceita.
-- [ ] CA-03: Nomes com 1 e 100 caracteres após normalização são aceitos;
+- [x] CA-03: Nomes com 1 e 100 caracteres após normalização são aceitos;
   nomes ausentes, nulos, vazios, só espaços, de tipo errado ou longos retornam `422`.
-- [ ] CA-04: Nomes e receitas repetidos geram produtos com IDs diferentes.
-- [ ] CA-05: `steps` ausente, nulo, vazio ou de tipo incorreto, etapas que não
+- [x] CA-04: Nomes e receitas repetidos geram produtos com IDs diferentes.
+- [x] CA-05: `steps` ausente, nulo, vazio ou de tipo incorreto, etapas que não
   são objetos, campos ausentes e campos extras retornam `422`, sem gravação.
-- [ ] CA-06: Campos inteiros das etapas rejeitam zero, negativos, nulos,
+- [x] CA-06: Campos inteiros das etapas rejeitam zero, negativos, nulos,
   booleanos, strings e decimais, inclusive `1.0`, sem gravar produto ou etapas.
-- [ ] CA-07: Sequências repetidas, iniciadas acima de 1 ou com lacunas retornam
+- [x] CA-07: Sequências repetidas, iniciadas acima de 1 ou com lacunas retornam
   o erro definido; arrays fora de ordem são aceitos e retornados ordenados.
-- [ ] CA-08: Máquinas inexistentes produzem `422` com todos os IDs ausentes
+- [x] CA-08: Máquinas inexistentes produzem `422` com todos os IDs ausentes
   ordenados e sem duplicatas; nenhuma parte do produto é persistida.
-- [ ] CA-09: Uma máquina pode aparecer em várias etapas com tempos distintos.
-- [ ] CA-10: Listagem vazia retorna `[]`; demais listagens ordenam produtos por
+- [x] CA-09: Uma máquina pode aparecer em várias etapas com tempos distintos.
+- [x] CA-10: Listagem vazia retorna `[]`; demais listagens ordenam produtos por
   ID e etapas por sequência, sem perder ou duplicar etapas.
-- [ ] CA-11: Consulta existente retorna a receita completa; ID positivo ausente
+- [x] CA-11: Consulta existente retorna a receita completa; ID positivo ausente
   retorna o `404` previsto; IDs inválidos retornam `422`.
-- [ ] CA-12: Produto e etapas permanecem disponíveis após reiniciar a aplicação
+- [x] CA-12: Produto e etapas permanecem disponíveis após reiniciar a aplicação
   usando o mesmo banco.
-- [ ] CA-13: Falha simulada após flush parcial e falha de commit desfazem toda
+- [x] CA-13: Falha simulada após flush parcial e falha de commit desfazem toda
   a criação, sem deixar produto ou etapas, sem retornar sucesso ou expor detalhes.
-- [ ] CA-14: A nova migration funciona em banco vazio e em banco com máquinas;
+- [x] CA-14: A nova migration funciona em banco vazio e em banco com máquinas;
   repetir upgrade preserva os dados, inclusive produtos já cadastrados.
-- [ ] CA-15: Em banco descartável, downgrade à revisão anterior preserva as
+- [x] CA-15: Em banco descartável, downgrade à revisão anterior preserva as
   máquinas; novo upgrade funciona e `alembic check` não detecta divergências.
-- [ ] CA-16: Testes comprovam a rejeição de referências órfãs, sequência
+- [x] CA-16: Testes comprovam a rejeição de referências órfãs, sequência
   duplicada no mesmo produto e valores não positivos cobertos por CHECKs,
   inclusive em escritas diretas de teste que não passam pelo service.
-- [ ] CA-17: Services validam a receita fora de HTTP; controllers e repositories
+- [x] CA-17: Services validam a receita fora de HTTP; controllers e repositories
   mantêm as responsabilidades das ADRs 004 e 005.
-- [ ] CA-18: A suíte completa, lint e formatação passam; testes usam SQLite
+- [x] CA-18: A suíte completa, lint e formatação passam; testes usam SQLite
   temporário preparado por migrations, sem banco de desenvolvimento ou hardware.
-- [ ] CA-19: README do backend documenta cadastro e consulta com IDs reais de
+- [x] CA-19: README do backend documenta cadastro e consulta com IDs reais de
   máquinas, erros, preparação do banco e comandos de validação.
 
 ## 10. Plano de implementação e validação
@@ -327,7 +327,7 @@ as evidências no PR; o merge exige revisão de outro integrante.
 7. Executar a suíte e as verificações locais; registrar resultados e obter
    revisão no PR, acompanhando o check existente da SPEC-0002.
 
-Comandos existentes para a futura validação, a partir de `backend/`:
+Comandos para reproduzir a validação, a partir de `backend/`:
 
 ```powershell
 uv sync --locked --python 3.12
@@ -343,14 +343,17 @@ exercitar upgrade a partir da revisão de máquinas com dados existentes e
 reversão até ela. A validação manual pode usar `/docs` para cadastrar máquinas,
 obter seus IDs, cadastrar produto e consultar sua receita.
 
-### Evidências desta revisão documental
+### Evidências da implementação
 
-Esta revisão especifica a funcionalidade; os critérios de aceite não foram
-executados nem marcados. A implementação, os testes de produto e a integração
-física continuam pendentes. Os testes planejados validam software com falhas
-simuladas e não comprovam funcionamento da maquete.
+Validação local em 02/10/2026: 129 testes passaram; Ruff lint e formatação
+passaram. Upgrade e alembic check foram executados em banco descartável.
+A suíte cobre contratos HTTP, services fora de HTTP, rollback após flush parcial
+e falha de commit, integridade por SQL direto, reinício, upgrade de banco existente
+e downgrade preservando máquinas. Há dois avisos de depreciação já existentes
+nas dependências de teste. A revisão no PR permanece pendente; não houve
+validação em hardware e os testes não comprovam funcionamento da maquete.
 
-## 11. Decisões propostas para revisão
+## 11. Contratos implementados, sujeitos à revisão no PR
 
 | Ponto | Proposta e justificativa |
 |---|---|

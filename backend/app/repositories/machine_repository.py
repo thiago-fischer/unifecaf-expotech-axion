@@ -22,3 +22,15 @@ class MachineRepository:
         if machine_id > 2**63 - 1:
             return None
         return self.session.get(Machine, machine_id)
+
+    def existing_ids(self, machine_ids: set[int]) -> set[int]:
+        # Query in batches to respect SQLite parameter limits and exclude oversized IDs.
+        ids = sorted(machine_id for machine_id in machine_ids if machine_id <= 2**63 - 1)
+        existing: set[int] = set()
+        for start in range(0, len(ids), 500):
+            existing.update(
+                self.session.scalars(
+                    select(Machine.id).where(Machine.id.in_(ids[start : start + 500]))
+                )
+            )
+        return existing

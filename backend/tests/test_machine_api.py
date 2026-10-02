@@ -112,7 +112,7 @@ def test_persistence_failure(
 
 def test_openapi_contract(client: TestClient) -> None:
     document = client.get("/openapi.json").json()
-    assert set(document["paths"]) == {"/machines", "/machines/{machine_id}"}
+    assert {"/machines", "/machines/{machine_id}"} <= set(document["paths"])
     assert set(document["paths"]["/machines"]) == {"post", "get"}
     assert "201" in document["paths"]["/machines"]["post"]["responses"]
     assert "422" in document["paths"]["/machines"]["post"]["responses"]

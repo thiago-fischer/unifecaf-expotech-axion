@@ -60,7 +60,9 @@ que acessar o banco utilizará uma sessão própria.
 A estrutura do banco será preparada e atualizada explicitamente por migrations,
 sem `create_all()` na inicialização da API. Essas definições estão registradas
 na [ADR-005](adr/0005-sqlalchemy-pydantic-alembic.md) e estão implementadas para
-o catálogo de máquinas da SPEC-0001. Consulte o [backend](../backend/README.md)
+os catálogos de máquinas (SPEC-0001) e produtos com etapas (SPEC-0003).
+Produto e etapas são gravados atomicamente; chaves estrangeiras SQLite são
+habilitadas em todas as conexões. Consulte o [backend](../backend/README.md)
 para instalação, migrations e testes. Os demais componentes continuam planejados.
 
 ### Otimização

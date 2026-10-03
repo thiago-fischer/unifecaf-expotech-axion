@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.config import BACKEND_DIR, Settings
 from app.database.database import build_engine
 from app.main import create_app
+from app.models import Machine, Product, ProductStep
 
 
 @pytest.fixture
@@ -31,7 +32,21 @@ def migrated_database(alembic_config: Config, database_path: Path) -> Path:
 
 
 @pytest.fixture
-def session(migrated_database: Path) -> Iterator[Session]:
+def empty_database(migrated_database: Path) -> Path:
+    """Exercise empty-catalog contracts after applying the complete migration history."""
+    engine = build_engine(Settings())
+    try:
+        with engine.begin() as connection:
+            connection.execute(ProductStep.__table__.delete())
+            connection.execute(Product.__table__.delete())
+            connection.execute(Machine.__table__.delete())
+    finally:
+        engine.dispose()
+    return migrated_database
+
+
+@pytest.fixture
+def session(empty_database: Path) -> Iterator[Session]:
     engine = build_engine(Settings())
     try:
         with sessionmaker(engine, expire_on_commit=False)() as session:
@@ -41,6 +56,6 @@ def session(migrated_database: Path) -> Iterator[Session]:
 
 
 @pytest.fixture
-def client(migrated_database: Path) -> Iterator[TestClient]:
+def client(empty_database: Path) -> Iterator[TestClient]:
     with TestClient(create_app()) as client:
         yield client

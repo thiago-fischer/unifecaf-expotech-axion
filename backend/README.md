@@ -48,8 +48,51 @@ disponibiliza a aplicação e sua fábrica, sem iniciar o Uvicorn.
 
 O padrão é `backend/data/axion.db`, sempre relativo ao módulo, independentemente
 do diretório do terminal. A API não cria tabelas nem aplica migrations ao iniciar.
-Um banco recém-preparado começa vazio. Repetir `alembic upgrade head` preserva
-os registros. Dados persistem após encerrar e reiniciar o servidor.
+Um banco recém-preparado recebe três máquinas e três produtos base pela revisão
+`bb94b7e72eb7`, descrita abaixo. Repetir `alembic upgrade head` preserva
+os registros e não duplica os dados base. Dados persistem após encerrar e
+reiniciar o servidor.
+
+## Dados iniciais
+
+O catálogo inicial usa um contexto de usinagem CNC para permitir consultar
+máquinas e receitas logo após preparar o banco. Esses cadastros fazem parte
+do padrão solicitado para o sistema e ficam em uma migration de dados separada
+das revisões de estrutura, conforme a ADR-005.
+
+Máquinas: **Torno CNC**, **Fresadora CNC** e **Centro de Usinagem CNC**.
+
+| Produto | Etapa 1 | Etapa 2 | Etapa 3 |
+|---|---|---|---|
+| Eixo escalonado | Torno CNC — 10 s | Centro de Usinagem CNC — 15 s | — |
+| Placa de fixação | Fresadora CNC — 15 s | Centro de Usinagem CNC — 20 s | — |
+| Suporte usinado | Torno CNC — 10 s | Fresadora CNC — 15 s | Centro de Usinagem CNC — 20 s |
+
+Os nomes são fictícios e os tempos são valores iniciais para processamento
+simulado. Não representam medições em máquinas reais nem acrescentam usinagem
+física ao MVP. O tempo pertence à etapa do produto; a máquina não possui tempo
+fixo. Produtos base e personalizados pertencem ao mesmo catálogo.
+
+A partir de `backend/`, aplique com:
+
+```powershell
+uv run --locked alembic upgrade head
+```
+
+A revisão também pode ser aplicada a um banco já populado. IDs são atribuídos
+pelo banco, sem reservar 1, 2 ou 3: consulte `GET /machines` e `GET /products`.
+Uma máquina com o mesmo nome é reutilizada; se houver várias, a de menor ID
+é selecionada. Um produto só é reutilizado quando o nome e a receita completa
+(sequências, IDs das máquinas e tempos) coincidirem. Um produto homônimo com
+outra receita é preservado e recebe um novo cadastro base, pois nomes duplicados
+são permitidos. Nenhum registro existente é sobrescrito.
+
+O `downgrade` desta revisão mantém os cadastros e suas referências; reverter
+para `d8e063d489f1` apenas recua a versão do Alembic. Isso evita remover receitas
+personalizadas que utilizem as máquinas base. Reaplicar a revisão reutiliza
+os registros correspondentes. Reversões anteriores que removem tabelas continuam
+removendo seus dados. Esta migration exige conexão com o banco e não suporta
+geração offline por `--sql`.
 
 ## Execução no PyCharm
 
@@ -170,7 +213,8 @@ retornam `422`; positivos ausentes retornam
 Produto e etapas são gravados na mesma transação; falhas fazem rollback.
 Erros SQLAlchemy retornam `500` genérico, com diagnóstico somente no log.
 Cadastrar uma receita não inicia produção nem cria unidades físicas.
-Não há edição, exclusão, versionamento, paginação ou produtos de demonstração.
+Não há edição, exclusão, versionamento ou paginação. Os três produtos base são
+inseridos pela migration de dados iniciais; a API não carrega dados ao iniciar.
 
 ## Organização das camadas
 
@@ -208,9 +252,15 @@ e referências a produtos e máquinas. Todas as conexões do engine compartilhad
 (API, Alembic e testes) habilitam `PRAGMA foreign_keys=ON`.
 `uv run --locked alembic downgrade 77be86445d30` remove receitas e produtos,
 preservando máquinas; use somente em banco descartável. Novo upgrade recria
-as tabelas vazias e não recupera receitas removidas.
+as tabelas; ao alcançar `head`, a revisão de dados iniciais recompõe os produtos
+base. Receitas personalizadas removidas não são recuperadas.
 
-`uv run --locked alembic downgrade base` remove a tabela e todos os seus dados:
+A revisão `bb94b7e72eb7` insere somente os dados iniciais descritos acima, sem
+alterar tabelas. Seu `downgrade` preserva os registros. Para futuras migrations
+exclusivas de dados, use `alembic revision -m "descricao"` e escreva as inserções
+explicitamente: `--autogenerate` detecta mudanças de estrutura, não cadastros.
+
+`uv run --locked alembic downgrade base` remove as tabelas e todos os seus dados:
 execute somente em banco descartável. Os testes verificam upgrade, repetição,
 downgrade e novo upgrade sem acessar o banco de desenvolvimento.
 
@@ -226,6 +276,9 @@ Os testes preparam bancos SQLite temporários por migrations reais e cobrem
 contratos HTTP, regras do service, normalização, limites, duplicidade,
 persistência após reinício, rollback de falhas simuladas e OpenAPI.
 `alembic check` também verifica a coerência entre model e migration.
+Os testes de dados iniciais cobrem receitas, referências, banco já populado,
+repetição e reaplicação sem duplicação. Os testes de contratos de catálogo vazio
+aplicam o histórico completo e limpam os cadastros apenas no banco temporário.
 Nenhum teste depende da maquete; essa validação não comprova integração física.
 
 As versões transitivas atuais emitem dois avisos de depreciação no TestClient

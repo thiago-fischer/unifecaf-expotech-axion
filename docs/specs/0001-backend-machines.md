@@ -123,7 +123,10 @@ API, sem presumir que IDs sejam consecutivos ou indiquem posição na maquete.
 | RN-08 | Consultar um ID válido que não existe deve retornar recurso não encontrado. |
 
 Não estabelecer uma quantidade fixa de máquinas nem inserir máquinas
-automaticamente na inicialização. Um banco recém-preparado começa vazio.
+automaticamente na inicialização. Na entrega original, um banco recém-preparado
+começava vazio. Em complemento solicitado em 02/10/2026, a revisão `bb94b7e72eb7`
+adiciona três máquinas CNC e três produtos base durante a aplicação explícita
+das migrations. Consulte os [dados iniciais do backend](../../backend/README.md#dados-iniciais).
 
 ## 6. Contrato HTTP
 

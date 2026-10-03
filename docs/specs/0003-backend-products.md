@@ -64,9 +64,13 @@ de validação, respostas HTTP ou uma funcionalidade já disponível.
 - Estado operacional das máquinas, execução física e comunicação com firmware.
 - Frontend, autenticação, autorização, Grafana e deploy.
 
-Produtos cadastrados pelo usuário pertencem ao mesmo catálogo; não haverá
-categoria técnica separada para produtos personalizados nem carga automática
-de produtos de demonstração.
+Produtos cadastrados pelo usuário pertencem ao mesmo catálogo, sem categoria
+técnica separada para produtos personalizados. Em complemento posterior a esta
+entrega, por solicitação do responsável em 02/10/2026, a revisão `bb94b7e72eb7`
+passou a inserir três produtos base em contexto CNC. Receitas, tempos simulados
+e comportamento de aplicação/reversão estão no
+[README do backend](../../backend/README.md#dados-iniciais). A carga ocorre pela
+migration explícita, sem inserções na inicialização da API.
 
 ## 4. Conceito das entidades
 

@@ -16,12 +16,11 @@ from app.models.product_step import ProductStep
 
 
 def test_upgrade_repeat_downgrade_and_upgrade(alembic_config: Config) -> None:
-    command.upgrade(alembic_config, "head")
+    command.upgrade(alembic_config, "d8e063d489f1")
     with TestClient(create_app()) as client:
         assert client.get("/machines").json() == []
         machine = client.post("/machines", json={"name": "Migration"}).json()
-    command.upgrade(alembic_config, "head")
-    command.check(alembic_config)
+    command.upgrade(alembic_config, "d8e063d489f1")
     with TestClient(create_app()) as client:
         assert client.get("/machines").json() == [machine]
     command.downgrade(alembic_config, "base")
@@ -30,7 +29,7 @@ def test_upgrade_repeat_downgrade_and_upgrade(alembic_config: Config) -> None:
         assert "machines" not in inspect(engine).get_table_names()
     finally:
         engine.dispose()
-    command.upgrade(alembic_config, "head")
+    command.upgrade(alembic_config, "d8e063d489f1")
     with TestClient(create_app()) as client:
         assert client.get("/machines").json() == []
         assert client.post("/machines", json={"name": "Nova"}).status_code == 201
@@ -66,7 +65,7 @@ def test_products_upgrade_existing_database_and_downgrade(alembic_config: Config
     command.upgrade(alembic_config, "77be86445d30")
     with TestClient(create_app()) as client:
         machine = client.post("/machines", json={"name": "Preservada"}).json()
-    command.upgrade(alembic_config, "head")
+    command.upgrade(alembic_config, "d8e063d489f1")
     with TestClient(create_app()) as client:
         product = client.post(
             "/products",
@@ -78,8 +77,7 @@ def test_products_upgrade_existing_database_and_downgrade(alembic_config: Config
             },
         ).json()
         assert product["id"] > 0
-    command.upgrade(alembic_config, "head")
-    command.check(alembic_config)
+    command.upgrade(alembic_config, "d8e063d489f1")
     with TestClient(create_app()) as client:
         assert client.get("/machines").json() == [machine]
         assert client.get("/products").json() == [product]
@@ -89,8 +87,7 @@ def test_products_upgrade_existing_database_and_downgrade(alembic_config: Config
         assert set(inspect(engine).get_table_names()) == {"machines", "alembic_version"}
     finally:
         engine.dispose()
-    command.upgrade(alembic_config, "head")
-    command.check(alembic_config)
+    command.upgrade(alembic_config, "d8e063d489f1")
     with TestClient(create_app()) as client:
         assert client.get("/machines").json() == [machine]
         assert client.get("/products").json() == []

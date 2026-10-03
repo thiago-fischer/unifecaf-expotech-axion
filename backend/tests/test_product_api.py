@@ -17,7 +17,7 @@ def recipe(machine_id: int = 1) -> dict[str, object]:
     }
 
 
-def test_catalog_and_restart(migrated_database: Path) -> None:
+def test_catalog_and_restart(empty_database: Path) -> None:
     with TestClient(create_app()) as client:
         assert client.get("/products").json() == []
         machine = client.post("/machines", json={"name": "M"}).json()

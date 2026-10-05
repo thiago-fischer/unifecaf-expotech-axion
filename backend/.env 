@@ -1,0 +1,3 @@
+# Exemplo; exporte a variável no terminal. Não há carregamento automático de .env.
+# Caminhos relativos são resolvidos a partir de backend/.
+AXION_DATABASE_PATH=data/axion.db

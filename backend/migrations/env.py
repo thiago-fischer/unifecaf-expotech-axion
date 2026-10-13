@@ -1,9 +1,9 @@
 from alembic import context
 
+import app.models  # noqa: F401 -- registers model metadata
 from app.config import Settings
 from app.database.base import Base
 from app.database.database import build_engine
-from app.models import Machine, Product, ProductStep  # noqa: F401 -- registers model metadata
 
 target_metadata = Base.metadata
 settings = Settings()

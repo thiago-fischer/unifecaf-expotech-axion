@@ -182,9 +182,13 @@ os schemas de entrada e saída, separados dos models de persistência.
 Alembic será utilizado para criar e evoluir a estrutura do banco por migrations
 versionadas, conforme a [ADR-005](adr/0005-sqlalchemy-pydantic-alembic.md).
 Essas escolhas estão implementadas nos catálogos de máquinas (SPEC-0001) e
-produtos com etapas (SPEC-0003), com cadastro, listagem e consulta via API local.
+produtos com etapas (SPEC-0003), além de ordens com produtos e quantidades
+(SPEC-0004), com cadastro, listagem e consulta via API local.
 As receitas validam sequência, duração e existência das máquinas e são gravadas
-atomicamente, sem iniciar produção. Consulte o [backend](../backend/README.md).
+atomicamente, sem iniciar produção. As ordens validam produtos existentes,
+quantidades positivas e ausência de duplicatas; ordem e itens são persistidos
+na mesma transação. Criar uma ordem apenas registra demanda, sem otimizar,
+reservar máquinas ou criar unidades físicas. Consulte o [backend](../backend/README.md).
 As demais funcionalidades permanecem planejadas.
 
 As tecnologias específicas do frontend e a configuração definitiva do firmware

@@ -1,8 +1,10 @@
 # SPEC-0004 — Criação de ordens de produção
 
-> **Status:** Rascunho para discussão; não aprovado para implementação
+> **Status:** Implementada; validação na CI e revisão de PR pendentes
 >
 > **Data:** 03/10/2026
+>
+> **Implementação:** 13/10/2026, por solicitação do responsável.
 
 ## 1. Objetivo
 
@@ -12,7 +14,8 @@ e suas respectivas quantidades.
 Uma ordem registra a demanda solicitada. Seu cadastro não otimiza a produção,
 não reserva máquinas, não cria unidades físicas e não inicia a execução na
 maquete. O planejamento da produção será tratado em uma spec posterior, após
-aprovação do modelo de ordens.
+revisão do modelo de ordens. A solicitação do responsável autorizou esta
+implementação; a revisão por outro integrante permanece necessária antes do merge.
 
 ## 2. Referências e contexto
 
@@ -95,7 +98,7 @@ aparecer no máximo uma vez na mesma ordem; a quantidade deve ser informada em
 um único item. A ordem de entrada dos itens não representa prioridade nem
 sequência de fabricação.
 
-Esta proposta não adiciona status ou horário de criação: nenhum fluxo de
+Esta implementação não adiciona status ou horário de criação: nenhum fluxo de
 execução ou regra que dependa desses campos foi definido nas specs anteriores.
 Também não copia a receita para a ordem. Como a SPEC-0003 não oferece edição ou
 exclusão de produtos, o item referencia o produto cadastrado; caso edição ou
@@ -255,7 +258,7 @@ sem alterar migrations já integradas. A migration deve criar:
   pelo service antes da persistência.
 - Não permitir que a exclusão de um produto referenciado invalide uma ordem.
   Não adicionar endpoint de exclusão nesta entrega.
-- Produto e itens devem ser escritos atomicamente. Repositories podem fazer
+- Ordem e itens devem ser escritos atomicamente. Repositories podem fazer
   `flush`, mas somente o service controla commit/rollback, conforme a ADR-005.
 - API e Alembic usam `AXION_DATABASE_PATH` e as migrations são aplicadas
   explicitamente por `alembic upgrade head`. Não usar `create_all()` na
@@ -266,36 +269,48 @@ sem alterar migrations já integradas. A migration deve criar:
 
 ## 9. Critérios de aceite
 
-Todos os itens permanecem desmarcados até implementação e validação. Registrar
-as evidências no PR; o merge exige revisão de outro integrante.
+Marcar os itens somente após implementação e validação. As evidências locais
+estão na seção 10; o merge exige CI e revisão de outro integrante.
 
-- [ ] CA-01: OpenAPI apresenta `POST /orders`, `GET /orders` e
+- [x] CA-01: OpenAPI apresenta `POST /orders`, `GET /orders` e
   `GET /orders/{order_id}` com schemas e respostas previstos.
-- [ ] CA-02: Uma ordem válida com um ou mais produtos existentes retorna `201`,
+- [x] CA-02: Uma ordem válida com um ou mais produtos existentes retorna `201`,
   ID positivo e todos os itens com suas quantidades.
-- [ ] CA-03: Repetir a mesma demanda cria ordens com IDs distintos.
-- [ ] CA-04: Corpo ausente, `items` ausente, nulo, vazio ou de tipo incorreto,
+- [x] CA-03: Repetir a mesma demanda cria ordens com IDs distintos.
+- [x] CA-04: Corpo ausente, `items` ausente, nulo, vazio ou de tipo incorreto,
   itens que não são objetos e campos ausentes, extras ou nulos retornam `422`.
-- [ ] CA-05: `product_id` e `quantity` rejeitam zero, negativos, booleanos,
+- [x] CA-05: `product_id` e `quantity` rejeitam zero, negativos, booleanos,
   strings e decimais, inclusive `1.0`, sem gravar ordem ou itens.
-- [ ] CA-06: Produto repetido na mesma ordem retorna o erro definido e não
+- [x] CA-06: Produto repetido na mesma ordem retorna o erro definido e não
   persiste registros.
-- [ ] CA-07: Produtos inexistentes retornam `422` com todos os IDs ausentes,
+- [x] CA-07: Produtos inexistentes retornam `422` com todos os IDs ausentes,
   ordenados e sem duplicatas; nenhuma parte da ordem é persistida.
-- [ ] CA-08: Listagem vazia retorna `[]`; ordens são listadas por ID e itens
+- [x] CA-08: Listagem vazia retorna `[]`; ordens são listadas por ID e itens
   por `product_id`, sem perda ou duplicação.
-- [ ] CA-09: Consultar ID positivo inexistente retorna `404`; IDs inválidos
+- [x] CA-09: Consultar ID positivo inexistente retorna `404`; IDs inválidos
   retornam `422`.
-- [ ] CA-10: Falhas durante gravação ou commit fazem rollback da ordem e de
+- [x] CA-10: Falhas durante gravação ou commit fazem rollback da ordem e de
   todos os itens, sem expor detalhes internos na resposta.
-- [ ] CA-11: Migrations upgrade/downgrade funcionam em banco descartável,
+- [x] CA-11: Migrations upgrade/downgrade funcionam em banco descartável,
   preservando produtos e receitas no upgrade.
 - [ ] CA-12: A suíte completa do backend passa localmente e na CI.
-- [ ] CA-13: README do backend documenta criação e consulta de ordens, erros,
+- [x] CA-13: README do backend documenta criação e consulta de ordens, erros,
   migrations e comandos de validação.
 
 ## 10. Implementação e validação
 
-Esta spec é somente um rascunho documental. Nenhum endpoint, model, migration,
-regra ou critério acima deve ser tratado como implementado ou aprovado até a
-revisão do escopo e a validação correspondente.
+Implementados `POST /orders`, `GET /orders` e `GET /orders/{order_id}`, com
+models, schemas, repository e service separados. A revisão Alembic
+`f47c9a2e8106` sucede `bb94b7e72eb7`, cria ordens e itens e preserva o catálogo.
+Nenhuma revisão previamente integrada foi alterada.
+
+Os testes em `test_order_api.py`, `test_order_service.py`, `test_migrations.py`
+e `test_main.py` cobrem contratos, regras fora de HTTP, persistência, rollback,
+restrições SQLite, migrations e carregamento das rotas sem iniciar o servidor.
+A validação utiliza bancos temporários e falhas simuladas, sem hardware real.
+
+Comandos locais em `backend/`: `uv run --locked pytest -q`,
+`uv run --locked ruff check .` e `uv run --locked ruff format --check .`.
+O teste de migrations executa também `alembic check` em banco descartável.
+Validação local: 203 testes passaram; Ruff (lint e formatação) passou.
+O resultado da CI e a revisão por outro integrante devem ser registrados no PR.

@@ -18,7 +18,8 @@ def test_import_does_not_start_server_or_create_database(database_path: Path) ->
             "guard.start(); "
             "from app.main import app, create_app; "
             "assert callable(create_app); "
-            "assert '/machines' in app.openapi()['paths']",
+            "assert {'/machines', '/products', '/orders', '/orders/{order_id}'} "
+            "<= set(app.openapi()['paths'])",
         ],
         cwd=BACKEND_DIR,
         capture_output=True,

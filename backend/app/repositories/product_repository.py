@@ -35,3 +35,15 @@ class ProductRepository:
         return self.session.scalar(
             select(Product).options(selectinload(Product.steps)).where(Product.id == product_id)
         )
+
+    def existing_ids(self, product_ids: set[int]) -> set[int]:
+        # Respect SQLite parameter limits and exclude IDs outside its integer range.
+        ids = sorted(product_id for product_id in product_ids if product_id <= 2**63 - 1)
+        existing: set[int] = set()
+        for start in range(0, len(ids), 500):
+            existing.update(
+                self.session.scalars(
+                    select(Product.id).where(Product.id.in_(ids[start : start + 500]))
+                )
+            )
+        return existing

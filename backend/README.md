@@ -1,8 +1,9 @@
 # Backend do Axion
 
-Implementação das SPEC-0001 e SPEC-0003: cadastro, listagem e consulta de máquinas
-e produtos com etapas produtivas. Execução local, sem autenticação e sem
-comunicação com hardware. Ordens, otimização e estado operacional permanecem planejados.
+Implementação das SPEC-0001, SPEC-0003 e SPEC-0004: cadastro, listagem e consulta
+de máquinas, produtos com etapas produtivas e ordens com produtos e quantidades.
+Execução local, sem autenticação e sem comunicação com hardware. Otimização,
+execução das ordens e estado operacional permanecem planejados.
 
 ## Ferramentas
 
@@ -216,6 +217,53 @@ Cadastrar uma receita não inicia produção nem cria unidades físicas.
 Não há edição, exclusão, versionamento ou paginação. Os três produtos base são
 inseridos pela migration de dados iniciais; a API não carrega dados ao iniciar.
 
+## Ordens de produção (SPEC-0004)
+
+| Operação | Resultado |
+|---|---|
+| `POST /orders` | `201`, ordem com ID gerado pelo banco e todos os itens |
+| `GET /orders` | `200`, ordens por ID; `[]` se vazio |
+| `GET /orders/{order_id}` | `200`, ordem completa; `404` se inexistente |
+
+O corpo contém somente `items`, uma lista não vazia de objetos com `product_id`
+e `quantity`. Ambos exigem inteiros JSON positivos, sem coerção de strings,
+booleanos ou decimais (inclusive `1.0`). Campos ausentes, nulos ou extras são
+rejeitados. Cada produto deve existir e aparecer uma única vez na ordem.
+A resposta contém somente `id` e `items`; cada item contém `product_id` e
+`quantity`, ordenado por `product_id`. Essa ordem não indica prioridade de
+fabricação. Repetir um POST válido cria uma nova ordem com ID próprio.
+
+Exemplo PowerShell, com migrations aplicadas e a API em execução:
+
+```powershell
+$products = @(Invoke-RestMethod http://127.0.0.1:8000/products)
+$body = @{ items = @(
+    @{ product_id = $products[0].id; quantity = 3 }
+) } | ConvertTo-Json -Depth 4
+$order = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/orders -ContentType 'application/json; charset=utf-8' -Body $body
+Invoke-RestMethod http://127.0.0.1:8000/orders
+Invoke-RestMethod "http://127.0.0.1:8000/orders/$($order.id)"
+```
+
+O exemplo usa um produto do catálogo inicial, sem presumir seu ID.
+Erros de estrutura e tipos retornam `422` no formato FastAPI/Pydantic.
+Depois da estrutura, valida-se duplicidade e, por último, existência dos produtos:
+
+- Repetidos: `422`, `{"detail":"Cada produto pode aparecer somente uma vez na ordem."}`.
+- Ausentes: `422`, `{"detail":"Um ou mais produtos da ordem não existem.","product_ids":[9,12]}`,
+  com todos os IDs ausentes em ordem crescente, sem repetição.
+- ID de caminho inválido: `422`; positivo inexistente: `404`,
+  `{"detail":"Ordem de produção não encontrada."}`.
+- Falha SQLAlchemy: `500`, `{"detail":"Erro interno do servidor."}`, com detalhes
+  somente no log e rollback de toda a gravação.
+
+O service confirma ordem e itens na mesma transação antes de retornar sucesso.
+Produtos e receitas permanecem intactos. A ordem registra apenas demanda:
+não programa produção, não reserva máquinas nem cria unidades físicas.
+Não há edição, exclusão, cancelamento, status, horário de criação ou paginação.
+As receitas são referenciadas, sem cópia; sua futura edição exigirá definir a
+preservação do histórico das ordens.
+
 ## Organização das camadas
 
 `controllers` traduz HTTP e chama `services`; services validam as regras e
@@ -260,6 +308,17 @@ alterar tabelas. Seu `downgrade` preserva os registros. Para futuras migrations
 exclusivas de dados, use `alembic revision -m "descricao"` e escreva as inserções
 explicitamente: `--autogenerate` detecta mudanças de estrutura, não cadastros.
 
+A revisão `f47c9a2e8106`, após `bb94b7e72eb7`, cria `production_orders` e
+`production_order_items`. Itens possuem chave composta `(order_id, product_id)`,
+referências à ordem e ao produto, quantidade obrigatória e CHECK `quantity > 0`.
+As referências impedem excluir produtos utilizados por ordens. A exigência de
+ao menos um item é validada pelo service. A migration foi escrita e revisada
+explicitamente; `alembic check` verifica sua coerência com os models.
+`uv run --locked alembic upgrade head` aplica a nova revisão preservando o catálogo.
+`uv run --locked alembic downgrade bb94b7e72eb7` remove primeiro os itens e
+depois as ordens, preservando máquinas, produtos e receitas. Use downgrade
+somente em banco descartável: as ordens removidas não são recuperadas no upgrade.
+
 `uv run --locked alembic downgrade base` remove as tabelas e todos os seus dados:
 execute somente em banco descartável. Os testes verificam upgrade, repetição,
 downgrade e novo upgrade sem acessar o banco de desenvolvimento.
@@ -280,6 +339,12 @@ Os testes de dados iniciais cobrem receitas, referências, banco já populado,
 repetição e reaplicação sem duplicação. Os testes de contratos de catálogo vazio
 aplicam o histórico completo e limpam os cadastros apenas no banco temporário.
 Nenhum teste depende da maquete; essa validação não comprova integração física.
+
+Os testes de ordens cobrem tipos estritos, duplicidade, referências ausentes,
+ordenação, repetição de demanda, reinício da aplicação, OpenAPI e revalidação
+do service fora de HTTP. Falhas simuladas após gravação parcial e no commit
+verificam rollback de ordem e itens. Testes de migration validam restrições
+diretamente no SQLite, preservação do catálogo e upgrade/downgrade/reaplicação.
 
 As versões transitivas atuais emitem dois avisos de depreciação no TestClient
 (HTTPX e alias BlockingPortal do AnyIO). Eles não impedem os testes e não são

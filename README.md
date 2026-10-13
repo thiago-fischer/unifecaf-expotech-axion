@@ -5,8 +5,10 @@ O **Axion** é uma plataforma para planejamento, otimização e acompanhamento d
 O sistema tem como objetivo cadastrar produtos, criar ordens de produção, otimizar a sequência das operações e acompanhar a execução física em uma maquete automatizada.
 
 **Implementado:** backend local com cadastro, listagem e consulta de máquinas
-e produtos com receitas completas, SQLite e migrations Alembic, conforme as
-SPEC-0001 e SPEC-0003. Veja os comandos de instalação,
+e produtos com receitas completas, além de ordens com produtos e quantidades,
+SQLite e migrations Alembic, conforme as SPEC-0001, SPEC-0003 e SPEC-0004.
+O cadastro de ordens registra demanda; planejamento e execução continuam previstos.
+Veja os comandos de instalação,
 execução e testes no [README do backend](backend/README.md).
 As demais funcionalidades descritas abaixo permanecem planejadas.
 

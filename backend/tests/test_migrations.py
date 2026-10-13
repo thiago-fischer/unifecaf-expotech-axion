@@ -145,3 +145,89 @@ def test_foreign_keys_on_each_connection(migrated_database: Path) -> None:
             assert second.scalar(text("PRAGMA foreign_keys")) == 1
     finally:
         engine.dispose()
+
+
+def test_orders_upgrade_preserves_catalog_and_downgrade(alembic_config: Config) -> None:
+    command.upgrade(alembic_config, "bb94b7e72eb7")
+    with TestClient(create_app()) as client:
+        machines = client.get("/machines").json()
+        products = client.get("/products").json()
+    command.upgrade(alembic_config, "head")
+    command.check(alembic_config)
+    with TestClient(create_app()) as client:
+        assert client.get("/machines").json() == machines
+        assert client.get("/products").json() == products
+        assert client.get("/orders").json() == []
+        order = client.post(
+            "/orders", json={"items": [{"product_id": products[0]["id"], "quantity": 3}]}
+        ).json()
+        assert order["id"] > 0
+    command.upgrade(alembic_config, "head")
+    with TestClient(create_app()) as client:
+        assert client.get("/orders").json() == [order]
+    command.downgrade(alembic_config, "bb94b7e72eb7")
+    engine = build_engine(Settings())
+    try:
+        assert set(inspect(engine).get_table_names()) == {
+            "machines",
+            "products",
+            "product_steps",
+            "alembic_version",
+        }
+    finally:
+        engine.dispose()
+    with TestClient(create_app()) as client:
+        assert client.get("/machines").json() == machines
+        assert client.get("/products").json() == products
+    command.upgrade(alembic_config, "head")
+    with TestClient(create_app()) as client:
+        assert client.get("/orders").json() == []
+        assert client.get("/products").json() == products
+    command.check(alembic_config)
+    command.downgrade(alembic_config, "base")
+    command.upgrade(alembic_config, "head")
+    command.check(alembic_config)
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {},
+        {"order_id": 999},
+        {"product_id": 999},
+        {"quantity": 0},
+        {"quantity": -1},
+        {"quantity": None},
+        {"order_id": None},
+        {"product_id": None},
+    ],
+)
+def test_order_item_database_constraints(session: Session, changes: dict[str, int | None]) -> None:
+    from app.models.production_order import ProductionOrder, ProductionOrderItem
+
+    product = Product(name="P")
+    order = ProductionOrder()
+    session.add_all([product, order])
+    session.flush()
+    values = {"order_id": order.id, "product_id": product.id, "quantity": 2}
+    session.add(ProductionOrderItem(**values))
+    # A free composite key ensures quantity checks cannot pass via duplicate-key errors.
+    other_order = ProductionOrder()
+    session.add(other_order)
+    session.commit()
+    candidate = {**values, **changes}
+    if "quantity" in changes:
+        candidate["order_id"] = other_order.id
+    with pytest.raises(IntegrityError):
+        session.execute(
+            text(
+                "INSERT INTO production_order_items (order_id, product_id, quantity) "
+                "VALUES (:order_id, :product_id, :quantity)"
+            ),
+            candidate,
+        )
+    session.rollback()
+    for table, identifier in [("products", product.id), ("production_orders", order.id)]:
+        with pytest.raises(IntegrityError):
+            session.execute(text(f"DELETE FROM {table} WHERE id = :id"), {"id": identifier})
+        session.rollback()

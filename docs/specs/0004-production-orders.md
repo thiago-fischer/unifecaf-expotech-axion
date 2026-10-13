@@ -1,6 +1,6 @@
 # SPEC-0004 — Criação de ordens de produção
 
-> **Status:** Implementada; validação na CI e revisão de PR pendentes
+> **Status:** Implementada e validada localmente e na CI; revisão de PR pendente
 >
 > **Data:** 03/10/2026
 >
@@ -293,7 +293,7 @@ estão na seção 10; o merge exige CI e revisão de outro integrante.
   todos os itens, sem expor detalhes internos na resposta.
 - [x] CA-11: Migrations upgrade/downgrade funcionam em banco descartável,
   preservando produtos e receitas no upgrade.
-- [ ] CA-12: A suíte completa do backend passa localmente e na CI.
+- [x] CA-12: A suíte completa do backend passa localmente e na CI.
 - [x] CA-13: README do backend documenta criação e consulta de ordens, erros,
   migrations e comandos de validação.
 
@@ -313,4 +313,7 @@ Comandos locais em `backend/`: `uv run --locked pytest -q`,
 `uv run --locked ruff check .` e `uv run --locked ruff format --check .`.
 O teste de migrations executa também `alembic check` em banco descartável.
 Validação local: 203 testes passaram; Ruff (lint e formatação) passou.
-O resultado da CI e a revisão por outro integrante devem ser registrados no PR.
+A CI aprovou o commit de implementação `6e9a6c4` no check `Tests (Python 3.12)`
+([execução](https://github.com/thiago-fischer/unifecaf-expotech-axion/actions/runs/38476809424)).
+O [PR #7](https://github.com/thiago-fischer/unifecaf-expotech-axion/pull/7)
+aguarda revisão por outro integrante antes do merge.

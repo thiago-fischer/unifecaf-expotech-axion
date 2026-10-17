@@ -1,13 +1,14 @@
 # Backend do Axion
 
-Implementação das SPEC-0001, SPEC-0003 e SPEC-0004: cadastro, listagem e consulta
+Implementação das SPEC-0001, SPEC-0003, SPEC-0004 e SPEC-0005: cadastro, listagem e consulta
 de máquinas, produtos com etapas produtivas e ordens com produtos e quantidades.
-Execução local, sem autenticação e sem comunicação com hardware. Otimização,
-execução das ordens e estado operacional permanecem planejados.
+Inclui planejamento transitório com AG obrigatório e certificação CP-SAT.
+Execução local, sem autenticação e sem comunicação com hardware. Execução das
+ordens e estado operacional permanecem planejados.
 
 ## Ferramentas
 
-Python **3.12 ou superior** e **uv** para instalar, resolver e executar o projeto.
+Python **3.12–3.14** e **uv** para instalar, resolver e executar o projeto.
 Instale o uv conforme a [documentação oficial](https://docs.astral.sh/uv/getting-started/installation/).
 `pyproject.toml` declara as faixas compatíveis; `uv.lock` registra as versões
 exatas, inclusive dependências transitivas. Use `--locked` para reproduzi-las.
@@ -18,6 +19,11 @@ e HTTPX 0.28.1; lint e formatação usam Ruff 0.16.8. A escolha de uv mantém
 ambiente e dependências isolados e reproduzíveis; pytest e Ruff oferecem uma
 base pequena para validar o módulo. Isso concretiza as ADRs aceitas, sem
 introduzir novas decisões sobre frontend, cloud ou hardware.
+
+O planejador utiliza OR-Tools **9.15.6755**, fixado no pacote local
+`../optimizer` (`axion-optimizer` 0.1.0). Clone o monorepo completo antes de
+`uv sync`; não há alteração de `sys.path` nem instalação manual de pacote local.
+O ambiente validado usa Python 3.12.13. Consulte o [README do núcleo](../optimizer/README.md).
 
 ## Instalação e execução
 
@@ -264,6 +270,73 @@ Não há edição, exclusão, cancelamento, status, horário de criação ou pag
 As receitas são referenciadas, sem cópia; sua futura edição exigirá definir a
 preservação do histórico das ordens.
 
+## Planejamento de uma ordem (SPEC-0005)
+
+`POST /orders/{order_id}/plan` exige corpo JSON; `{}` usa os padrões:
+
+```json
+{"optimality_policy":"require_proof","ga_time_limit_seconds":3,"certification_time_limit_seconds":7,"seed":0}
+```
+
+Exemplo PowerShell, usando uma ordem existente:
+
+```powershell
+$orders = @(Invoke-RestMethod http://127.0.0.1:8000/orders)
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/orders/$($orders[0].id)/plan" -ContentType 'application/json' -Body '{}'
+```
+
+| Resultado | Resposta |
+|---|---|
+| Ótimo comprovado | `200`, `quality: optimal` |
+| Sem prova, política padrão | `409`, `code: optimality_not_proven`, envelope completo em `result` |
+| Sem prova, `optimality_policy: allow_feasible` | `200`, `quality: feasible` |
+| Ordem ausente | `404` |
+| Entrada/ID ou limites inválidos | `422` |
+| Busca já ativa no processo | `503`, `code: planning_busy`, `Retry-After: 1` |
+| Snapshot inconsistente, falha do solver/validação | `500` genérico, diagnóstico no log |
+
+Os tempos e a semente exigem inteiros JSON estritos; extras e nulos são rejeitados.
+Cada orçamento aceita 1–20 s, soma até 30 s; semente de 0 a 2.147.483.647.
+Limites por ordem: 100 unidades, 1.000 operações, 50 máquinas usadas e horizonte
+de 1.000.000.000 s. O erro lista todas as violações, ordenadas por `field`, em
+`violations: [{field, actual, limit}]`, com `code: planning_limits_exceeded`.
+Esses limites não mudam o cadastro de ordens. Valida-se entrada, existência,
+integridade/limites e, por último, capacidade de busca.
+
+O envelope inclui snapshot de produtos/receitas/máquinas, todas as operações,
+dependências e esperas, métricas por máquina, gaps e proveniência separada do
+AG e do CP-SAT. Nomes repetidos e IDs esparsos são aceitos. Agrupe `operations`
+por `machine_id` para Gantt e filtre por `unit_id` para acompanhar uma unidade.
+Os intervalos são `[start_seconds, end_seconds)`; o array mantém operações
+simultâneas e é ordenado por início, máquina, produto, unidade e etapa.
+`selected_source` atribui melhorias ao CP-SAT e conserva o AG em empate.
+
+Cada chamada copia as receitas atuais para um snapshot imutável e fecha a
+sessão antes da busca. Não modifica ordem/catálogo, não cria unidades físicas,
+não reserva máquinas nem persiste planos; não exige nova migration.
+`execution_ready` é sempre `false`. A prova se refere ao modelo simplificado,
+sem transporte, setup, buffers limitados ou disputa pela mesa.
+
+Uma busca ativa por **processo**, sem fila. O limite usa trava compartilhada
+inclusive entre instâncias de aplicação no mesmo processo e é liberado em
+sucesso/falha. Múltiplos workers/processos multiplicam o consumo; reavalie CPU
+e memória antes de aumentar workers. Use inicialmente um processo da API.
+Rotas síncronas de catálogo continuam atendendo pelo pool de threads, mas
+podem sofrer contenção de CPU/GIL durante o AG.
+
+Os orçamentos limitam busca, não latência HTTP total. Há custo adicional de
+snapshot, referências, modelagem, validação e serialização. O AG verifica o
+prazo entre avaliações; uma avaliação em curso pode excedê-lo. No experimento
+de fronteira, o maior excedente observado foi 0,032 s no AG e 0,032 s na fase
+de certificação, que inclui criação do modelo. Não são garantias para outro
+hardware. Veja [evidências completas](../docs/planning-validation.md).
+
+Para repetir as medições HTTP reais com banco temporário, a partir de `backend/`:
+
+```powershell
+uv run --locked python -m scripts.measure_planning --output ../docs/examples/planning-http-benchmark.json
+```
+
 ## Organização das camadas
 
 `controllers` traduz HTTP e chama `services`; services validam as regras e
@@ -327,6 +400,7 @@ downgrade e novo upgrade sem acessar o banco de desenvolvimento.
 
 ```powershell
 uv run --locked pytest -q
+uv run --locked pytest -q ../optimizer/tests
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 ```
@@ -350,6 +424,11 @@ As versões transitivas atuais emitem dois avisos de depreciação no TestClient
 (HTTPX e alias BlockingPortal do AnyIO). Eles não impedem os testes e não são
 suprimidos; a atualização das dependências de teste pode ser feita separadamente.
 
+O planejamento acrescenta testes de schemas/HTTP, concorrência, ausência de
+consultas durante busca, sessão devolvida ao pool, erros e liberação da trava,
+resposta transitória e validação do JSON documental. O núcleo tem suíte própria
+com solver real, estados controlados, oráculo de ordens por máquina e invariantes.
+
 ## Integração contínua
 
 O workflow `Backend CI`, em `.github/workflows/backend-tests.yml`, executa a
@@ -363,6 +442,9 @@ validação local:
 ```powershell
 uv run --locked pytest -q
 ```
+
+A CI também executa a suíte de `optimizer/`, lint/formatação dos dois módulos
+e instalação/testes do núcleo em ambiente independente pelo seu lockfile.
 
 A suíte é predominantemente de integração: usa bancos SQLite temporários,
 migrations Alembic, `TestClient` e um subprocesso controlado. Ela não acessa o

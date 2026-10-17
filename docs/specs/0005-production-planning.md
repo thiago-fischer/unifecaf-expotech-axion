@@ -1,6 +1,6 @@
 # SPEC-0005 — Otimização e cronograma da produção
 
-> **Status:** Aprovada; implementação pendente.
+> **Status:** Aprovada; implementada, aguardando revisão de outro integrante.
 >
 > **Data:** 17/10/2026
 >
@@ -461,7 +461,7 @@ backend/app/
   schemas/planning_schema.py
 ```
 
-O diretório ainda não existe. `optimizer/` segue a referência da ADR-003 aceita;
+O diretório foi criado nesta implementação. `optimizer/` segue a referência da ADR-003 aceita;
 `optimization/` aparece como desenho alternativo no README/CONTRIBUTING e não
 deve motivar dois componentes. Formalizar empacotamento local em `optimizer/`,
 com import `axion_optimizer`, dependência local explícita do backend e lockfile
@@ -480,59 +480,61 @@ usar `create_all()`. Não adicionar implicitamente execução ou status à ordem
 
 ## 9. Testes e critérios de aceite
 
-Todos os itens permanecem pendentes até implementação e execução dos testes.
+Os critérios abaixo são acompanhados pelos testes e medições em
+[Validação da SPEC-0005](../planning-validation.md). A revisão humana antes
+do merge continua obrigatória; a ADR-006 permanece Proposta.
 
-- [ ] CA-01: Máquinas/produtos novos, IDs não consecutivos, nomes repetidos e
+- [x] CA-01: Máquinas/produtos novos, IDs não consecutivos, nomes repetidos e
   quantidades variadas funcionam sem alterar código, reiniciar ou retreinar.
-- [ ] CA-02: Receitas de tamanhos diferentes, ordens distintas de máquinas,
+- [x] CA-02: Receitas de tamanhos diferentes, ordens distintas de máquinas,
   revisitas e etapas consecutivas na mesma máquina são respeitadas.
-- [ ] CA-03: Duas operações independentes de 10 s em máquinas distintas
+- [x] CA-03: Duas operações independentes de 10 s em máquinas distintas
   terminam em 10 s; na mesma máquina, terminam em 20 s.
-- [ ] CA-04: Duas unidades da receita M1/10 → M2/10 terminam em 30 s,
+- [x] CA-04: Duas unidades da receita M1/10 → M2/10 terminam em 30 s,
   demonstrando que as quantidades não viram lote indivisível de 40 s.
-- [ ] CA-05: O decodificador preenche lacunas: U1=M1/10 → M2/5,
+- [x] CA-05: O decodificador preenche lacunas: U1=M1/10 → M2/5,
   U2=M2/5, prioridade U1.s1,U1.s2,U2.s1 resulta em U2.s1 de 0–5,
   U1.s2 de 10–15 e makespan 15; o acréscimo somente ao fim daria 20.
-- [ ] CA-06: AG executa obrigatoriamente, preserva referências e elitismo;
+- [x] CA-06: AG executa obrigatoriamente, preserva referências e elitismo;
   operadores mantêm permutação válida, quantidades e todas as operações.
-- [ ] CA-07: Uma operação e espaços pequenos não causam falha em OX/swap;
+- [x] CA-07: Uma operação e espaços pequenos não causam falha em OX/swap;
   o melhor inicial é registrado separadamente do melhor final.
-- [ ] CA-08: Certificador considera todo o modelo e usa AG como sugestão/limite,
+- [x] CA-08: Certificador considera todo o modelo e usa AG como sugestão/limite,
   não como restrição indevida às programações que pode explorar.
-- [ ] CA-09: Caso controlado em que CP-SAT melhora o AG retorna a melhoria com
+- [x] CA-09: Caso controlado em que CP-SAT melhora o AG retorna a melhoria com
   origem `cp_sat`; empate mantém AG; métricas de ambos permanecem acessíveis.
-- [ ] CA-10: `OPTIMAL`, `FEASIBLE`, `UNKNOWN`, `INFEASIBLE` e `MODEL_INVALID`
+- [x] CA-10: `OPTIMAL`, `FEASIBLE`, `UNKNOWN`, `INFEASIBLE` e `MODEL_INVALID`
   têm tratamentos testados com adaptador controlado, sem depender de timeout
   aleatório para cobrir cada ramo. Testar também integração real do solver.
-- [ ] CA-11: Limites, gap, prova e melhoria são coerentes; arredondamento
+- [x] CA-11: Limites, gap, prova e melhoria são coerentes; arredondamento
   percentual não produz falsa certificação; tolerâncias de gap são zero.
-- [ ] CA-12: Sem prova, política padrão retorna `409` com candidato válido;
+- [x] CA-12: Sem prova, política padrão retorna `409` com candidato válido;
   `allow_feasible` retorna `200` com qualidade `feasible`. Com prova, `200`.
-- [ ] CA-13: Validador rejeita operação faltante/duplicada, troca de máquina,
+- [x] CA-13: Validador rejeita operação faltante/duplicada, troca de máquina,
   duração alterada, inversão de etapa, sobreposição e métricas adulteradas.
-- [ ] CA-14: O cronograma de 65 s do estudo é válido e casos históricos podem
+- [x] CA-14: O cronograma de 65 s do estudo é válido e casos históricos podem
   atingir/provar 65 s e 175 s no mesmo modelo, sem exigir mesmas barras ou IDs.
-- [ ] CA-15: Casos pequenos personalizados com até oito operações são
+- [x] CA-15: Casos pequenos personalizados com até oito operações são
   comparados com um oráculo independente que enumera ordens por máquina,
   elimina ciclos com precedências e calcula inícios mais cedo em cada DAG.
   Não usar somente permutações do decodificador como prova do ótimo geral.
-- [ ] CA-16: Testes gerados com sementes fixas verificam invariantes em receitas
+- [x] CA-16: Testes gerados com sementes fixas verificam invariantes em receitas
   variadas, máquinas esparsas, revisitas e quantidades; makespan do AG é menor
   ou igual ao da referência oficial e limites inferiores não ultrapassam o
   ótimo do oráculo.
-- [ ] CA-17: Mesma entrada e semente, com limite fixo de gerações e sem corte
+- [x] CA-17: Mesma entrada e semente, com limite fixo de gerações e sem corte
   por relógio no teste, reproduzem o AG. Não exigir barras idênticas sob timeout
   ou versões diferentes do solver; registrar versões, parâmetros e hardware.
-- [ ] CA-18: Contagens/H são limitados antes da expansão; testar fronteiras e
+- [x] CA-18: Contagens/H são limitados antes da expansão; testar fronteiras e
   excesso, parâmetros estritos e concorrência com liberação após falhas.
-- [ ] CA-19: Resposta pode ser agrupada por máquina e filtrada por unidade,
+- [x] CA-19: Resposta pode ser agrupada por máquina e filtrada por unidade,
   com todas as dependências, esperas e durações e ordenação determinística.
   Validar também o exemplo JSON contra o schema implementado.
-- [ ] CA-20: API cobre `404`, `422`, `409`, `503` e `500`; não grava unidades
+- [x] CA-20: API cobre `404`, `422`, `409`, `503` e `500`; não grava unidades
   físicas, planos ou estados de execução e não mantém sessão durante a busca.
 - [ ] CA-21: Instalação limpa, suíte do núcleo/backend, lint, formatação e CI
   passam; READMEs contêm instalação, execução, teste e limites efetivos.
-- [ ] CA-22: Experimentos usam várias sementes, referências e entradas variadas;
+- [x] CA-22: Experimentos usam várias sementes, referências e entradas variadas;
   publicam ganho, gap, frequência de prova, melhor/média/pior e custo de cálculo,
   distinguindo contribuição do AG de melhorias exclusivas do certificador.
 
@@ -560,8 +562,8 @@ uv run --locked ruff check .
 uv run --locked ruff format --check .
 ```
 
-O núcleo deverá documentar comandos equivalentes em seu README quando existir.
-Não anunciar comandos de módulo inexistente como já executáveis. O script
+O [README do núcleo](../../optimizer/README.md) documenta instalação isolada,
+uso Python, testes e experimentos. O script
 histórico `python docs/examples/estudo_ag_jobshop.py` continua sendo somente
 experimento de catálogo fixo, não implementação desta spec.
 
@@ -576,10 +578,11 @@ experimento de catálogo fixo, não implementação desta spec.
 - Verificados 33 links locais nos cinco documentos envolvidos, incluindo os
   links para os arquivos novos; `git diff --check` sem erros.
 
-A suíte de implementação acima permanece pendente. Esta validação documental
-não comprova qualidade de busca, instalação de OR-Tools, latência ou
-funcionamento em hardware. Os parâmetros de busca e status do solver no JSON
-são ilustrativos, não evidências de uma execução.
+Essas evidências documentais precedem a implementação. A validação real está em
+[Validação da SPEC-0005](../planning-validation.md), com suítes do núcleo/backend,
+instalação de OR-Tools, oráculo independente e medições de qualidade/tempo/memória.
+O JSON documental continua ilustrativo; os relatórios experimentais são separados.
+Nenhuma dessas verificações comprova funcionamento em hardware.
 
 ## 11. Pendências e evolução física
 

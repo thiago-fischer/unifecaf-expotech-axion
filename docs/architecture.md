@@ -62,8 +62,9 @@ sem `create_all()` na inicialização da API. Essas definições estão registra
 na [ADR-005](adr/0005-sqlalchemy-pydantic-alembic.md) e estão implementadas para
 os catálogos de máquinas (SPEC-0001), produtos com etapas (SPEC-0003) e ordens
 de produção com produtos e quantidades (SPEC-0004). Produto e etapas, assim como
-ordem e itens, são gravados atomicamente. Ordens apenas registram demanda;
-planejamento e execução permanecem previstos. Chaves estrangeiras SQLite são
+ordem e itens, são gravados atomicamente. Ordens registram demanda; a rota
+separada de planejamento da SPEC-0005 produz resposta transitória sem alterar
+o banco. A execução física permanece prevista. Chaves estrangeiras SQLite são
 habilitadas em todas as conexões. Consulte o [backend](../backend/README.md)
 para instalação, migrations e testes. Os demais componentes continuam planejados.
 
@@ -75,12 +76,24 @@ Responsável pelos algoritmos de Inteligência Computacional utilizados para o p
 
 - Python
 
-O algoritmo ainda não foi definido.
+Implementado em `optimizer/`, pacote Python local `axion_optimizer` 0.1.0,
+dependência explícita do backend, independente de HTTP/ORM. O núcleo usa AG
+com referências canônica/SPT, decodificação com encaixe em lacunas, elitismo,
+OX e swap, seguido por CP-SAT do OR-Tools 9.15.6755 no modelo completo.
 
 A [SPEC-0005](specs/0005-production-planning.md) e a
 [ADR-006 proposta](adr/0006-ag-cpsat-production-planning.md) detalham AG
 obrigatório com verificação/certificação CP-SAT e contrato de cronograma para
-Gantt. A proposta ainda não é decisão aceita nem implementação do módulo.
+Gantt. A implementação segue a spec aprovada; a ADR-006 permanece **Proposta**,
+aguardando revisão da equipe. Veja [instalação e limites](../optimizer/README.md)
+e [experimentos](planning-validation.md).
+
+O service carrega o snapshot por repository e fecha a sessão antes da busca.
+Uma trava permite uma busca por processo, sem fila; concorrentes recebem 503.
+Cada chamada executa AG e certificação, preserva melhorias do solver com autoria
+explícita e valida o cronograma independentemente. O contrato padrão responde
+409 com candidato quando não há prova de ótimo; `allow_feasible` aceita 200
+exploratório. Não há persistência de plano, migration nem execução física.
 
 ### Dispositivos Embarcados
 
@@ -136,8 +149,7 @@ axion/
 
 - frontend;
 - protocolo de comunicação;
-- algoritmo de otimização;
-- biblioteca de otimização;
+- aceitação formal da ADR-006 para AG/CP-SAT já implementados pela SPEC-0005;
 - cloud;
 - mecanismo de identificação da matéria-prima.
 

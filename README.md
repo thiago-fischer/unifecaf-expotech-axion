@@ -7,7 +7,8 @@ O sistema tem como objetivo cadastrar produtos, criar ordens de produção, otim
 **Implementado:** backend local com cadastro, listagem e consulta de máquinas
 e produtos com receitas completas, além de ordens com produtos e quantidades,
 SQLite e migrations Alembic, conforme as SPEC-0001, SPEC-0003 e SPEC-0004.
-O cadastro de ordens registra demanda; planejamento e execução continuam previstos.
+O planejamento transitório da SPEC-0005 usa AG obrigatório e certificação
+CP-SAT, com operações e métricas para Gantt. A execução física permanece prevista.
 Veja os comandos de instalação,
 execução e testes no [README do backend](backend/README.md).
 As demais funcionalidades descritas abaixo permanecem planejadas.
@@ -167,11 +168,13 @@ axion/
 
 A documentação completa do projeto está disponível na pasta [`docs`](docs/).
 
-O planejamento está proposto na
+O planejamento está implementado conforme a
 [SPEC-0005 — Otimização e cronograma da produção](docs/specs/0005-production-planning.md),
 com AG obrigatório, verificação/certificação CP-SAT e saída para Gantt por máquina.
 A [ADR-006](docs/adr/0006-ag-cpsat-production-planning.md) registra a proposta
-técnica, ainda não aceita. Esses componentes não estão implementados.
+técnica, ainda não aceita. Consulte o [núcleo](optimizer/README.md) e as
+[medições de validação](docs/planning-validation.md). Nenhum plano autoriza
+execução física nesta entrega.
 
 ## Contexto acadêmico
 

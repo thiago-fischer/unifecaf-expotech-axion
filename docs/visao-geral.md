@@ -100,7 +100,10 @@ O sistema deverá considerar características como:
 
 O principal indicador de otimização será o tempo total necessário para concluir uma ordem de produção, podendo posteriormente serem considerados outros fatores.
 
-O algoritmo específico de otimização ainda será definido durante a etapa de desenvolvimento e experimentação.
+A SPEC-0005 implementa AG obrigatório e certificação CP-SAT para `job_shop_v1`.
+O planejamento é transitório, com qualidade e evidências explícitas e saída
+para Gantt. A [ADR-006](adr/0006-ag-cpsat-production-planning.md) permanece
+Proposta, aguardando revisão. Não há execução física nem interface Gantt nesta entrega.
 
 ## 7. Maquete e Automação
 
@@ -189,7 +192,12 @@ atomicamente, sem iniciar produção. As ordens validam produtos existentes,
 quantidades positivas e ausência de duplicatas; ordem e itens são persistidos
 na mesma transação. Criar uma ordem apenas registra demanda, sem otimizar,
 reservar máquinas ou criar unidades físicas. Consulte o [backend](../backend/README.md).
-As demais funcionalidades permanecem planejadas.
+A rota separada `POST /orders/{order_id}/plan` implementa o planejamento da
+SPEC-0005 a partir das receitas atuais, sem manter sessão durante a busca ou
+alterar o banco. Sem prova de ótimo, a política padrão responde 409 com plano
+candidato; `allow_feasible` permite resultado exploratório 200. Consulte o
+[núcleo e seus limites](../optimizer/README.md). Execução e demais integrações
+permanecem planejadas.
 
 As tecnologias específicas do frontend e a configuração definitiva do firmware
 permanecem em definição.
@@ -255,7 +263,7 @@ A plataforma de nuvem, estratégia de deploy, testes automatizados e demais tecn
 
 Neste estágio do projeto permanecem em definição:
 
-- algoritmo de Inteligência Computacional;
+- revisão e aceitação formal da ADR-006, após implementação da SPEC-0005;
 - quantidade definitiva de máquinas;
 - configuração final das máquinas;
 - receitas e tempos dos produtos previamente cadastrados;

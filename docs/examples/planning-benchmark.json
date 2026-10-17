@@ -1,0 +1,1865 @@
+{
+  "planner_version": "0.1.0",
+  "ortools_version": "9.15.6755",
+  "python": "3.12.13",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "AMD64 Family 25 Model 33 Stepping 2, AuthenticAMD",
+  "logical_cpu_count": 16,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "budgets": {
+    "ga_seconds": 3,
+    "certification_seconds": 7
+  },
+  "memory_measurement": "cumulative peak process RSS; includes native allocations",
+  "cases": {
+    "historical_65": {
+      "runs": [
+        {
+          "seed": 0,
+          "makespan_seconds": 65,
+          "unit_count": 3,
+          "operation_count": 7,
+          "lower_bound_seconds": 65,
+          "upper_bound_seconds": 65,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 65,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 65,
+            "best_makespan_seconds": 65,
+            "completed_generations": 80,
+            "evaluations": 609,
+            "elapsed_seconds": 0.030999999999039574,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 65,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 0,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 65
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 65
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 65
+            }
+          ],
+          "total_seconds": 0.030999999999039574,
+          "peak_process_rss_bytes": 85585920
+        },
+        {
+          "seed": 1,
+          "makespan_seconds": 65,
+          "unit_count": 3,
+          "operation_count": 7,
+          "lower_bound_seconds": 65,
+          "upper_bound_seconds": 65,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 65,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 65,
+            "best_makespan_seconds": 65,
+            "completed_generations": 80,
+            "evaluations": 785,
+            "elapsed_seconds": 0.0319999999992433,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 65,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 1,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 65
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 65
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 65
+            }
+          ],
+          "total_seconds": 0.0319999999992433,
+          "peak_process_rss_bytes": 85667840
+        },
+        {
+          "seed": 2,
+          "makespan_seconds": 65,
+          "unit_count": 3,
+          "operation_count": 7,
+          "lower_bound_seconds": 65,
+          "upper_bound_seconds": 65,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 65,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 65,
+            "best_makespan_seconds": 65,
+            "completed_generations": 80,
+            "evaluations": 510,
+            "elapsed_seconds": 0.030999999999039574,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 65,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 2,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 65
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 65
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 65
+            }
+          ],
+          "total_seconds": 0.030999999999039574,
+          "peak_process_rss_bytes": 85696512
+        },
+        {
+          "seed": 3,
+          "makespan_seconds": 65,
+          "unit_count": 3,
+          "operation_count": 7,
+          "lower_bound_seconds": 65,
+          "upper_bound_seconds": 65,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 65,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 65,
+            "best_makespan_seconds": 65,
+            "completed_generations": 80,
+            "evaluations": 614,
+            "elapsed_seconds": 0.031000000002677552,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 65,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 3,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 65
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 65
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 65
+            }
+          ],
+          "total_seconds": 0.031000000002677552,
+          "peak_process_rss_bytes": 85708800
+        },
+        {
+          "seed": 4,
+          "makespan_seconds": 65,
+          "unit_count": 3,
+          "operation_count": 7,
+          "lower_bound_seconds": 65,
+          "upper_bound_seconds": 65,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 65,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 65,
+            "best_makespan_seconds": 65,
+            "completed_generations": 80,
+            "evaluations": 877,
+            "elapsed_seconds": 0.030999999999039574,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 65,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 4,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 65
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 65
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 65
+            }
+          ],
+          "total_seconds": 0.030999999999039574,
+          "peak_process_rss_bytes": 85716992
+        }
+      ],
+      "makespan": {
+        "best": 65,
+        "mean": 65,
+        "worst": 65
+      },
+      "ga_makespan": {
+        "best": 65,
+        "mean": 65,
+        "worst": 65
+      },
+      "gain_percent": {
+        "best": 0.0,
+        "mean": 0.0,
+        "worst": 0.0
+      },
+      "gap_percent": {
+        "best": 0.0,
+        "mean": 0.0,
+        "worst": 0.0
+      },
+      "computation_seconds": {
+        "best": 0.030999999999039574,
+        "mean": 0.031199999999807916,
+        "worst": 0.0319999999992433
+      },
+      "proof_frequency": 1,
+      "evolutionary_gain_runs": 0,
+      "cp_improvement_runs": 0
+    },
+    "historical_175": {
+      "runs": [
+        {
+          "seed": 0,
+          "makespan_seconds": 175,
+          "unit_count": 9,
+          "operation_count": 22,
+          "lower_bound_seconds": 175,
+          "upper_bound_seconds": 175,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 175,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 175,
+            "best_makespan_seconds": 175,
+            "completed_generations": 80,
+            "evaluations": 2409,
+            "elapsed_seconds": 0.17199999999866122,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 175,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 0,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 175
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 175
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 175
+            }
+          ],
+          "total_seconds": 0.17199999999866122,
+          "peak_process_rss_bytes": 87056384
+        },
+        {
+          "seed": 1,
+          "makespan_seconds": 175,
+          "unit_count": 9,
+          "operation_count": 22,
+          "lower_bound_seconds": 175,
+          "upper_bound_seconds": 175,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 175,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 175,
+            "best_makespan_seconds": 175,
+            "completed_generations": 80,
+            "evaluations": 2420,
+            "elapsed_seconds": 0.15599999999903957,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 175,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 1,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 175
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 175
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 175
+            }
+          ],
+          "total_seconds": 0.15599999999903957,
+          "peak_process_rss_bytes": 87179264
+        },
+        {
+          "seed": 2,
+          "makespan_seconds": 175,
+          "unit_count": 9,
+          "operation_count": 22,
+          "lower_bound_seconds": 175,
+          "upper_bound_seconds": 175,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 175,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 175,
+            "best_makespan_seconds": 175,
+            "completed_generations": 80,
+            "evaluations": 2393,
+            "elapsed_seconds": 0.15700000000288128,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 175,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.014999999999417923,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 2,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 175
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 175
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 175
+            }
+          ],
+          "total_seconds": 0.1720000000022992,
+          "peak_process_rss_bytes": 87212032
+        },
+        {
+          "seed": 3,
+          "makespan_seconds": 175,
+          "unit_count": 9,
+          "operation_count": 22,
+          "lower_bound_seconds": 175,
+          "upper_bound_seconds": 175,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 175,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 175,
+            "best_makespan_seconds": 175,
+            "completed_generations": 80,
+            "evaluations": 2286,
+            "elapsed_seconds": 0.1569999999992433,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 175,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 3,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 175
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 175
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 175
+            }
+          ],
+          "total_seconds": 0.1569999999992433,
+          "peak_process_rss_bytes": 87326720
+        },
+        {
+          "seed": 4,
+          "makespan_seconds": 175,
+          "unit_count": 9,
+          "operation_count": 22,
+          "lower_bound_seconds": 175,
+          "upper_bound_seconds": 175,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 175,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 175,
+            "best_makespan_seconds": 175,
+            "completed_generations": 80,
+            "evaluations": 2438,
+            "elapsed_seconds": 0.15599999999903957,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 175,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 4,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 175
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 175
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 175
+            }
+          ],
+          "total_seconds": 0.1709999999984575,
+          "peak_process_rss_bytes": 87326720
+        }
+      ],
+      "makespan": {
+        "best": 175,
+        "mean": 175,
+        "worst": 175
+      },
+      "ga_makespan": {
+        "best": 175,
+        "mean": 175,
+        "worst": 175
+      },
+      "gain_percent": {
+        "best": 0.0,
+        "mean": 0.0,
+        "worst": 0.0
+      },
+      "gap_percent": {
+        "best": 0.0,
+        "mean": 0.0,
+        "worst": 0.0
+      },
+      "computation_seconds": {
+        "best": 0.15599999999903957,
+        "mean": 0.16559999999954017,
+        "worst": 0.1720000000022992
+      },
+      "proof_frequency": 1,
+      "evolutionary_gain_runs": 0,
+      "cp_improvement_runs": 0
+    },
+    "heterogeneous_revisits": {
+      "runs": [
+        {
+          "seed": 0,
+          "makespan_seconds": 110,
+          "unit_count": 12,
+          "operation_count": 27,
+          "lower_bound_seconds": 110,
+          "upper_bound_seconds": 110,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 136,
+          "improvement_percent": 19.12,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 111,
+            "best_makespan_seconds": 110,
+            "completed_generations": 80,
+            "evaluations": 2056,
+            "elapsed_seconds": 0.1720000000022992,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 110,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.01599999999962165,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 0,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 110
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 136
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 136
+            }
+          ],
+          "total_seconds": 0.18800000000192085,
+          "peak_process_rss_bytes": 87330816
+        },
+        {
+          "seed": 1,
+          "makespan_seconds": 110,
+          "unit_count": 12,
+          "operation_count": 27,
+          "lower_bound_seconds": 110,
+          "upper_bound_seconds": 110,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 136,
+          "improvement_percent": 19.12,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 110,
+            "best_makespan_seconds": 110,
+            "completed_generations": 80,
+            "evaluations": 2328,
+            "elapsed_seconds": 0.20300000000133878,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 110,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 1,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 110
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 136
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 136
+            }
+          ],
+          "total_seconds": 0.20300000000133878,
+          "peak_process_rss_bytes": 87465984
+        },
+        {
+          "seed": 2,
+          "makespan_seconds": 110,
+          "unit_count": 12,
+          "operation_count": 27,
+          "lower_bound_seconds": 110,
+          "upper_bound_seconds": 110,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 136,
+          "improvement_percent": 19.12,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 111,
+            "best_makespan_seconds": 110,
+            "completed_generations": 80,
+            "evaluations": 2178,
+            "elapsed_seconds": 0.18799999999828287,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 110,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.014999999999417923,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 2,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 110
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 136
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 136
+            }
+          ],
+          "total_seconds": 0.2029999999977008,
+          "peak_process_rss_bytes": 87470080
+        },
+        {
+          "seed": 3,
+          "makespan_seconds": 110,
+          "unit_count": 12,
+          "operation_count": 27,
+          "lower_bound_seconds": 110,
+          "upper_bound_seconds": 110,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 136,
+          "improvement_percent": 19.12,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 110,
+            "best_makespan_seconds": 110,
+            "completed_generations": 80,
+            "evaluations": 2363,
+            "elapsed_seconds": 0.20300000000133878,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 110,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 3,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 110
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 136
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 136
+            }
+          ],
+          "total_seconds": 0.20300000000133878,
+          "peak_process_rss_bytes": 87470080
+        },
+        {
+          "seed": 4,
+          "makespan_seconds": 110,
+          "unit_count": 12,
+          "operation_count": 27,
+          "lower_bound_seconds": 110,
+          "upper_bound_seconds": 110,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 136,
+          "improvement_percent": 19.12,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 110,
+            "best_makespan_seconds": 110,
+            "completed_generations": 80,
+            "evaluations": 2380,
+            "elapsed_seconds": 0.21900000000096043,
+            "termination_reason": "generation_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 110,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 4,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 110
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 136
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 136
+            }
+          ],
+          "total_seconds": 0.21900000000096043,
+          "peak_process_rss_bytes": 87474176
+        }
+      ],
+      "makespan": {
+        "best": 110,
+        "mean": 110,
+        "worst": 110
+      },
+      "ga_makespan": {
+        "best": 110,
+        "mean": 110,
+        "worst": 110
+      },
+      "gain_percent": {
+        "best": 19.12,
+        "mean": 19.12,
+        "worst": 19.12
+      },
+      "gap_percent": {
+        "best": 0.0,
+        "mean": 0.0,
+        "worst": 0.0
+      },
+      "computation_seconds": {
+        "best": 0.18800000000192085,
+        "mean": 0.20320000000065191,
+        "worst": 0.21900000000096043
+      },
+      "proof_frequency": 1,
+      "evolutionary_gain_runs": 2,
+      "cp_improvement_runs": 0
+    },
+    "boundary_units_operations_machines": {
+      "runs": [
+        {
+          "seed": 0,
+          "makespan_seconds": 495,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 350,
+          "upper_bound_seconds": 495,
+          "absolute_gap_seconds": 145,
+          "relative_gap_percent": 29.29,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 555,
+          "improvement_percent": 10.81,
+          "selected_source": "cp_sat",
+          "optimality_proven": false,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 542,
+            "best_makespan_seconds": 527,
+            "completed_generations": 4,
+            "evaluations": 182,
+            "elapsed_seconds": 3.0159999999996217,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 350,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 7.03099999999904,
+            "solver_status": "FEASIBLE",
+            "solver_version": "9.15.6755",
+            "seed": 0,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 495
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 555
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 561
+            }
+          ],
+          "total_seconds": 10.0779999999977,
+          "peak_process_rss_bytes": 111239168
+        },
+        {
+          "seed": 1,
+          "makespan_seconds": 479,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 350,
+          "upper_bound_seconds": 479,
+          "absolute_gap_seconds": 129,
+          "relative_gap_percent": 26.93,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 555,
+          "improvement_percent": 13.69,
+          "selected_source": "cp_sat",
+          "optimality_proven": false,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 535,
+            "best_makespan_seconds": 526,
+            "completed_generations": 4,
+            "evaluations": 182,
+            "elapsed_seconds": 3.0159999999996217,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 350,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 7.0310000000026776,
+            "solver_status": "FEASIBLE",
+            "solver_version": "9.15.6755",
+            "seed": 1,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 479
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 555
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 561
+            }
+          ],
+          "total_seconds": 10.06300000000192,
+          "peak_process_rss_bytes": 111239168
+        },
+        {
+          "seed": 2,
+          "makespan_seconds": 481,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 350,
+          "upper_bound_seconds": 481,
+          "absolute_gap_seconds": 131,
+          "relative_gap_percent": 27.23,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 555,
+          "improvement_percent": 13.33,
+          "selected_source": "cp_sat",
+          "optimality_proven": false,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 546,
+            "best_makespan_seconds": 540,
+            "completed_generations": 4,
+            "evaluations": 178,
+            "elapsed_seconds": 3.0309999999990396,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 350,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 7.03099999999904,
+            "solver_status": "FEASIBLE",
+            "solver_version": "9.15.6755",
+            "seed": 2,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 481
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 555
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 561
+            }
+          ],
+          "total_seconds": 10.0779999999977,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 3,
+          "makespan_seconds": 496,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 350,
+          "upper_bound_seconds": 496,
+          "absolute_gap_seconds": 146,
+          "relative_gap_percent": 29.44,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 555,
+          "improvement_percent": 10.63,
+          "selected_source": "cp_sat",
+          "optimality_proven": false,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 547,
+            "best_makespan_seconds": 540,
+            "completed_generations": 3,
+            "evaluations": 160,
+            "elapsed_seconds": 3.014999999999418,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 350,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 7.032000000002881,
+            "solver_status": "FEASIBLE",
+            "solver_version": "9.15.6755",
+            "seed": 3,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 496
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 555
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 561
+            }
+          ],
+          "total_seconds": 10.062000000001717,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 4,
+          "makespan_seconds": 515,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 350,
+          "upper_bound_seconds": 515,
+          "absolute_gap_seconds": 165,
+          "relative_gap_percent": 32.04,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 555,
+          "improvement_percent": 7.21,
+          "selected_source": "cp_sat",
+          "optimality_proven": false,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 549,
+            "best_makespan_seconds": 530,
+            "completed_generations": 4,
+            "evaluations": 181,
+            "elapsed_seconds": 3.0159999999996217,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 350,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 7.03099999999904,
+            "solver_status": "FEASIBLE",
+            "solver_version": "9.15.6755",
+            "seed": 4,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 515
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 555
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 561
+            }
+          ],
+          "total_seconds": 10.062999999998283,
+          "peak_process_rss_bytes": 112640000
+        }
+      ],
+      "makespan": {
+        "best": 479,
+        "mean": 493.2,
+        "worst": 515
+      },
+      "ga_makespan": {
+        "best": 526,
+        "mean": 532.6,
+        "worst": 540
+      },
+      "gain_percent": {
+        "best": 7.21,
+        "mean": 11.134,
+        "worst": 13.69
+      },
+      "gap_percent": {
+        "best": 26.93,
+        "mean": 28.986,
+        "worst": 32.04
+      },
+      "computation_seconds": {
+        "best": 10.062000000001717,
+        "mean": 10.068799999999465,
+        "worst": 10.0779999999977
+      },
+      "proof_frequency": 0,
+      "evolutionary_gain_runs": 5,
+      "cp_improvement_runs": 5
+    },
+    "boundary_horizon": {
+      "runs": [
+        {
+          "seed": 0,
+          "makespan_seconds": 1000000000,
+          "unit_count": 1,
+          "operation_count": 1,
+          "lower_bound_seconds": 1000000000,
+          "upper_bound_seconds": 1000000000,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 1000000000,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 1000000000,
+            "best_makespan_seconds": 1000000000,
+            "completed_generations": 0,
+            "evaluations": 1,
+            "elapsed_seconds": 0.0,
+            "termination_reason": "trivial_instance"
+          },
+          "certification": {
+            "lower_bound_seconds": 1000000000,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 0,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 1000000000
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1000000000
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 1000000000
+            }
+          ],
+          "total_seconds": 0.0,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 1,
+          "makespan_seconds": 1000000000,
+          "unit_count": 1,
+          "operation_count": 1,
+          "lower_bound_seconds": 1000000000,
+          "upper_bound_seconds": 1000000000,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 1000000000,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 1000000000,
+            "best_makespan_seconds": 1000000000,
+            "completed_generations": 0,
+            "evaluations": 1,
+            "elapsed_seconds": 0.0,
+            "termination_reason": "trivial_instance"
+          },
+          "certification": {
+            "lower_bound_seconds": 1000000000,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 1,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 1000000000
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1000000000
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 1000000000
+            }
+          ],
+          "total_seconds": 0.0,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 2,
+          "makespan_seconds": 1000000000,
+          "unit_count": 1,
+          "operation_count": 1,
+          "lower_bound_seconds": 1000000000,
+          "upper_bound_seconds": 1000000000,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 1000000000,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 1000000000,
+            "best_makespan_seconds": 1000000000,
+            "completed_generations": 0,
+            "evaluations": 1,
+            "elapsed_seconds": 0.0,
+            "termination_reason": "trivial_instance"
+          },
+          "certification": {
+            "lower_bound_seconds": 1000000000,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 2,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 1000000000
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1000000000
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 1000000000
+            }
+          ],
+          "total_seconds": 0.0,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 3,
+          "makespan_seconds": 1000000000,
+          "unit_count": 1,
+          "operation_count": 1,
+          "lower_bound_seconds": 1000000000,
+          "upper_bound_seconds": 1000000000,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 1000000000,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 1000000000,
+            "best_makespan_seconds": 1000000000,
+            "completed_generations": 0,
+            "evaluations": 1,
+            "elapsed_seconds": 0.0,
+            "termination_reason": "trivial_instance"
+          },
+          "certification": {
+            "lower_bound_seconds": 1000000000,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 3,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 1000000000
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1000000000
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 1000000000
+            }
+          ],
+          "total_seconds": 0.0,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 4,
+          "makespan_seconds": 1000000000,
+          "unit_count": 1,
+          "operation_count": 1,
+          "lower_bound_seconds": 1000000000,
+          "upper_bound_seconds": 1000000000,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "canonical_priority",
+          "baseline_makespan_seconds": 1000000000,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 1000000000,
+            "best_makespan_seconds": 1000000000,
+            "completed_generations": 0,
+            "evaluations": 1,
+            "elapsed_seconds": 0.0,
+            "termination_reason": "trivial_instance"
+          },
+          "certification": {
+            "lower_bound_seconds": 1000000000,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.0,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 4,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 1000000000
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1000000000
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 1000000000
+            }
+          ],
+          "total_seconds": 0.014999999999417923,
+          "peak_process_rss_bytes": 112640000
+        }
+      ],
+      "makespan": {
+        "best": 1000000000,
+        "mean": 1000000000,
+        "worst": 1000000000
+      },
+      "ga_makespan": {
+        "best": 1000000000,
+        "mean": 1000000000,
+        "worst": 1000000000
+      },
+      "gain_percent": {
+        "best": 0.0,
+        "mean": 0.0,
+        "worst": 0.0
+      },
+      "gap_percent": {
+        "best": 0.0,
+        "mean": 0.0,
+        "worst": 0.0
+      },
+      "computation_seconds": {
+        "best": 0.0,
+        "mean": 0.0029999999998835845,
+        "worst": 0.014999999999417923
+      },
+      "proof_frequency": 1,
+      "evolutionary_gain_runs": 0,
+      "cp_improvement_runs": 0
+    },
+    "boundary_revisits": {
+      "runs": [
+        {
+          "seed": 0,
+          "makespan_seconds": 907,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 907,
+          "upper_bound_seconds": 907,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "spt",
+          "baseline_makespan_seconds": 907,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 907,
+            "best_makespan_seconds": 907,
+            "completed_generations": 2,
+            "evaluations": 103,
+            "elapsed_seconds": 3.0160000000032596,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 907,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.5159999999996217,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 0,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 907
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1135
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 907
+            }
+          ],
+          "total_seconds": 3.547000000002299,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 1,
+          "makespan_seconds": 907,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 907,
+          "upper_bound_seconds": 907,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "spt",
+          "baseline_makespan_seconds": 907,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 907,
+            "best_makespan_seconds": 907,
+            "completed_generations": 1,
+            "evaluations": 77,
+            "elapsed_seconds": 3.0319999999992433,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 907,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.5620000000017171,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 1,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 907
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1135
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 907
+            }
+          ],
+          "total_seconds": 3.5940000000009604,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 2,
+          "makespan_seconds": 907,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 907,
+          "upper_bound_seconds": 907,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "spt",
+          "baseline_makespan_seconds": 907,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 907,
+            "best_makespan_seconds": 907,
+            "completed_generations": 2,
+            "evaluations": 106,
+            "elapsed_seconds": 3.0309999999990396,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 907,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.39099999999962165,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 2,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 907
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1135
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 907
+            }
+          ],
+          "total_seconds": 3.4219999999986612,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 3,
+          "makespan_seconds": 907,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 907,
+          "upper_bound_seconds": 907,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "spt",
+          "baseline_makespan_seconds": 907,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 907,
+            "best_makespan_seconds": 907,
+            "completed_generations": 2,
+            "evaluations": 109,
+            "elapsed_seconds": 3.0159999999996217,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 907,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.375,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 3,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 907
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1135
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 907
+            }
+          ],
+          "total_seconds": 3.4059999999990396,
+          "peak_process_rss_bytes": 112640000
+        },
+        {
+          "seed": 4,
+          "makespan_seconds": 907,
+          "unit_count": 100,
+          "operation_count": 1000,
+          "lower_bound_seconds": 907,
+          "upper_bound_seconds": 907,
+          "absolute_gap_seconds": 0,
+          "relative_gap_percent": 0.0,
+          "baseline_name": "spt",
+          "baseline_makespan_seconds": 907,
+          "improvement_percent": 0.0,
+          "selected_source": "genetic_algorithm",
+          "optimality_proven": true,
+          "ga": {
+            "profile": "ga_v1",
+            "time_limit_seconds": 3,
+            "population_size": 40,
+            "generation_limit": 80,
+            "tournament_size": 3,
+            "crossover_probability": 0.8,
+            "mutation_probability_per_child": 0.2,
+            "elite_count": 1,
+            "initial_best_makespan_seconds": 907,
+            "best_makespan_seconds": 907,
+            "completed_generations": 2,
+            "evaluations": 114,
+            "elapsed_seconds": 3.0309999999990396,
+            "termination_reason": "time_limit"
+          },
+          "certification": {
+            "lower_bound_seconds": 907,
+            "time_limit_seconds": 7,
+            "elapsed_seconds": 0.375,
+            "solver_status": "OPTIMAL",
+            "solver_version": "9.15.6755",
+            "seed": 4,
+            "num_search_workers": 1,
+            "absolute_gap_limit": 0,
+            "relative_gap_limit": 0,
+            "candidate_makespan_seconds": 907
+          },
+          "baseline_results": [
+            {
+              "name": "canonical_priority",
+              "makespan_seconds": 1135
+            },
+            {
+              "name": "spt",
+              "makespan_seconds": 907
+            }
+          ],
+          "total_seconds": 3.4059999999990396,
+          "peak_process_rss_bytes": 112640000
+        }
+      ],
+      "makespan": {
+        "best": 907,
+        "mean": 907,
+        "worst": 907
+      },
+      "ga_makespan": {
+        "best": 907,
+        "mean": 907,
+        "worst": 907
+      },
+      "gain_percent": {
+        "best": 0.0,
+        "mean": 0.0,
+        "worst": 0.0
+      },
+      "gap_percent": {
+        "best": 0.0,
+        "mean": 0.0,
+        "worst": 0.0
+      },
+      "computation_seconds": {
+        "best": 3.4059999999990396,
+        "mean": 3.475,
+        "worst": 3.5940000000009604
+      },
+      "proof_frequency": 1,
+      "evolutionary_gain_runs": 0,
+      "cp_improvement_runs": 0
+    }
+  },
+  "elapsed_seconds": 69.73399999999674
+}

@@ -60,8 +60,10 @@ que acessar o banco utilizará uma sessão própria.
 A estrutura do banco será preparada e atualizada explicitamente por migrations,
 sem `create_all()` na inicialização da API. Essas definições estão registradas
 na [ADR-005](adr/0005-sqlalchemy-pydantic-alembic.md) e estão implementadas para
-os catálogos de máquinas (SPEC-0001) e produtos com etapas (SPEC-0003).
-Produto e etapas são gravados atomicamente; chaves estrangeiras SQLite são
+os catálogos de máquinas (SPEC-0001), produtos com etapas (SPEC-0003) e ordens
+de produção com produtos e quantidades (SPEC-0004). Produto e etapas, assim como
+ordem e itens, são gravados atomicamente. Ordens apenas registram demanda;
+planejamento e execução permanecem previstos. Chaves estrangeiras SQLite são
 habilitadas em todas as conexões. Consulte o [backend](../backend/README.md)
 para instalação, migrations e testes. Os demais componentes continuam planejados.
 

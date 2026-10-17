@@ -1,0 +1,72 @@
+{
+  "measurement": "TestClient, one process, real GA/CP-SAT, disposable SQLite",
+  "baseline_get_machines": {
+    "samples": 20,
+    "mean_seconds": 0.002349999999933061,
+    "worst_seconds": 0.01599999999962165
+  },
+  "during_search_get_machines": {
+    "samples": 37,
+    "mean_seconds": 0.03456756756762892,
+    "worst_seconds": 0.5
+  },
+  "busy_status": 503,
+  "busy_seconds": 1.1879999999982829,
+  "planning_status": 409,
+  "search": {
+    "planner_version": "0.1.0",
+    "seed": 0,
+    "baseline_results": [
+      {
+        "name": "canonical_priority",
+        "makespan_seconds": 555
+      },
+      {
+        "name": "spt",
+        "makespan_seconds": 561
+      }
+    ],
+    "preparation_seconds": 0.014999999999417923,
+    "total_planning_seconds": 10.078000000001339,
+    "ga": {
+      "profile": "ga_v1",
+      "time_limit_seconds": 3,
+      "population_size": 40,
+      "generation_limit": 80,
+      "tournament_size": 3,
+      "crossover_probability": 0.8,
+      "mutation_probability_per_child": 0.2,
+      "elite_count": 1,
+      "initial_best_makespan_seconds": 542,
+      "best_makespan_seconds": 527,
+      "completed_generations": 4,
+      "evaluations": 174,
+      "elapsed_seconds": 3.0160000000032596,
+      "termination_reason": "time_limit"
+    },
+    "certification": {
+      "lower_bound_seconds": 350,
+      "time_limit_seconds": 7,
+      "elapsed_seconds": 7.03099999999904,
+      "solver_status": "FEASIBLE",
+      "solver_version": "9.15.6755",
+      "seed": 0,
+      "num_search_workers": 1,
+      "absolute_gap_limit": 0,
+      "relative_gap_limit": 0,
+      "candidate_makespan_seconds": 495
+    }
+  },
+  "metrics": {
+    "makespan_seconds": 495,
+    "unit_count": 100,
+    "operation_count": 1000,
+    "lower_bound_seconds": 350,
+    "upper_bound_seconds": 495,
+    "absolute_gap_seconds": 145,
+    "relative_gap_percent": 29.29,
+    "baseline_name": "canonical_priority",
+    "baseline_makespan_seconds": 555,
+    "improvement_percent": 10.81
+  }
+}

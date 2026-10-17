@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from app.config import Settings
 from app.controllers.machine_controller import router
 from app.controllers.order_controller import router as order_router
+from app.controllers.planning_controller import router as planning_router
 from app.controllers.product_controller import router as product_router
 from app.database.database import build_engine
 
@@ -31,6 +32,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(router)
     application.include_router(product_router)
     application.include_router(order_router)
+    application.include_router(planning_router)
 
     @application.exception_handler(SQLAlchemyError)
     async def persistence_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:

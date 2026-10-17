@@ -37,7 +37,9 @@ jobs:
           version: "0.11.7"
           python-version: "3.12"
           enable-cache: true
-          cache-dependency-glob: "backend/uv.lock"
+          cache-dependency-glob: |
+            backend/uv.lock
+            optimizer/uv.lock
 
       - name: Install locked dependencies
         run: uv sync --locked --group dev
@@ -49,6 +51,20 @@ jobs:
 
       - name: Run backend tests
         run: uv run --locked pytest -q
+
+      - name: Run optimizer tests
+        run: uv run --locked pytest -q ../optimizer/tests
+
+      - name: Check lint and formatting
+        run: |
+          uv run --locked ruff check . ../optimizer
+          uv run --locked ruff format --check . ../optimizer
+
+      - name: Verify independent optimizer installation
+        working-directory: optimizer
+        run: |
+          uv sync --locked --python 3.12
+          uv run --locked pytest -q
 
       - name: Verify repository remains clean
         run: test -z "$(git status --porcelain)"

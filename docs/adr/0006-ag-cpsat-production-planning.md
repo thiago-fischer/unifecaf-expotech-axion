@@ -63,7 +63,11 @@ primeira entrega, com hipóteses declaradas e sem autorização de execução f�
 ## Estado e revisão
 
 Esta ADR registra uma proposta técnica motivada pelo requisito do responsável;
-não altera o status das ADRs aceitas nem declara implementação concluída.
+não altera o status das ADRs aceitas. A implementação da SPEC-0005 em
+`optimizer/` e no backend foi realizada em 17/10/2026, com OR-Tools 9.15.6755
+e dependência local explícita. Consulte os [resultados de validação](../planning-validation.md).
+Implementar a spec aprovada não muda automaticamente o status desta ADR;
+a aceitação formal continua pendente de revisão da equipe.
 Revisar resultados em receitas variadas, custo da certificação e aderência à
 avaliação acadêmica antes de aceitar. Reavaliar quando houver restrições físicas,
 recursos alternativos, múltiplas ordens ou necessidade de execução assíncrona.
@@ -77,4 +81,5 @@ recursos alternativos, múltiplas ordens ou necessidade de execução assíncron
 - [Limites de busca](https://developers.google.com/optimization/cp/cp_tasks):
   orçamento de execução do solver.
 
-Fontes consultadas em 17/10/2026; nenhuma dependência foi instalada por esta ADR.
+Fontes consultadas em 17/10/2026; a dependência foi instalada e fixada na
+implementação da SPEC-0005, mantendo esta ADR como proposta.

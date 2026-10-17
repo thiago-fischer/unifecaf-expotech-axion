@@ -7,6 +7,13 @@
 > **Escopo:** Revisão da SPEC-0004 e recomendação fundamentada nas atividades
 > de Inteligência Computacional. Não implementa planejamento na API.
 
+> **Continuidade (17/10/2026):** A
+> [SPEC-0005](specs/0005-production-planning.md) detalha o planejador genérico
+> e o contrato para Gantt. Conforme orientação do responsável, mantém AG
+> obrigatório pela finalidade acadêmica e propõe CP-SAT para verificar e
+> certificar resultados; ver [ADR-006 proposta](adr/0006-ag-cpsat-production-planning.md).
+> Isso não reexecuta nem altera os resultados históricos deste estudo.
+
 > **Restauração:** Conteúdo recomposto em 17/10/2026 a partir do histórico
 > da conversa. A pesquisa e os experimentos não foram executados novamente.
 

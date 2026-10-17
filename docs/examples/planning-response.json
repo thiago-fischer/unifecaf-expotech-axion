@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "order_id": 1,
+  "model_version": "job_shop_v1",
+  "time_unit": "seconds",
+  "quality": "optimal",
+  "optimality_proven": true,
+  "selected_source": "genetic_algorithm",
+  "execution_ready": false,
+  "assumptions": {
+    "all_units_released_at_zero": true,
+    "all_machines_available_at_zero": true,
+    "machine_capacity": 1,
+    "nonpreemptive_operations": true,
+    "deterministic_durations": true,
+    "unlimited_buffers": true,
+    "transport_time_seconds": 0,
+    "setup_time_seconds": 0,
+    "shared_transport_resource_modeled": false,
+    "machine_blocking_modeled": false
+  },
+  "input_snapshot": {
+    "items": [
+      {
+        "product_id": 1,
+        "product_name": "Eixo",
+        "quantity": 1,
+        "steps": [
+          {"sequence": 1, "machine_id": 1, "processing_time_seconds": 10},
+          {"sequence": 2, "machine_id": 3, "processing_time_seconds": 15}
+        ]
+      },
+      {
+        "product_id": 2,
+        "product_name": "Placa",
+        "quantity": 1,
+        "steps": [
+          {"sequence": 1, "machine_id": 2, "processing_time_seconds": 15},
+          {"sequence": 2, "machine_id": 3, "processing_time_seconds": 20}
+        ]
+      },
+      {
+        "product_id": 3,
+        "product_name": "Suporte",
+        "quantity": 1,
+        "steps": [
+          {"sequence": 1, "machine_id": 1, "processing_time_seconds": 10},
+          {"sequence": 2, "machine_id": 2, "processing_time_seconds": 15},
+          {"sequence": 3, "machine_id": 3, "processing_time_seconds": 20}
+        ]
+      }
+    ],
+    "machines": [
+      {"machine_id": 1, "machine_name": "Torno"},
+      {"machine_id": 2, "machine_name": "Fresadora"},
+      {"machine_id": 3, "machine_name": "Centro"}
+    ]
+  },
+  "metrics": {
+    "makespan_seconds": 65,
+    "unit_count": 3,
+    "operation_count": 7,
+    "lower_bound_seconds": 65,
+    "upper_bound_seconds": 65,
+    "absolute_gap_seconds": 0,
+    "relative_gap_percent": 0.0,
+    "baseline_name": "canonical_priority",
+    "baseline_makespan_seconds": 65,
+    "improvement_percent": 0.0
+  },
+  "search": {
+    "planner_version": "illustrative-not-executed",
+    "seed": 0,
+    "baseline_results": [
+      {"name": "canonical_priority", "makespan_seconds": 65},
+      {"name": "spt", "makespan_seconds": 65}
+    ],
+    "preparation_seconds": 0.01,
+    "total_planning_seconds": 0.53,
+    "ga": {
+      "profile": "ga_v1",
+      "time_limit_seconds": 3,
+      "population_size": 40,
+      "generation_limit": 80,
+      "tournament_size": 3,
+      "crossover_probability": 0.8,
+      "mutation_probability_per_child": 0.2,
+      "elite_count": 1,
+      "initial_best_makespan_seconds": 65,
+      "best_makespan_seconds": 65,
+      "completed_generations": 80,
+      "evaluations": 100,
+      "elapsed_seconds": 0.3,
+      "termination_reason": "generation_limit"
+    },
+    "certification": {
+      "time_limit_seconds": 7,
+      "elapsed_seconds": 0.2,
+      "solver_status": "OPTIMAL",
+      "solver_version": "illustrative-not-executed",
+      "seed": 0,
+      "num_search_workers": 1,
+      "absolute_gap_limit": 0,
+      "relative_gap_limit": 0,
+      "candidate_makespan_seconds": 65
+    }
+  },
+  "proof": {
+    "method": "cp_sat",
+    "solver_version": "illustrative-not-executed",
+    "solver_status": "OPTIMAL",
+    "lower_bound_seconds": 65
+  },
+  "operations": [
+    {
+      "operation_id": "p1-u1-s1",
+      "unit_id": "p1-u1",
+      "unit_index": 1,
+      "product_id": 1,
+      "step_sequence": 1,
+      "machine_id": 1,
+      "start_seconds": 0,
+      "end_seconds": 10,
+      "duration_seconds": 10,
+      "predecessor_operation_id": null,
+      "waiting_seconds": 0
+    },
+    {
+      "operation_id": "p2-u1-s1",
+      "unit_id": "p2-u1",
+      "unit_index": 1,
+      "product_id": 2,
+      "step_sequence": 1,
+      "machine_id": 2,
+      "start_seconds": 0,
+      "end_seconds": 15,
+      "duration_seconds": 15,
+      "predecessor_operation_id": null,
+      "waiting_seconds": 0
+    },
+    {
+      "operation_id": "p3-u1-s1",
+      "unit_id": "p3-u1",
+      "unit_index": 1,
+      "product_id": 3,
+      "step_sequence": 1,
+      "machine_id": 1,
+      "start_seconds": 10,
+      "end_seconds": 20,
+      "duration_seconds": 10,
+      "predecessor_operation_id": null,
+      "waiting_seconds": 10
+    },
+    {
+      "operation_id": "p1-u1-s2",
+      "unit_id": "p1-u1",
+      "unit_index": 1,
+      "product_id": 1,
+      "step_sequence": 2,
+      "machine_id": 3,
+      "start_seconds": 10,
+      "end_seconds": 25,
+      "duration_seconds": 15,
+      "predecessor_operation_id": "p1-u1-s1",
+      "waiting_seconds": 0
+    },
+    {
+      "operation_id": "p3-u1-s2",
+      "unit_id": "p3-u1",
+      "unit_index": 1,
+      "product_id": 3,
+      "step_sequence": 2,
+      "machine_id": 2,
+      "start_seconds": 20,
+      "end_seconds": 35,
+      "duration_seconds": 15,
+      "predecessor_operation_id": "p3-u1-s1",
+      "waiting_seconds": 0
+    },
+    {
+      "operation_id": "p2-u1-s2",
+      "unit_id": "p2-u1",
+      "unit_index": 1,
+      "product_id": 2,
+      "step_sequence": 2,
+      "machine_id": 3,
+      "start_seconds": 25,
+      "end_seconds": 45,
+      "duration_seconds": 20,
+      "predecessor_operation_id": "p2-u1-s1",
+      "waiting_seconds": 10
+    },
+    {
+      "operation_id": "p3-u1-s3",
+      "unit_id": "p3-u1",
+      "unit_index": 1,
+      "product_id": 3,
+      "step_sequence": 3,
+      "machine_id": 3,
+      "start_seconds": 45,
+      "end_seconds": 65,
+      "duration_seconds": 20,
+      "predecessor_operation_id": "p3-u1-s2",
+      "waiting_seconds": 10
+    }
+  ],
+  "machine_metrics": [
+    {"machine_id": 1, "busy_seconds": 20, "idle_seconds": 45, "utilization_percent": 30.77},
+    {"machine_id": 2, "busy_seconds": 30, "idle_seconds": 35, "utilization_percent": 46.15},
+    {"machine_id": 3, "busy_seconds": 55, "idle_seconds": 10, "utilization_percent": 84.62}
+  ]
+}

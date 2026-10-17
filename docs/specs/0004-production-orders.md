@@ -34,6 +34,9 @@ aprovação do modelo de ordens.
   Pydantic separados e migrations Alembic.
 - [README do backend](../../backend/README.md): instalação, migrations e
   validação locais.
+- [Estudo de otimização](../estudo-otimizacao-producao.md): revisão desta spec
+  e proposta de algoritmo genético baseada nas aulas, para uma entrega posterior
+  de planejamento. A proposta não representa uma decisão aceita.
 
 O backend já permite consultar produtos com suas receitas. A SPEC-0003 não
 incluiu ordens nem quantidades. Esta spec propõe a primeira operação que reúne
@@ -255,7 +258,7 @@ sem alterar migrations já integradas. A migration deve criar:
   pelo service antes da persistência.
 - Não permitir que a exclusão de um produto referenciado invalide uma ordem.
   Não adicionar endpoint de exclusão nesta entrega.
-- Produto e itens devem ser escritos atomicamente. Repositories podem fazer
+- Ordem e itens devem ser escritos atomicamente. Repositories podem fazer
   `flush`, mas somente o service controla commit/rollback, conforme a ADR-005.
 - API e Alembic usam `AXION_DATABASE_PATH` e as migrations são aplicadas
   explicitamente por `alembic upgrade head`. Não usar `create_all()` na

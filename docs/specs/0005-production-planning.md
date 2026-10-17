@@ -1,8 +1,10 @@
 # SPEC-0005 — Otimização e cronograma da produção
 
-> **Status:** Proposta para revisão; não implementada.
+> **Status:** Aprovada; implementação pendente.
 >
 > **Data:** 17/10/2026
+>
+> **Aprovação:** 17/10/2026, por solicitação do responsável.
 >
 > **Diretriz do responsável:** AG obrigatório pela finalidade acadêmica;
 > CP-SAT para verificar a solução e certificar o ótimo quando possível.
@@ -536,7 +538,8 @@ Todos os itens permanecem pendentes até implementação e execução dos testes
 
 ## 10. Plano de implementação e validação
 
-1. Revisar esta spec e a ADR-006 proposta, preservando a obrigatoriedade do AG.
+1. Seguir o escopo aprovado desta spec e revisar a ADR-006 proposta,
+   preservando a obrigatoriedade do AG.
 2. Criar núcleo tipado, gerador de unidades e limites de entrada; implementar
    referências, validador e decodificador com encaixe em lacunas.
 3. Implementar AG e registrar sua contribuição com testes determinísticos.

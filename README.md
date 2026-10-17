@@ -167,6 +167,12 @@ axion/
 
 A documentação completa do projeto está disponível na pasta [`docs`](docs/).
 
+O planejamento está proposto na
+[SPEC-0005 — Otimização e cronograma da produção](docs/specs/0005-production-planning.md),
+com AG obrigatório, verificação/certificação CP-SAT e saída para Gantt por máquina.
+A [ADR-006](docs/adr/0006-ag-cpsat-production-planning.md) registra a proposta
+técnica, ainda não aceita. Esses componentes não estão implementados.
+
 ## Contexto acadêmico
 
 Projeto desenvolvido para a **ExpoTech 2026.2 — Missão 2050: Smart Home & Tecnologias do Futuro**, na categoria **NEXUS**, voltada ao curso de Engenharia da Computação.

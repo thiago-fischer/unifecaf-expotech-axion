@@ -77,6 +77,11 @@ Responsável pelos algoritmos de Inteligência Computacional utilizados para o p
 
 O algoritmo ainda não foi definido.
 
+A [SPEC-0005](specs/0005-production-planning.md) e a
+[ADR-006 proposta](adr/0006-ag-cpsat-production-planning.md) detalham AG
+obrigatório com verificação/certificação CP-SAT e contrato de cronograma para
+Gantt. A proposta ainda não é decisão aceita nem implementação do módulo.
+
 ### Dispositivos Embarcados
 
 Responsáveis pelo controle da maquete, sensores, motores e displays.

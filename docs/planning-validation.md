@@ -62,7 +62,9 @@ Ruff lint/formatação dos dois módulos passaram e `git diff --check` passou.
 O núcleo também foi instalado e testado pelo próprio lockfile. Uma instalação
 adicional em ambiente virtual vazio, fora do repositório, instalou os 39 pacotes
 do backend pelo lockfile e executou o planejador real (ótimo de 30 s) e o OpenAPI.
-O log de CI no PR registra a verificação Linux após publicação da branch.
+A [CI Linux da implementação](https://github.com/thiago-fischer/unifecaf-expotech-axion/actions/runs/39079037267)
+passou no commit `5b894c0`: suítes backend/núcleo, lint/formatação, instalação
+independente do núcleo e árvore limpa ao final.
 
 Testes cobrem contratos HTTP e schemas estritos, catálogo personalizado, nomes
 repetidos, IDs esparsos, paralelismo, quantidades, receitas heterogêneas/revisitas,

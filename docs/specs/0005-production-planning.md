@@ -532,7 +532,7 @@ do merge continua obrigatória; a ADR-006 permanece Proposta.
   Validar também o exemplo JSON contra o schema implementado.
 - [x] CA-20: API cobre `404`, `422`, `409`, `503` e `500`; não grava unidades
   físicas, planos ou estados de execução e não mantém sessão durante a busca.
-- [ ] CA-21: Instalação limpa, suíte do núcleo/backend, lint, formatação e CI
+- [x] CA-21: Instalação limpa, suíte do núcleo/backend, lint, formatação e CI
   passam; READMEs contêm instalação, execução, teste e limites efetivos.
 - [x] CA-22: Experimentos usam várias sementes, referências e entradas variadas;
   publicam ganho, gap, frequência de prova, melhor/média/pior e custo de cálculo,

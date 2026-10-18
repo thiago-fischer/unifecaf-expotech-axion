@@ -10,8 +10,8 @@ SQLite e migrations Alembic, conforme as SPEC-0001, SPEC-0003 e SPEC-0004.
 O planejamento transitório da SPEC-0005 usa AG obrigatório e certificação
 CP-SAT, com operações e métricas para Gantt. A execução física permanece prevista.
 O [frontend React](frontend/README.md), conforme a SPEC-0006, permite usar
-localmente os catálogos, ordens e planejamento em português, com tabela de
-operações e identificação de resultados sem prova de ótimo.
+localmente os catálogos, ordens e planejamento em português, com Gantt por
+máquina, tabela de operações recolhível e identificação de resultados sem prova de ótimo.
 Veja os comandos de instalação,
 execução e testes no [README do backend](backend/README.md).
 As demais funcionalidades descritas abaixo permanecem planejadas.

@@ -26,7 +26,9 @@ O cliente usa `fetch` para `/api`, encaminhado pelo proxy local do Vite à API
 configurada por ambiente. Não há acesso direto ao banco, alteração de contratos
 HTTP ou necessidade de CORS nesse fluxo. Resultados de planejamento são
 transitórios, com nomes do snapshot e distinção entre viabilidade e prova de
-ótimo. Não há execução física. Veja [comandos e validação](../frontend/README.md).
+ótimo. Um Gantt por máquina apresenta as operações; a tabela detalhada começa
+recolhida e permite expansão por mouse ou teclado. Não há execução física.
+Veja [comandos e validação](../frontend/README.md).
 
 ### Backend
 

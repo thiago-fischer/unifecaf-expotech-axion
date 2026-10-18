@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ApiError, planOrder } from '../api/client';
 import type { Order, Plan } from '../api/types';
 import { ErrorNotice, ListState, useList, type Navigate } from '../components/Common';
+import PlanningGantt from '../components/PlanningGantt';
 
 export default function Planning({
   initialOrder,
@@ -192,45 +193,54 @@ export default function Planning({
             Tempos relativos ao início do plano, em segundos. As unidades são lógicas. O resultado é
             transitório e se perde ao sair desta área ou recarregar a página.
           </p>
-          <div className="table-scroll" tabIndex={0} role="region" aria-label="Tabela de operações">
-            <table>
-              <caption>Operações da ordem #{result.order_id}</caption>
-              <thead>
-                <tr>
-                  {[
-                    'Produto',
-                    'Unidade',
-                    'Etapa',
-                    'Máquina',
-                    'Início (s)',
-                    'Fim (s)',
-                    'Duração (s)',
-                  ].map((label) => (
-                    <th key={label} scope="col">
-                      {label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {result.operations.map((operation) => (
-                  <tr key={operation.operation_id}>
-                    <td>
-                      {productNames.get(operation.product_id)} · #{operation.product_id}
-                    </td>
-                    <td>{operation.unit_id}</td>
-                    <td>{operation.step_sequence}</td>
-                    <td>
-                      {machineNames.get(operation.machine_id)} · #{operation.machine_id}
-                    </td>
-                    <td>{operation.start_seconds}</td>
-                    <td>{operation.end_seconds}</td>
-                    <td>{operation.duration_seconds}</td>
+          <PlanningGantt plan={result} />
+          <details className="operations-details">
+            <summary>Tabela de operações ({result.operations.length})</summary>
+            <div
+              className="table-scroll"
+              tabIndex={0}
+              role="region"
+              aria-label="Tabela de operações"
+            >
+              <table>
+                <caption>Operações da ordem #{result.order_id}</caption>
+                <thead>
+                  <tr>
+                    {[
+                      'Produto',
+                      'Unidade',
+                      'Etapa',
+                      'Máquina',
+                      'Início (s)',
+                      'Fim (s)',
+                      'Duração (s)',
+                    ].map((label) => (
+                      <th key={label} scope="col">
+                        {label}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {result.operations.map((operation) => (
+                    <tr key={operation.operation_id}>
+                      <td>
+                        {productNames.get(operation.product_id)} · #{operation.product_id}
+                      </td>
+                      <td>{operation.unit_id}</td>
+                      <td>{operation.step_sequence}</td>
+                      <td>
+                        {machineNames.get(operation.machine_id)} · #{operation.machine_id}
+                      </td>
+                      <td>{operation.start_seconds}</td>
+                      <td>{operation.end_seconds}</td>
+                      <td>{operation.duration_seconds}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
         </section>
       )}
     </>

@@ -33,7 +33,8 @@ embora o planejamento já esteja implementado conforme a SPEC-0005 aprovada.
 - Listagem, cadastro e consulta individual de máquinas, produtos e ordens.
 - Formulário de receita com adição e remoção de etapas.
 - Solicitação explícita de planejamento para uma ordem existente.
-- Resumo do resultado e tabela de operações, inclusive para candidatos sem prova.
+- Resumo do resultado, Gantt por máquina e tabela de operações recolhível,
+  inclusive para candidatos sem prova, conforme ajuste solicitado pelo responsável.
 - Configuração da API por ambiente e acesso pelo navegador em desenvolvimento.
 - Estados de carregamento, vazio, sucesso, validação e falha de comunicação.
 - Interface legível em desktop e telas menores, com navegação por teclado.
@@ -42,7 +43,7 @@ embora o planejamento já esteja implementado conforme a SPEC-0005 aprovada.
 ### Fora desta entrega
 
 - Editar ou excluir cadastros, cancelar ordens ou oferecer ações sem rota na API.
-- Autenticação, cloud, deploy, dashboard completo e Gantt interativo.
+- Autenticação, cloud, deploy, dashboard completo e edição interativa do Gantt.
 - Telemetria, Grafana, firmware, execução física, rastreabilidade física e
   validação final de unidades.
 - Persistência de planos, fila de cálculo, execução assíncrona e novos
@@ -153,7 +154,13 @@ Abortar a espera do navegador não garante interrupção da busca no servidor.
 | Produto e máquina de cada operação | Nomes em `input_snapshot`, associados pelos IDs |
 | Unidade lógica, etapa, início, fim e duração | `unit_id`, `step_sequence`, `start_seconds`, `end_seconds`, `duration_seconds` em `operations` |
 
-Exibir uma linha por operação, preservando operações simultâneas e a ordem
+Exibir primeiro um Gantt por máquina, com escala de tempo comum em segundos e
+barras proporcionais ao início e à duração. Identificar produtos por cores e
+legenda; expor unidade, etapa e tempos ao passar o cursor ou focar a barra pelo
+teclado. Nomes e IDs vêm do snapshot. Permitir rolagem horizontal em telas pequenas.
+
+Manter a tabela abaixo do gráfico, recolhida por padrão, com controle nativo
+para expandir/recolher por mouse ou teclado. Na tabela, exibir uma linha por operação, preservando operações simultâneas e a ordem
 recebida. Os tempos são relativos ao início do plano, em segundos, não horários
 reais. A unidade é lógica no planejamento, sem equivaler à identificação de uma
 peça física. Associar nomes exclusivamente ao snapshot desse resultado, sem
@@ -285,18 +292,25 @@ geral e READMEs foram atualizados. Backend e migrations foram preservados.
 Validações locais executadas:
 
 - `npm run check`, `npm run format:check` e `npm run build`: aprovados.
-- `npm test`: 20 testes aprovados, cobrindo contrato HTTP, planejamento e formulários.
+- `npm test`: 21 testes aprovados, cobrindo contrato HTTP, planejamento, Gantt e formulários.
 - `uv run --locked pytest -q` em `backend/`: 255 testes aprovados, com dois
   avisos de depreciação das dependências de teste existentes.
 - `uv run --locked pytest -q ../optimizer/tests`: 56 testes aprovados.
 - Ruff sobre `frontend/scripts/`: lint e formatação aprovados.
-- `npm run test:e2e`: 1 teste aprovado em Chromium com API real, Alembic e SQLite
+- `npm run test:e2e`: 2 testes aprovados em Chromium com API real, Alembic e SQLite
   descartável; fluxo completo com nomes repetidos, IDs retornados e revisita.
   Ordem de duas unidades com etapas de 4 s e 7 s: quatro operações e makespan de 22 s.
+  Gantt adicional com três produtos, três máquinas e 14 operações; expansão e
+  recolhimento da tabela por teclado e viewport de 390 px verificados.
 - Capturas de desktop e viewport de 390 px inspecionadas; navegação por teclado
   e ausência de transbordamento da página verificadas no teste de navegador.
 - Pipeline de frontend adicionado para repetir tipos, formatação, testes,
   build e integração com API real no GitHub Actions.
+
+Ajuste posterior solicitado pelo responsável: Gantt em SVG por máquina como
+visualização principal e tabela recolhida por padrão com expansão por teclado
+ou mouse. Sem novas dependências ou alterações na API. A cobertura inclui
+escala temporal, operações simultâneas, espera, revisitas e acesso por teclado.
 
 O timeout de 60 s foi configurado no cliente e no proxy; não é garantia de
 latência em todas as entradas. Não houve validação em hardware real.

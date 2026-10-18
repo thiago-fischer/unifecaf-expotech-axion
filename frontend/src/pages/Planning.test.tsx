@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, it, vi } from 'vitest';
 import Planning from './Planning';
@@ -32,8 +32,14 @@ it.each([200, 409])('exibe candidato viável em %i e nomes do snapshot', async (
   await screen.findByRole('option', { name: /Ordem #17/ });
   await userEvent.click(screen.getByRole('button', { name: 'Calcular planejamento' }));
   expect(await screen.findByText('Viável, sem prova de ótimo')).toBeVisible();
-  expect(screen.getByText('Produto do snapshot · #41')).toBeVisible();
-  expect(screen.getByText('Máquina do snapshot · #63')).toBeVisible();
+  expect(screen.getByRole('region', { name: 'Gráfico de Gantt por máquina' })).toBeVisible();
+  const table = screen.getByRole('region', { name: 'Tabela de operações', hidden: true });
+  expect(table).not.toBeVisible();
+  await userEvent.click(screen.getByText('Tabela de operações (1)'));
+  expect(within(table).getByText('Produto do snapshot · #41')).toBeVisible();
+  expect(within(table).getByText('Máquina do snapshot · #63')).toBeVisible();
+  await userEvent.click(screen.getByText('Tabela de operações (1)'));
+  expect(table).not.toBeVisible();
   expect(screen.getByText(/não habilita execução física/)).toBeVisible();
   expect(screen.queryByText('Ótimo comprovado')).not.toBeInTheDocument();
   await userEvent.selectOptions(screen.getByLabelText('Ordem de produção'), '91');

@@ -401,6 +401,83 @@ footer {
   color: #63796c;
   font-size: 11px;
 }
+.operations-details {
+  margin-top: 24px;
+  border-top: 1px solid #dce3db;
+  padding-top: 18px;
+}
+.operations-details summary {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #236650;
+  padding: 6px 0;
+}
+.gantt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin: 20px 0 12px;
+  font-size: 12px;
+}
+.gantt-legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+.gantt-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.gantt-scroll {
+  overflow-x: auto;
+  border: 1px solid #dce3db;
+  border-radius: 8px;
+}
+.gantt-scroll svg {
+  display: block;
+  width: 100%;
+  min-width: 800px;
+}
+.gantt-machine {
+  font-size: 12px;
+  fill: #243b37;
+  font-weight: 600;
+}
+.gantt-machine-id,
+.gantt-tick {
+  font-size: 11px;
+  fill: #5c7067;
+}
+.gantt-grid {
+  stroke: #dce3db;
+  stroke-dasharray: 3 3;
+}
+.gantt-bar-label {
+  font-size: 11px;
+  fill: white;
+  pointer-events: none;
+}
+.gantt-operation {
+  cursor: default;
+}
+.gantt-operation:focus {
+  outline: none;
+}
+.gantt-operation:hover rect,
+.gantt-operation:focus rect {
+  stroke: #142e2b;
+  stroke-width: 3px;
+}
+.gantt-description {
+  font-size: 12px;
+  margin: 12px 0 0;
+  min-height: 3em;
+  overflow-wrap: anywhere;
+}
 .skip-link {
   position: absolute;
   left: 12px;

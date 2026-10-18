@@ -70,16 +70,60 @@ test('cadastro completo e planejamento pela API real em desktop e celular', asyn
   await expect(result).toBeVisible();
   await expect(result).toContainText(`${plan.metrics.makespan_seconds} s`);
   expect(plan.metrics.makespan_seconds).toBe(22);
-  await expect(result.getByRole('row')).toHaveCount(5);
+  await expect(result.getByRole('region', { name: 'Gráfico de Gantt por máquina' })).toBeVisible();
+  await expect(result.getByRole('table')).not.toBeVisible();
   await expect(result).toContainText('Ótimo comprovado');
   await expect(result).toContainText('não habilita execução física');
   await page.screenshot({ path: 'test-results/desktop-planning.png', fullPage: true });
+  const tableToggle = result.locator('summary');
+  await tableToggle.focus();
+  await page.keyboard.press('Enter');
+  await expect(result.getByRole('row')).toHaveCount(5);
+  await page.keyboard.press('Enter');
+  await expect(result.getByRole('table')).not.toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('heading', { name: 'Planejamento', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
-  await page.getByRole('region', { name: 'Tabela de operações' }).focus();
-  await expect(page.getByRole('region', { name: 'Tabela de operações' })).toBeFocused();
+  await page.getByRole('region', { name: 'Cronograma por máquina em segundos' }).focus();
+  await expect(
+    page.getByRole('region', { name: 'Cronograma por máquina em segundos' }),
+  ).toBeFocused();
   await page.screenshot({ path: 'test-results/mobile-planning.png', fullPage: true });
+});
+
+test('Gantt com produtos simultâneos e três máquinas da API real', async ({ page }) => {
+  const products = (await (await page.request.get('/api/products')).json()) as {
+    id: number;
+    name: string;
+  }[];
+  const quantities = new Map([
+    ['Eixo escalonado', 3],
+    ['Placa de fixação', 1],
+    ['Suporte usinado', 2],
+  ]);
+  const items = products
+    .filter((product) => quantities.has(product.name))
+    .map((product) => ({ product_id: product.id, quantity: quantities.get(product.name) }));
+  expect(items).toHaveLength(3);
+  const orderResponse = await page.request.post('/api/orders', { data: { items } });
+  expect(orderResponse.status()).toBe(201);
+  const order = await orderResponse.json();
+  await page.goto('/');
+  await page.getByRole('navigation').getByRole('button', { name: 'Planejamento' }).click();
+  await page.getByLabel('Ordem de produção').selectOption(String(order.id));
+  await page.getByRole('button', { name: 'Calcular planejamento' }).click();
+  const chart = page.getByRole('region', { name: 'Gráfico de Gantt por máquina' });
+  await expect(chart).toBeVisible();
+  await expect(chart.getByRole('img')).toHaveCount(14);
+  await expect(chart).toContainText('Torno CNC');
+  await expect(chart).toContainText('Fresadora CNC');
+  await expect(chart).toContainText('Centro de Usinagem CNC');
+  await page.screenshot({ path: 'test-results/desktop-gantt.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  await page.screenshot({ path: 'test-results/mobile-gantt.png', fullPage: true });
 });

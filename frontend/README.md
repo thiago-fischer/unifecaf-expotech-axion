@@ -62,8 +62,13 @@ validado; 60 s não é garantia de resposta para todas as ordens e máquinas.
 O padrão exige prova de ótimo. A opção “Permitir resultado viável sem prova de
 ótimo” envia `allow_feasible`. `409 optimality_not_proven` mostra o candidato em
 `result` como viável sem prova, sem mudar a política ou repetir a requisição.
-O resumo mostra tempo total, prova e origem do plano; a tabela usa os nomes do
-snapshot. As unidades são lógicas e os tempos relativos ao início do plano.
+O resumo mostra tempo total, prova e origem do plano. O Gantt exibe uma linha
+por máquina, barras proporcionais ao início e à duração e cores por produto,
+usando nomes do snapshot. Passe o cursor ou use Tab nas barras para consultar
+unidade, etapa e tempos. Em telas menores, o gráfico tem rolagem horizontal.
+A tabela detalhada começa recolhida: clique em “Tabela de operações” ou use
+Enter/Espaço no controle para expandir e recolher. As unidades são lógicas e
+os tempos relativos ao início do plano.
 O resultado se perde ao sair da área ou recarregar a página.
 
 Em `503 planning_busy`, o botão aguarda `Retry-After` antes de permitir nova
@@ -101,9 +106,11 @@ O script `scripts/serve_test_api.py` cria um SQLite temporário fora do reposit�
 e aplica as migrations reais. Não utiliza o banco de desenvolvimento.
 Em Linux CI, use `npx playwright install --with-deps chromium`.
 
-O teste percorre cadastro → consulta → planejamento, incluindo nomes repetidos,
+Os testes percorrem cadastro → consulta → planejamento, incluindo nomes repetidos,
 revisita à máquina, uso dos IDs retornados, validação contra o resultado da API,
-teclado e viewport de 390 px. Screenshots ficam em `test-results/` (ignorado).
+teclado e viewport de 390 px. Também conferem o Gantt com três produtos, três
+máquinas e 14 operações, além da expansão e recolhimento da tabela pelo teclado.
+Screenshots ficam em `test-results/` (ignorado).
 Os testes controlados cobrem respostas sem prova, limites, ocupação, falhas de
 rede, timeout e descarte de resultado antigo sem depender de tempo de busca.
 Essa validação é em software, sem hardware real.

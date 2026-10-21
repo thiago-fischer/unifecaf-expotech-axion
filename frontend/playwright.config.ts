@@ -5,7 +5,12 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   timeout: 90_000,
-  use: { baseURL: 'http://127.0.0.1:5174', browserName: 'chromium', trace: 'retain-on-failure' },
+  use: {
+    baseURL: 'http://127.0.0.1:5174',
+    browserName: 'chromium',
+    channel: process.env.PLAYWRIGHT_CHANNEL,
+    trace: 'retain-on-failure',
+  },
   webServer: [
     {
       command: 'uv run --locked --no-sync python ../frontend/scripts/serve_test_api.py',

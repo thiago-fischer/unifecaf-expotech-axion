@@ -177,6 +177,11 @@ axion/
 
 A documentação completa do projeto está disponível na pasta [`docs`](docs/).
 
+A [SPEC-0007 — Maquete virtual 3D](docs/specs/0007-maquete-virtual.md)
+descreve a demonstração animada implementada no frontend, com máquinas,
+almoxarifado, transporte e estoque auxiliar. Funciona sem a API; integração
+com o planejador e hardware permanece futura. Revisão por outro integrante pendente.
+
 O planejamento está implementado conforme a
 [SPEC-0005 — Otimização e cronograma da produção](docs/specs/0005-production-planning.md),
 com AG obrigatório, verificação/certificação CP-SAT e saída para Gantt por máquina.

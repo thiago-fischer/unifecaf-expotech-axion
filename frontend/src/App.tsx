@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Machines, Orders, Products } from './pages/Catalog';
 import Planning from './pages/Planning';
 import type { Area, Navigate } from './components/Common';
 
-const areas: Area[] = ['Máquinas', 'Produtos', 'Ordens', 'Planejamento'];
+const Simulation = lazy(() => import('./pages/Simulation'));
+
+const areas: Area[] = ['Máquinas', 'Produtos', 'Ordens', 'Planejamento', 'Simulação'];
 const descriptions: Record<Area, string> = {
+  Simulação: 'Explore o movimento de cada unidade na maquete virtual.',
   Máquinas: 'Organize as estações da sua linha de produção.',
   Produtos: 'Transforme etapas e tempos em receitas de produção.',
   Ordens: 'Reúna os produtos que você precisa produzir.',
@@ -55,6 +58,11 @@ export default function App() {
         {area === 'Produtos' && <Products navigate={navigate} />}
         {area === 'Ordens' && <Orders navigate={navigate} />}
         {area === 'Planejamento' && <Planning initialOrder={orderId} navigate={navigate} />}
+        {area === 'Simulação' && (
+          <Suspense fallback={<p>Carregando maquete…</p>}>
+            <Simulation />
+          </Suspense>
+        )}
         <footer>Axion · Planejamento local da produção</footer>
       </main>
     </div>

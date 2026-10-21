@@ -9,6 +9,9 @@ e produtos com receitas completas, além de ordens com produtos e quantidades,
 SQLite e migrations Alembic, conforme as SPEC-0001, SPEC-0003 e SPEC-0004.
 O planejamento transitório da SPEC-0005 usa AG obrigatório e certificação
 CP-SAT, com operações e métricas para Gantt. A execução física permanece prevista.
+O [frontend React](frontend/README.md), conforme a SPEC-0006, permite usar
+localmente os catálogos, ordens e planejamento em português, com Gantt por
+máquina, tabela de operações recolhível e identificação de resultados sem prova de ótimo.
 Veja os comandos de instalação,
 execução e testes no [README do backend](backend/README.md).
 As demais funcionalidades descritas abaixo permanecem planejadas.
@@ -23,17 +26,17 @@ Quando a sequência de produção não é bem planejada, podem surgir problemas 
 
 O Axion busca resolver esse problema por meio de um sistema capaz de planejar automaticamente a produção, considerando os produtos solicitados, suas quantidades, as etapas produtivas, o tempo de processamento em cada máquina e a disponibilidade dos recursos.
 
-## Funcionalidades planejadas
+## Funcionalidades do projeto
 
-- Cadastro de produtos e etapas produtivas.
-- Criação de produtos personalizados.
-- Criação de ordens de produção.
-- Otimização da programação da produção.
-- Comunicação com dispositivos embarcados.
-- Acompanhamento do estado das máquinas.
-- Rastreabilidade das matérias-primas.
-- Validação final das unidades produzidas.
-- Coleta e visualização de métricas do processo.
+- Cadastro de produtos e etapas produtivas: implementado na API e no frontend.
+- Criação de produtos personalizados: implementada na API e no frontend.
+- Criação de ordens de produção: implementada na API e no frontend.
+- Otimização da programação: implementada em software, com consulta pelo frontend.
+- Comunicação com dispositivos embarcados: planejada.
+- Acompanhamento do estado das máquinas: planejado.
+- Rastreabilidade das matérias-primas: planejada.
+- Validação final das unidades produzidas: planejada.
+- Coleta e visualização de métricas do processo físico: planejadas.
 
 ## Arquitetura do software
 
@@ -43,7 +46,13 @@ O sistema será composto por módulos integrados, cada um com uma responsabilida
 
 Interface responsável pela interação com o usuário.
 
-Funcionalidades previstas:
+Implementado em React com TypeScript e Vite para uso local. Cadastro e consulta
+de máquinas, produtos e ordens, além de planejamento em software, estão disponíveis.
+Consulte o [README do frontend](frontend/README.md) e a
+[ADR-007](docs/adr/0007-react-frontend.md). Acompanhamento físico e rastreabilidade
+continuam planejados.
+
+Funcionalidades do frontend, incluindo evoluções previstas:
 
 - cadastro e seleção de produtos;
 - criação de produtos personalizados;

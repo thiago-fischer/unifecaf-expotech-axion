@@ -199,8 +199,13 @@ candidato; `allow_feasible` permite resultado exploratório 200. Consulte o
 [núcleo e seus limites](../optimizer/README.md). Execução e demais integrações
 permanecem planejadas.
 
-As tecnologias específicas do frontend e a configuração definitiva do firmware
-permanecem em definição.
+O frontend local está implementado em React, TypeScript e Vite conforme a
+[SPEC-0006](specs/0006-react-frontend.md) e a
+[ADR-007](adr/0007-react-frontend.md): permite cadastrar e consultar máquinas,
+produtos e ordens e solicitar planejamento em software. A interface diferencia
+ótimo comprovado de candidato viável e não oferece execução física. Consulte
+o [README do frontend](../frontend/README.md). A configuração definitiva do
+firmware permanece em definição.
 
 ## 10. Observabilidade e Métricas
 
@@ -272,7 +277,6 @@ Neste estágio do projeto permanecem em definição:
 - tecnologia de identificação e rastreabilidade;
 - protocolo de comunicação entre dispositivos;
 - vulnerabilidade de rede que será estudada;
-- tecnologia de frontend;
 - detalhes de integração entre os componentes;
 - plataforma de cloud;
 - estratégia de CI/CD;

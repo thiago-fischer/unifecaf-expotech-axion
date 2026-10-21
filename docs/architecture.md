@@ -1,10 +1,10 @@
 # Arquitetura do Axion
 
-> **Versão:** 0.2
+> **Versão:** 0.3
 >
 > **Status:** Em definição
 >
-> **Última atualização:** 21/09/2026
+> **Última atualização:** 17/10/2026
 
 ## Visão Geral
 
@@ -16,7 +16,19 @@ O Axion será desenvolvido utilizando uma arquitetura composta por diferentes co
 
 Responsável pela interface com o usuário.
 
-Tecnologia ainda não definida.
+Implementado em `frontend/` com React, TypeScript e Vite para uso local,
+conforme a [SPEC-0006](specs/0006-react-frontend.md) e a
+[ADR-007](adr/0007-react-frontend.md). Componentes funcionais e hooks organizam
+as áreas de máquinas, produtos, ordens e planejamento. A navegação é em memória,
+sem roteador; CSS responsivo atende desktop e telas menores.
+
+O cliente usa `fetch` para `/api`, encaminhado pelo proxy local do Vite à API
+configurada por ambiente. Não há acesso direto ao banco, alteração de contratos
+HTTP ou necessidade de CORS nesse fluxo. Resultados de planejamento são
+transitórios, com nomes do snapshot e distinção entre viabilidade e prova de
+ótimo. Um Gantt por máquina apresenta as operações; a tabela detalhada começa
+recolhida e permite expansão por mouse ou teclado. Não há execução física.
+Veja [comandos e validação](../frontend/README.md).
 
 ### Backend
 
@@ -135,6 +147,7 @@ axion/
 | Área | Tecnologia |
 |---|---|
 | Backend | Python |
+| Frontend | React, TypeScript e Vite |
 | Framework Backend | FastAPI |
 | Banco de Dados | SQLite |
 | ORM | SQLAlchemy 2.x, síncrono |
@@ -147,7 +160,6 @@ axion/
 
 ## Tecnologias Ainda em Definição
 
-- frontend;
 - protocolo de comunicação;
 - aceitação formal da ADR-006 para AG/CP-SAT já implementados pela SPEC-0005;
 - cloud;
@@ -160,3 +172,4 @@ axion/
 - ADR-003 — Monorepo
 - ADR-004 — Arquitetura em Camadas para o Backend
 - [ADR-005 — SQLAlchemy, Pydantic e Alembic](adr/0005-sqlalchemy-pydantic-alembic.md)
+- [ADR-007 — Frontend React local](adr/0007-react-frontend.md)

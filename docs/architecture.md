@@ -173,3 +173,11 @@ axion/
 - ADR-004 — Arquitetura em Camadas para o Backend
 - [ADR-005 — SQLAlchemy, Pydantic e Alembic](adr/0005-sqlalchemy-pydantic-alembic.md)
 - [ADR-007 — Frontend React local](adr/0007-react-frontend.md)
+
+## Maquete virtual
+
+A área Simulação do frontend implementa a SPEC-0007 com Three.js e motor
+local determinístico em TypeScript, conforme a [ADR-008](adr/0008-maquete-virtual-threejs.md).
+A cena consome estado e interpola movimentos; regras de capacidade e tempo
+ficam separadas da renderização. Não há novos endpoints ou persistência.
+O cenário demonstrativo é independente do otimizador e não controla hardware.

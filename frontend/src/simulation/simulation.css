@@ -1,0 +1,316 @@
+.simulation {
+  color: #cbd9e5;
+  background: #101d28;
+  border-radius: 18px;
+  padding: 26px;
+  overflow: hidden;
+}
+.sim-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+.sim-tag {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #52d8bd;
+}
+.sim-top h2 {
+  font-size: 26px;
+  color: #f2f6fa;
+  margin: 10px 0;
+}
+.sim-top h2 span {
+  color: #54dfbe;
+}
+.sim-top p {
+  font-size: 13px;
+  color: #92a8ba;
+}
+.sim-status {
+  font-size: 12px;
+  border: 1px solid #345164;
+  border-radius: 20px;
+  padding: 8px 15px;
+  white-space: nowrap;
+}
+.sim-stage {
+  position: relative;
+  background: #0b141d;
+  border: 1px solid #29404f;
+  border-radius: 12px;
+  margin-top: 24px;
+  overflow: hidden;
+}
+.sim-scene {
+  height: 470px;
+  position: relative;
+}
+.sim-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+.sim-overlay {
+  position: absolute;
+  z-index: 1;
+  top: 20px;
+  left: 22px;
+  pointer-events: none;
+  display: grid;
+  gap: 5px;
+  font-size: 16px;
+  letter-spacing: 3px;
+}
+.sim-overlay b {
+  color: #52d8bd;
+}
+.sim-overlay small {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #93aabd;
+}
+.sim-stage-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  font-size: 11px;
+  color: #91a5b6;
+  border-top: 1px solid #223644;
+}
+.sim-stage-bottom button {
+  font-size: 11px;
+  background: #223645;
+  padding: 6px 10px;
+}
+.sim-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 20px 0;
+}
+.sim-controls button {
+  font-size: 12px;
+  background: #294356;
+}
+.sim-controls button:first-child {
+  background: #62e4bf;
+  color: #09271e;
+}
+.sim-controls label {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 0 8px;
+}
+.sim-controls select {
+  background: #203443;
+  color: white;
+  border: 1px solid #476171;
+  padding: 7px;
+  border-radius: 5px;
+  width: auto;
+}
+.sim-controls input {
+  width: auto;
+}
+.sim-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-block: 1px solid #2a3d4a;
+  padding: 20px 0;
+}
+.sim-metrics > div {
+  padding: 0 18px;
+  border-right: 1px solid #2a3d4a;
+}
+.sim-metrics > div:first-child {
+  padding-left: 0;
+}
+.sim-metrics small {
+  font-size: 9px;
+  letter-spacing: 1.3px;
+  color: #97adbc;
+}
+.sim-metrics strong {
+  display: block;
+  font-size: 29px;
+  color: #edf5fa;
+  margin-top: 5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.sim-metrics em {
+  font-style: normal;
+  font-size: 13px;
+  color: #94abba;
+}
+.sim-machines {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+.sim-machines article {
+  background: #1b2d3b;
+  padding: 15px;
+  border-radius: 8px;
+  display: grid;
+  gap: 5px;
+}
+.sim-machines article > span {
+  color: #64e1c2;
+  font-size: 12px;
+}
+.sim-machines b {
+  font-size: 13px;
+}
+.sim-machines small {
+  font-size: 11px;
+  color: #95acbe;
+}
+.sim-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.simulation h3 {
+  font-size: 15px;
+  color: #e5eef5;
+}
+.simulation h3 small {
+  display: block;
+  font-weight: 400;
+  color: #90a7b9;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.sim-units {
+  display: grid;
+  gap: 7px;
+}
+.sim-units button {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 12px;
+  border: 1px solid #2b4353;
+  background: #172937;
+  color: #dfebf4;
+  padding: 11px;
+  font-size: 12px;
+}
+.sim-units button[aria-pressed='true'] {
+  border-color: #56d8b6;
+  background: #213c47;
+}
+.sim-units i {
+  width: 12px;
+  height: 18px;
+  border-radius: 3px;
+}
+.sim-units span:nth-child(2) {
+  flex: 1;
+}
+.sim-units small {
+  display: block;
+  color: #a1b5c5;
+  font-size: 10px;
+  margin-top: 3px;
+}
+.sim-history p {
+  font-size: 12px;
+}
+.sim-route {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sim-route span {
+  padding: 5px 8px;
+  background: #253c4c;
+  border-radius: 5px;
+}
+.sim-route .done {
+  color: #66e2c0;
+}
+.sim-history ol,
+.sim-log ol {
+  max-height: 220px;
+  overflow: auto;
+  font-size: 11px;
+  padding-left: 22px;
+  color: #a9bfce;
+}
+.sim-history li,
+.sim-log li {
+  padding: 6px 0;
+}
+.sim-log {
+  margin-top: 24px;
+  border-top: 1px solid #304451;
+  padding-top: 14px;
+  font-size: 12px;
+}
+.sim-note {
+  font-size: 10px;
+  color: #8ba2b4;
+  margin: 20px 0 0;
+}
+.sim-graphic-error {
+  position: absolute;
+  top: 45%;
+  padding: 20px;
+  font-size: 13px;
+}
+.simulation button:focus-visible {
+  outline-color: #72edce;
+}
+@media (max-width: 700px) {
+  .simulation {
+    padding: 14px;
+  }
+  .sim-top {
+    display: block;
+  }
+  .sim-top h2 {
+    font-size: 21px;
+  }
+  .sim-status {
+    display: inline-block;
+  }
+  .sim-scene {
+    height: 340px;
+  }
+  .sim-metrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+  .sim-metrics > div {
+    padding: 0;
+    border: 0;
+  }
+  .sim-details {
+    grid-template-columns: 1fr;
+  }
+  .sim-machines {
+    gap: 6px;
+  }
+  .sim-machines article {
+    padding: 9px;
+  }
+  .sim-stage-bottom > span {
+    max-width: 50%;
+  }
+  .sim-controls label {
+    margin: 0;
+  }
+  .sim-overlay small {
+    font-size: 7px;
+  }
+}

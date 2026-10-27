@@ -1,8 +1,9 @@
 # Backend do Axion
 
-Implementação das SPEC-0001, SPEC-0003, SPEC-0004 e SPEC-0005: cadastro, listagem e consulta
-de máquinas, produtos com etapas produtivas e ordens com produtos e quantidades.
-Inclui planejamento transitório com AG obrigatório e certificação CP-SAT.
+Implementação das SPEC-0001, SPEC-0003, SPEC-0004, SPEC-0005 e SPEC-0009:
+cadastro, listagem e consulta de máquinas, produtos com etapas produtivas e
+ordens com produtos e quantidades; planejamento transitório com AG obrigatório
+e certificação CP-SAT; registro de eventos de progresso.
 Execução local, sem autenticação e sem comunicação com hardware. Execução das
 ordens e estado operacional permanecem planejados.
 
@@ -270,6 +271,38 @@ Não há edição, exclusão, cancelamento, status, horário de criação ou pag
 As receitas são referenciadas, sem cópia; sua futura edição exigirá definir a
 preservação do histórico das ordens.
 
+## Eventos de progresso (SPEC-0009)
+
+`POST /orders/{order_id}/progress` grava um evento declarado por um dispositivo,
+associado a uma ordem e a um produto presente nela. O endpoint não inicia a
+ordem nem confirma fisicamente uma operação.
+
+```json
+{
+  "device_id": "esp32-linha-01",
+  "event_id": "evt-001",
+  "unit_id": "MAT-001",
+  "product_id": 1,
+  "status": "in_progress",
+  "step_sequence": 1
+}
+```
+
+Estados aceitos: `started`, `in_progress`, `completed` e `failed`. O corpo
+completo, limites e códigos HTTP estão na
+[SPEC-0009](../docs/specs/0009-api-progresso-firmware.md). Evento novo retorna
+`201`; reenvio idêntico para o mesmo dispositivo retorna `200` e
+`duplicate: true`; reuso do identificador com outro conteúdo retorna `409`.
+Ordem ausente retorna `404`; produto fora da ordem ou entrada inválida retorna
+`422`. A idempotência é garantida pela combinação `(device_id, event_id)`.
+
+Os eventos são persistidos por migration Alembic e vinculados ao item da ordem
+por chave estrangeira. A rota não autentica dispositivos. A API escuta em
+`127.0.0.1` por padrão; não exponha a uma rede compartilhada. A PoC ESP32 ainda
+não envia eventos para este endpoint. Veja a
+[SPEC-0008](../docs/specs/0008-firmware-esp32.md) e
+[ADR-010](../docs/adr/0010-api-eventos-progresso.md).
+
 ## Planejamento de uma ordem (SPEC-0005)
 
 `POST /orders/{order_id}/plan` exige corpo JSON; `{}` usa os padrões:
@@ -419,6 +452,8 @@ ordenação, repetição de demanda, reinício da aplicação, OpenAPI e revalid
 do service fora de HTTP. Falhas simuladas após gravação parcial e no commit
 verificam rollback de ordem e itens. Testes de migration validam restrições
 diretamente no SQLite, preservação do catálogo e upgrade/downgrade/reaplicação.
+Testes da SPEC-0009 cobrem persistência, idempotência, conflito de evento,
+vínculo a produto da ordem, validação estrita e o contrato OpenAPI.
 
 As versões transitivas atuais emitem dois avisos de depreciação no TestClient
 (HTTPX e alias BlockingPortal do AnyIO). Eles não impedem os testes e não são

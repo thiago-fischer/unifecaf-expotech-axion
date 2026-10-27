@@ -99,7 +99,11 @@ O principal indicador de otimização será o tempo total necessário para concl
 
 Responsáveis pelo controle dos componentes físicos da maquete, como sensores, atuadores, displays, mecanismos de movimentação e estações de processamento.
 
-Poderão ser utilizados Arduino, ESP32 ou tecnologias equivalentes.
+A PoC para ESP32/PlatformIO recebe JSON e imprime no serial, sem acionar
+hardware. O backend já registra eventos de progresso, mas ainda não existe
+integração física entre os dois componentes. Consulte o
+[README do firmware](firmware/README.md), a [SPEC-0008](docs/specs/0008-firmware-esp32.md)
+e a [SPEC-0009](docs/specs/0009-api-progresso-firmware.md).
 
 ### Banco de dados
 
@@ -181,6 +185,14 @@ A [SPEC-0007 — Maquete virtual 3D](docs/specs/0007-maquete-virtual.md)
 descreve a demonstração animada implementada no frontend, com máquinas,
 almoxarifado, transporte e estoque auxiliar. Funciona sem a API; integração
 com o planejador e hardware permanece futura. Revisão por outro integrante pendente.
+
+A [SPEC-0008 — Firmware ESP32](docs/specs/0008-firmware-esp32.md) e a
+[ADR-009](docs/adr/0009-firmware-esp32-platformio.md) documentam a PoC PlatformIO:
+servidor HTTP de teste sem controle de motores ou sensores. A
+[SPEC-0009 — API de progresso](docs/specs/0009-api-progresso-firmware.md) e a
+[ADR-010](docs/adr/0010-api-eventos-progresso.md) definem o registro de eventos
+no backend; a conexão física entre o firmware e a API, autenticação e validação
+em hardware permanecem pendentes. Consulte o [README do firmware](firmware/README.md).
 
 O planejamento está implementado conforme a
 [SPEC-0005 — Otimização e cronograma da produção](docs/specs/0005-production-planning.md),

@@ -17,6 +17,8 @@ dist/
 *.sqlite3-*
 backend/data/
 node_modules/
+firmware/.pio/
+firmware/include/secrets.h
 coverage/
 playwright-report/
 test-results/

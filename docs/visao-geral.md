@@ -175,7 +175,13 @@ O frontend será responsável pela interação com o usuário, incluindo:
 
 O backend será responsável pelas regras do sistema, integração entre os componentes, gerenciamento das ordens e comunicação com o módulo de otimização e com a linha física.
 
-Os dispositivos embarcados, utilizando Arduino, ESP32 ou tecnologia equivalente, serão responsáveis pelo controle das máquinas, displays, sensores, atuadores e mecanismos de movimentação.
+O firmware possui uma PoC em PlatformIO para ESP32/Arduino, com servidor HTTP
+de teste que recebe JSON e imprime no serial, sem acionar hardware. A
+[SPEC-0008](specs/0008-firmware-esp32.md) e a [ADR-009](adr/0009-firmware-esp32-platformio.md)
+documentam a implementação e seus limites. O backend também registra eventos
+via API conforme [SPEC-0009](specs/0009-api-progresso-firmware.md), mas o
+firmware ainda não envia eventos nem controla máquinas, displays, sensores,
+atuadores ou mecanismos físicos.
 
 O sistema também contará com persistência de dados para armazenamento das informações relacionadas à produção.
 
@@ -204,8 +210,9 @@ O frontend local está implementado em React, TypeScript e Vite conforme a
 [ADR-007](adr/0007-react-frontend.md): permite cadastrar e consultar máquinas,
 produtos e ordens e solicitar planejamento em software. A interface diferencia
 ótimo comprovado de candidato viável e não oferece execução física. Consulte
-o [README do frontend](../frontend/README.md). A configuração definitiva do
-firmware permanece em definição.
+o [README do frontend](../frontend/README.md). A pilha da PoC de firmware foi
+definida; topologia de rede, segurança, componentes físicos e integração final
+permanecem em definição.
 
 ## 10. Observabilidade e Métricas
 
@@ -275,7 +282,9 @@ Neste estágio do projeto permanecem em definição:
 - mecanismo de movimento vertical;
 - mecanismo definitivo de captura da matéria-prima;
 - tecnologia de identificação e rastreabilidade;
-- protocolo de comunicação entre dispositivos;
+- contrato de comandos backend → ESP32, autenticação e segurança do protocolo;
+- associação e reconciliação de eventos com unidades físicas; a API de
+  progresso da SPEC-0009 registra eventos declarados, sem validar execução;
 - vulnerabilidade de rede que será estudada;
 - detalhes de integração entre os componentes;
 - plataforma de cloud;

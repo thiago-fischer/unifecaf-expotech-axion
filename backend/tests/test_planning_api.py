@@ -78,6 +78,7 @@ def test_plan_new_catalog_and_no_writes(client: TestClient) -> None:
             "product_steps",
             "production_orders",
             "production_order_items",
+            "progress_events",
         }
 
 

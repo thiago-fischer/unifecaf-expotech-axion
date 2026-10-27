@@ -111,12 +111,21 @@ exploratório. Não há persistência de plano, migration nem execução física
 
 Responsáveis pelo controle da maquete, sensores, motores e displays.
 
-**Tecnologias previstas:**
+**PoC implementada:** módulo ESP32 com PlatformIO e framework Arduino,
+configuração `esp32dev`, servidor `ESPAsyncWebServer` na porta 80 e
+`ArduinoJson`. A rota local `POST /api/firmware/command` apenas recebe um
+objeto JSON, imprime no serial e não controla GPIO ou hardware. As versões,
+limites e pendências estão na [SPEC-0008](specs/0008-firmware-esp32.md) e
+[ADR-009](adr/0009-firmware-esp32-platformio.md).
 
-- ESP32
-- Arduino ou equivalente
+A [SPEC-0009](specs/0009-api-progresso-firmware.md) define e implementa no
+backend `POST /orders/{order_id}/progress` para registrar eventos imutáveis
+de progresso. Não há integração entre a PoC ESP32 e essa rota, autenticação,
+controle físico nem validação de execução real. A [ADR-010](adr/0010-api-eventos-progresso.md)
+registra o contrato e os limites; hardware, segurança de rede e associação de
+unidades continuam pendentes.
 
-O protocolo de comunicação ainda não foi definido.
+O contrato de comandos backend → ESP32 permanece em definição.
 
 ### Observabilidade
 
@@ -154,13 +163,14 @@ axion/
 | Schemas da API | Pydantic |
 | Migrations | Alembic |
 | Otimização | Python |
+| Firmware PoC | ESP32, PlatformIO, Arduino |
 | Observabilidade | Grafana |
 | Versionamento | Git / GitHub |
 | Organização | Monorepo |
 
 ## Tecnologias Ainda em Definição
 
-- protocolo de comunicação;
+- contrato de comandos backend → ESP32, autenticação e segurança do protocolo;
 - aceitação formal da ADR-006 para AG/CP-SAT já implementados pela SPEC-0005;
 - cloud;
 - mecanismo de identificação da matéria-prima.
@@ -172,6 +182,8 @@ axion/
 - ADR-003 — Monorepo
 - ADR-004 — Arquitetura em Camadas para o Backend
 - [ADR-005 — SQLAlchemy, Pydantic e Alembic](adr/0005-sqlalchemy-pydantic-alembic.md)
+- [ADR-009 — ESP32, PlatformIO e bibliotecas](adr/0009-firmware-esp32-platformio.md)
+- [ADR-010 — API de eventos de progresso](adr/0010-api-eventos-progresso.md)
 - [ADR-007 — Frontend React local](adr/0007-react-frontend.md)
 
 ## Maquete virtual

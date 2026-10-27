@@ -59,3 +59,20 @@ def session(empty_database: Path) -> Iterator[Session]:
 def client(empty_database: Path) -> Iterator[TestClient]:
     with TestClient(create_app()) as client:
         yield client
+
+
+@pytest.fixture
+def products(client: TestClient) -> list[dict[str, object]]:
+    machine = client.post("/machines", json={"name": "M"}).json()
+    return [
+        client.post(
+            "/products",
+            json={
+                "name": name,
+                "steps": [
+                    {"sequence": 1, "machine_id": machine["id"], "processing_time_seconds": 10}
+                ],
+            },
+        ).json()
+        for name in ["A", "B"]
+    ]

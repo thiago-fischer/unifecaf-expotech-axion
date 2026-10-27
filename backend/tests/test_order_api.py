@@ -12,23 +12,6 @@ from app.repositories.order_repository import OrderRepository
 from app.schemas.order_schema import OrderCreate
 
 
-@pytest.fixture
-def products(client: TestClient) -> list[dict[str, object]]:
-    machine = client.post("/machines", json={"name": "M"}).json()
-    return [
-        client.post(
-            "/products",
-            json={
-                "name": name,
-                "steps": [
-                    {"sequence": 1, "machine_id": machine["id"], "processing_time_seconds": 10}
-                ],
-            },
-        ).json()
-        for name in ["A", "B"]
-    ]
-
-
 def assert_no_orders(client: TestClient) -> None:
     assert client.get("/orders").json() == []
     with client.app.state.session_factory() as session:
@@ -201,6 +184,7 @@ def test_openapi(client: TestClient) -> None:
     paths = document["paths"]
     assert set(paths["/orders"]) == {"post", "get"}
     assert set(paths["/orders/{order_id}"]) == {"get"}
+    assert set(paths["/orders/{order_id}/progress"]) == {"post"}
     assert {"201", "422"} <= set(paths["/orders"]["post"]["responses"])
     assert {"200", "404", "422"} <= set(paths["/orders/{order_id}"]["get"]["responses"])
     schemas = document["components"]["schemas"]

@@ -141,6 +141,12 @@ Abra **Simulação** para uma demonstração 3D independente da API. Execute
 `npm ci` e `npm run dev`; a API só é necessária para as outras áreas.
 A cena usa Three.js, materiais e geometria próprios, sem assets remotos.
 
+À esquerda de M1, a maquete mostra uma plataforma elevada com leitor RFID
+demonstrativo. A garra para diante dele por 0,01 segundo simulado; a cena exibe
+o ID da unidade e aumenta o indicador durante a leitura, mantendo o destaque
+por mais 0,3 segundo simulado para facilitar a visualização. Isso é apenas
+visual e não lê etiquetas RFID físicas.
+
 Use Iniciar, Pausar/Continuar, Reiniciar, Próximo evento e velocidades de
 0,5× a 4×. Arraste para orbitar, role para aproximar e use Restaurar câmera.
 Selecione uma peça na cena ou na lista para consultar seu histórico. A aba

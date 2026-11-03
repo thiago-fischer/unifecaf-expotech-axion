@@ -45,6 +45,9 @@ continua proposta; esta spec não altera o status das decisões de otimização.
   espera entre etapas e utilização do estoque auxiliar.
 - Regras de execução com capacidade finita e tempos de transporte explícitos.
 - Controles de reprodução, seleção de unidades e histórico de eventos.
+- Plataforma elevada ao lado de M1; a garra para diante do leitor RFID por
+  0,01 segundo simulado, amplia o indicador visual da leitura e o mantém
+  destacado por mais 0,3 segundo simulado para facilitar a visualização.
 - Indicadores da execução simulada e alternativa textual acessível.
 
 ### Fora desta entrega
@@ -59,6 +62,8 @@ continua proposta; esta spec não altera o status das decisões de otimização.
 
 A tela deve identificar o cenário como **Demonstração simulada**. Identidades,
 receitas, estoques e resultados locais não representam registros físicos reais.
+O estado e o ID mostrados pelo leitor RFID são apenas uma animação visual baseada
+na unidade simulada transportada; não representam uma leitura de sensor real.
 
 ## 3. Composição da maquete
 
@@ -70,6 +75,7 @@ receitas, estoques e resultados locais não representam registros físicos reais
 | Estoque auxiliar | Duas vagas visíveis e identificadas para espera entre operações |
 | Transportador | Mesa deslizante com fuso visível, um único conjunto móvel e capacidade de uma unidade |
 | Captura vertical | Cabeçote conceitual com animação de aproximação, coleta, elevação e descarga |
+| Leitor RFID demonstrativo | Plataforma elevada à esquerda de M1; a garra para diante dele por 0,01 segundo simulado; o LED cresce e fica destacado por mais 0,3 segundo simulado, sem leitura física |
 | Validação | Uma posição para conferir identidade e histórico esperado da unidade |
 | Saída | Posições para unidades aprovadas e contador de produtos concluídos |
 | Rejeitados | Área separada para unidades que falhem na validação simulada |

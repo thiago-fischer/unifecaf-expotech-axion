@@ -142,21 +142,37 @@ export default function Scene({
       box(0.1, 0.45, 0.12, 0.36, 1.45, 0, '#d5e4e9', carriage),
     ];
     const rfidX = RFID_POSITION;
-    box(2, 0., 1.7, rfidX, 2.92, 1.2, '#536d7b');
-    for (const x of [rfidX - 0.85, rfidX + 0.85]) {
-      for (const z of [0.5, 1.9]) box(0.22, 2.84, 0.22, x, 1.42, z, '#849aa6');
-    }
-    for (const z of [0.5, 1.9]) box(1.78, 0.13, 0.18, rfidX, 1.55, z, '#405765');
-    box(1.86, 0.05, 0.05, rfidX, 3.01, 0.34, '#52d8bd');
-    box(0.32, 0.14, 0.24, rfidX, 3.07, 0.52, '#1d303e');
-    const rfidLed = box(0.07, 0.06, 0.07, rfidX, 3.17, 0.52, '#56edb9');
-    const rfidBeam = box(0.035, 0.42, 0.82, rfidX, 3.03, 0, '#39d6bc');
+    const armZ = -1.25;
+    const rfidSensorZ = -0.18;
+    const rfidBeamZ = rfidSensorZ - 0.52;
+    const armLength = rfidSensorZ - armZ;
+    box(0.58, 0.12, 0.58, rfidX, 0.12, armZ, '#536d7b');
+    const armPost = new T.Mesh(
+      new T.CylinderGeometry(0.09, 0.12, 3, 16),
+      new T.MeshStandardMaterial({ color: '#718695', metalness: 0.78, roughness: 0.3 }),
+    );
+    armPost.position.set(rfidX, 1.56, armZ);
+    armPost.castShadow = true;
+    scene.add(armPost);
+    box(0.14, 0.14, armLength, rfidX, 3.12, (armZ + rfidSensorZ) / 2, '#849aa6');
+    const armJoint = new T.Mesh(
+      new T.SphereGeometry(0.14, 16, 12),
+      new T.MeshStandardMaterial({ color: '#d2a75f', metalness: 0.68, roughness: 0.3 }),
+    );
+    armJoint.position.set(rfidX, 3.12, armZ);
+    armJoint.castShadow = true;
+    scene.add(armJoint);
+    box(0.4, 0.1, 0.32, rfidX, 3.19, rfidSensorZ, '#536d7b');
+    box(1.86, 0.05, 0.05, rfidX, 3.01, rfidSensorZ - 0.18, '#52d8bd');
+    box(0.32, 0.14, 0.24, rfidX, 3.07, rfidSensorZ, '#1d303e');
+    const rfidLed = box(0.07, 0.06, 0.07, rfidX, 3.17, rfidSensorZ, '#56edb9');
+    const rfidBeam = box(0.035, 0.42, 1.2, rfidX, 3.03, rfidBeamZ, '#39d6bc');
     const beamMaterial = rfidBeam.material as T.MeshStandardMaterial;
     beamMaterial.transparent = true;
     beamMaterial.opacity = 0.06;
     beamMaterial.emissive.set('#39d6bc');
     beamMaterial.emissiveIntensity = 0.3;
-    const rfidLabel = text('RFID · PRONTO', rfidX, 3.42, 0.65, 1.8, '#66f1cb');
+    const rfidLabel = text('RFID · PRONTO', rfidX, 3.42, rfidSensorZ + 0.13, 1.8, '#66f1cb');
     const displays: Record<string, (s: string) => void> = {};
     const lamps: Record<string, T.Mesh> = {};
     Object.entries(positions).forEach(([name, x]) => {

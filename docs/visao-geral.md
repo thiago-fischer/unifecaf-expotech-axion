@@ -179,7 +179,10 @@ Os dispositivos embarcados, utilizando Arduino, ESP32 ou tecnologia equivalente,
 
 O sistema também contará com persistência de dados para armazenamento das informações relacionadas à produção.
 
-O backend utilizará Python e FastAPI, com SQLite como banco inicial.
+O backend utiliza Python e FastAPI. SQLite permanece implementado durante a
+migração para PostgreSQL, aceita na
+[ADR-009](adr/0009-postgresql-banco-em-rede.md) e detalhada na
+[SPEC-0008](specs/0008-migracao-postgresql.md).
 SQLAlchemy 2.x será o ORM, com acesso síncrono no MVP; Pydantic definirá
 os schemas de entrada e saída, separados dos models de persistência.
 Alembic será utilizado para criar e evoluir a estrutura do banco por migrations

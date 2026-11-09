@@ -3,6 +3,11 @@
 - Status: Aceita
 - Data: 15/09/2026
 
+> Atualização: a referência ao SQLite nos exemplos desta ADR foi substituída em
+> 09/11/2026 pela
+> [ADR-009 — PostgreSQL como banco de dados em rede](0009-postgresql-banco-em-rede.md).
+> A separação em camadas permanece aceita sem alteração.
+
 ## Contexto
 
 O backend do Axion será responsável pelas regras de negócio, gerenciamento de produtos e ordens de produção, persistência de dados, integração com o módulo de Inteligência Computacional e comunicação com os demais componentes do sistema.

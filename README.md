@@ -67,9 +67,12 @@ Funcionalidades do frontend, incluindo evoluções previstas:
 Camada responsável pelas regras do sistema e pela integração entre os componentes.
 
 Tecnologias definidas para implementação: **Python e FastAPI**, **Pydantic**
-para os schemas da API, **SQLAlchemy 2.x** para persistência em **SQLite**
-e **Alembic** para migrations. O acesso ao banco será síncrono no MVP.
-Veja a [ADR-005](docs/adr/0005-sqlalchemy-pydantic-alembic.md).
+para os schemas da API, **SQLAlchemy 2.x** e **Alembic** para persistência.
+O acesso ao banco será síncrono no MVP. O backend ainda executa SQLite, mas a
+migração para PostgreSQL foi aceita na
+[ADR-009](docs/adr/0009-postgresql-banco-em-rede.md) e aprovada na
+[SPEC-0008](docs/specs/0008-migracao-postgresql.md). Veja também a
+[ADR-005](docs/adr/0005-sqlalchemy-pydantic-alembic.md).
 
 Responsabilidades previstas:
 

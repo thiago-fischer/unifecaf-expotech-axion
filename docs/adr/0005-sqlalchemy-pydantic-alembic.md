@@ -3,6 +3,11 @@
 - Status: Aceita
 - Data: 21/09/2026
 
+> Atualização: a escolha de SQLite registrada nesta ADR foi substituída em
+> 09/11/2026 pela
+> [ADR-009 — PostgreSQL como banco de dados em rede](0009-postgresql-banco-em-rede.md).
+> SQLAlchemy 2.x, Pydantic, Alembic e o acesso síncrono permanecem aceitos.
+
 ## Contexto
 
 O backend utilizará Python/FastAPI, SQLite e arquitetura em camadas,

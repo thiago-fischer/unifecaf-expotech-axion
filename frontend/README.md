@@ -34,6 +34,10 @@ npm run dev
 Abra [Axion local](http://127.0.0.1:5173). O processo escuta somente em
 `127.0.0.1`; encerre com `Ctrl+C`.
 
+Para editar e observar a maquete em uma página dedicada, abra
+[Pré-visualização da maquete](http://127.0.0.1:5173/preview). O Vite atualiza a
+página ao salvar alterações nos arquivos da cena, sem reiniciar o servidor.
+
 `AXION_API_TARGET` configura o endereço da API no **proxy do Vite**. O navegador
 sempre chama `/api` na mesma origem da interface; o proxy remove esse prefixo e
 encaminha a requisição, inclusive status e `Retry-After`. Reinicie o Vite ao
@@ -140,6 +144,13 @@ e [ambiente de testes do Vitest](https://vitest.dev/guide/environment.html).
 Abra **Simulação** para uma demonstração 3D independente da API. Execute
 `npm ci` e `npm run dev`; a API só é necessária para as outras áreas.
 A cena usa Three.js, materiais e geometria próprios, sem assets remotos.
+
+À esquerda de M1, um suporte recuado em direção à ponte sustenta o leitor RFID
+demonstrativo: uma haste reta avança para frente, perpendicular ao eixo X, sem
+passar sobre o primeiro módulo. A garra para diante dele por 0,01 segundo
+simulado; a cena exibe o ID da unidade e aumenta o indicador durante a leitura,
+mantendo o destaque por mais 0,3 segundo simulado para facilitar a visualização.
+Isso é apenas visual e não lê etiquetas RFID físicas.
 
 Use Iniciar, Pausar/Continuar, Reiniciar, Próximo evento e velocidades de
 0,5× a 4×. Arraste para orbitar, role para aproximar e use Restaurar câmera.

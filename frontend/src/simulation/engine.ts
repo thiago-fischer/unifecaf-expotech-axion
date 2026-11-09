@@ -20,6 +20,8 @@ export type Trip = {
   approach: number;
   pickup: number;
   lifted: number;
+  scanStart?: number;
+  scanEnd?: number;
   arrived: number;
   drop: number;
   end: number;
@@ -33,6 +35,8 @@ export type State = {
   events: { time: number; unit: string; text: string }[];
   status: 'ready' | 'active' | 'complete' | 'blocked';
 };
+export const RFID_POSITION = -5.4;
+export const RFID_SCAN_DURATION = 0.01;
 export const positions: Record<string, number> = { M1: -4, M2: -1, M3: 2, B1: 4, B2: 5.3, QA: 7.3 };
 for (let i = 0; i < 6; i++) {
   positions[`IN${i}`] = -10 + i * 0.8;
@@ -109,7 +113,15 @@ function dispatch(s: State) {
     const approach = s.time + 0.3 + Math.abs(s.x - positions[u.location]) / 0.9;
     const pickup = approach + 0.6,
       lifted = pickup + 0.6,
-      arrived = lifted + 0.3 + Math.abs(positions[u.location] - positions[to]) / 0.9;
+      fromX = positions[u.location],
+      toX = positions[to],
+      distance = Math.abs(toX - fromX),
+      crossesRfid = Math.min(fromX, toX) < RFID_POSITION && RFID_POSITION < Math.max(fromX, toX),
+      scanDistance = Math.abs(RFID_POSITION - fromX),
+      travelDuration = 0.3 + distance / 0.9,
+      scanStart = crossesRfid ? lifted + (travelDuration * scanDistance) / distance : undefined,
+      scanEnd = scanStart === undefined ? undefined : scanStart + RFID_SCAN_DURATION,
+      arrived = lifted + travelDuration + (crossesRfid ? RFID_SCAN_DURATION : 0);
     s.trip = {
       unit: u.id,
       from: u.location,
@@ -118,6 +130,7 @@ function dispatch(s: State) {
       approach,
       pickup,
       lifted,
+      ...(scanStart === undefined ? {} : { scanStart, scanEnd }),
       arrived,
       drop: arrived + 0.6,
       end: arrived + 1.2,
@@ -134,7 +147,9 @@ export function nextTime(s: State): number {
   return Math.min(
     ...s.units.flatMap((u) => (u.until === undefined ? [] : [u.until])),
     ...(t
-      ? [t.approach, t.pickup, t.lifted, t.arrived, t.drop, t.end].filter((n) => n > s.time + 1e-8)
+      ? [t.approach, t.pickup, t.lifted, t.scanStart, t.scanEnd, t.arrived, t.drop, t.end].filter(
+          (n): n is number => n !== undefined && n > s.time + 1e-8,
+        )
       : []),
   );
 }
@@ -224,6 +239,12 @@ export function pose(s: State) {
   if (s.time < t.approach) x = t.originX + (from - t.originX) * ease(t.start, t.approach);
   else if (s.time < t.pickup) y = 3.4 - 2 * ease(t.approach, t.pickup);
   else if (s.time < t.lifted) y = 1.4 + 2 * ease(t.pickup, t.lifted);
+  else if (t.scanStart !== undefined && t.scanEnd !== undefined && s.time < t.scanStart)
+    x = from + (RFID_POSITION - from) * ease(t.lifted, t.scanStart);
+  else if (t.scanStart !== undefined && t.scanEnd !== undefined && s.time < t.scanEnd)
+    x = RFID_POSITION;
+  else if (t.scanEnd !== undefined && s.time < t.arrived)
+    x = RFID_POSITION + (to - RFID_POSITION) * ease(t.scanEnd, t.arrived);
   else if (s.time < t.arrived) x = from + (to - from) * ease(t.lifted, t.arrived);
   else {
     x = to;

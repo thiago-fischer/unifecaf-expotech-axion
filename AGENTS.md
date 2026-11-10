@@ -43,7 +43,7 @@ Não trate alternativas em estudo como requisitos já aprovados.
 - Organização em monorepo.
 - Backend e otimização em Python.
 - API HTTP com FastAPI.
-- SQLite como banco de dados inicial.
+- PostgreSQL 17 em container, acessado por Psycopg 3; seguir a ADR-009.
 - SQLAlchemy 2.x como ORM, com acesso síncrono no MVP.
 - Pydantic para schemas de entrada e saída, separados dos models SQLAlchemy.
 - Alembic para migrations versionadas; seguir a ADR-005.

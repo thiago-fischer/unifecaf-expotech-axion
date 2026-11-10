@@ -6,7 +6,8 @@ O sistema tem como objetivo cadastrar produtos, criar ordens de produção, otim
 
 **Implementado:** backend local com cadastro, listagem e consulta de máquinas
 e produtos com receitas completas, além de ordens com produtos e quantidades,
-SQLite e migrations Alembic, conforme as SPEC-0001, SPEC-0003 e SPEC-0004.
+PostgreSQL em container e migrations Alembic, conforme as SPEC-0001, SPEC-0003,
+SPEC-0004 e SPEC-0008.
 O planejamento transitório da SPEC-0005 usa AG obrigatório e certificação
 CP-SAT, com operações e métricas para Gantt. A execução física permanece prevista.
 O [frontend React](frontend/README.md), conforme a SPEC-0006, permite usar
@@ -67,9 +68,11 @@ Funcionalidades do frontend, incluindo evoluções previstas:
 Camada responsável pelas regras do sistema e pela integração entre os componentes.
 
 Tecnologias definidas para implementação: **Python e FastAPI**, **Pydantic**
-para os schemas da API, **SQLAlchemy 2.x** para persistência em **SQLite**
-e **Alembic** para migrations. O acesso ao banco será síncrono no MVP.
-Veja a [ADR-005](docs/adr/0005-sqlalchemy-pydantic-alembic.md).
+para os schemas da API, **SQLAlchemy 2.x** e **Alembic** para persistência.
+O acesso ao banco é síncrono no MVP, com **PostgreSQL** e Psycopg 3. A decisão
+está na [ADR-009](docs/adr/0009-postgresql-banco-em-rede.md) e a implementação
+na [SPEC-0008](docs/specs/0008-migracao-postgresql.md). Veja também a
+[ADR-005](docs/adr/0005-sqlalchemy-pydantic-alembic.md).
 
 Responsabilidades previstas:
 

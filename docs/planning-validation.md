@@ -42,11 +42,12 @@ preparação do modelo Python. Os valores são observados, não tolerâncias gar
 
 ## Impacto nas demais rotas
 
-[Medição HTTP](examples/planning-http-benchmark.json) com TestClient, banco SQLite
-temporário por migrations reais e uma busca real de 1.000 operações/50 máquinas.
-`GET /machines`: 20 amostras sem busca (média 0,00235 s; máximo 0,016 s),
-37 durante a busca (média 0,03457 s; máximo 0,500 s). A segunda requisição de
-planejamento retornou 503 em 1,188 s; a principal terminou 409 sem prova.
+[Medição HTTP](examples/planning-http-benchmark.json) repetida em 10/11/2026 com
+TestClient, banco PostgreSQL descartável por migrations reais e uma busca de
+1.000 operações/50 máquinas. `GET /machines`: 20 amostras sem busca (média
+0,00545 s; máximo 0,016 s), 36 durante a busca (média 0,05086 s; máximo
+0,500 s). A segunda requisição de planejamento retornou 503 em 0,578 s; a
+principal terminou 409 sem prova.
 Há contenção de CPU/GIL na fase Python e custo de validar o snapshot antes de
 rejeitar concorrência. O bloqueio não cria fila de buscas nem mantém transação.
 
@@ -57,7 +58,8 @@ HTTP total. O controle local libera a trava em sucesso e falha.
 
 ## Cobertura e reprodução
 
-Validação local concluída: **255 testes do backend e 56 do núcleo passaram**,
+Validação local atualizada em 10/11/2026: **258 testes do backend em PostgreSQL
+e 56 do núcleo passaram**,
 Ruff lint/formatação dos dois módulos passaram e `git diff --check` passou.
 O núcleo também foi instalado e testado pelo próprio lockfile. Uma instalação
 adicional em ambiente virtual vazio, fora do repositório, instalou os 39 pacotes
@@ -65,6 +67,8 @@ do backend pelo lockfile e executou o planejador real (ótimo de 30 s) e o OpenA
 A [CI Linux da implementação](https://github.com/thiago-fischer/unifecaf-expotech-axion/actions/runs/39079037267)
 passou no commit `5b894c0`: suítes backend/núcleo, lint/formatação, instalação
 independente do núcleo e árvore limpa ao final.
+Essa execução de CI antecede a SPEC-0008; os workflows PostgreSQL atualizados
+aguardam execução no GitHub Actions.
 
 Testes cobrem contratos HTTP e schemas estritos, catálogo personalizado, nomes
 repetidos, IDs esparsos, paralelismo, quantidades, receitas heterogêneas/revisitas,
@@ -79,10 +83,14 @@ Há adulteração controlada de planos/métricas, limites antes da expansão,
 SQL durante busca, liberação após falhas, ausência de novas tabelas ou alterações
 nos cadastros e validação do exemplo documental contra schema e regras.
 
-Comandos, a partir de `backend/`:
+Comandos, a partir da raiz do repositório:
 
 ```powershell
+docker compose up -d database
+cd backend
 uv sync --locked --python 3.12
+$env:AXION_DATABASE_URL = 'postgresql+psycopg://axion:axion_local@127.0.0.1:5432/axion'
+$env:AXION_TEST_ADMIN_DATABASE_URL = 'postgresql+psycopg://axion:axion_local@127.0.0.1:5432/postgres'
 uv run --locked pytest -q
 uv run --locked pytest -q ../optimizer/tests
 uv run --locked ruff check . ../optimizer

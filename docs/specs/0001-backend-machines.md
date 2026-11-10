@@ -10,6 +10,11 @@
 > complemento de inicialização pelo `main.py` com Uvicorn implementado e validado
 > em terminal e confirmado pelo solicitante no PyCharm. Revisão por outro integrante pendente.
 
+> **Persistência substituída:** as referências desta spec a SQLite e
+> `AXION_DATABASE_PATH` registram a implementação original. Desde 10/11/2026,
+> prevalece a [SPEC-0008](0008-migracao-postgresql.md), com PostgreSQL e
+> `AXION_DATABASE_URL`.
+
 ### Registro de revisão — inicialização com Uvicorn
 
 Complemento autorizado pelo responsável solicitante nesta revisão: explicitar

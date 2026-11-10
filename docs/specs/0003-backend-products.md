@@ -6,6 +6,10 @@
 >
 > **Implementação:** Concluída em 02/10/2026, com validação local automatizada.
 
+> **Persistência substituída:** as referências desta spec a SQLite e
+> `AXION_DATABASE_PATH` são históricas. Desde 10/11/2026, prevalece a
+> [SPEC-0008](0008-migracao-postgresql.md).
+
 ## 1. Objetivo
 
 Permitir cadastrar e consultar produtos personalizados no backend do Axion,

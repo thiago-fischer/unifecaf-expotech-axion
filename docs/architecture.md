@@ -1,10 +1,10 @@
 # Arquitetura do Axion
 
-> **Versão:** 0.3
+> **Versão:** 0.5
 >
 > **Status:** Em definição
 >
-> **Última atualização:** 17/10/2026
+> **Última atualização:** 10/11/2026
 
 ## Visão Geral
 
@@ -56,9 +56,16 @@ Model
 
 **Banco de dados:**
 
-- SQLite
+- PostgreSQL 17 em container
 
-Utilizado inicialmente devido à simplicidade do projeto e à baixa necessidade de concorrência.
+O PostgreSQL substitui o SQLite conforme a
+[ADR-009](adr/0009-postgresql-banco-em-rede.md) e a
+[SPEC-0008](specs/0008-migracao-postgresql.md). API, Alembic e testes conectam-se
+por TCP usando Psycopg 3 e configuração de ambiente. O ambiente local usa
+container com volume persistente, healthcheck e porta limitada ao loopback.
+
+SQLite permanece apenas como origem histórica descartável e não é suportado
+pelo backend.
 
 **ORM:** SQLAlchemy 2.x, com acesso síncrono no MVP.
 
@@ -76,8 +83,8 @@ os catálogos de máquinas (SPEC-0001), produtos com etapas (SPEC-0003) e ordens
 de produção com produtos e quantidades (SPEC-0004). Produto e etapas, assim como
 ordem e itens, são gravados atomicamente. Ordens registram demanda; a rota
 separada de planejamento da SPEC-0005 produz resposta transitória sem alterar
-o banco. A execução física permanece prevista. Chaves estrangeiras SQLite são
-habilitadas em todas as conexões. Consulte o [backend](../backend/README.md)
+o banco. A execução física permanece prevista. PostgreSQL aplica as chaves
+estrangeiras em todas as conexões. Consulte o [backend](../backend/README.md)
 para instalação, migrations e testes. Os demais componentes continuam planejados.
 
 ### Otimização
@@ -149,7 +156,7 @@ axion/
 | Backend | Python |
 | Frontend | React, TypeScript e Vite |
 | Framework Backend | FastAPI |
-| Banco de Dados | SQLite |
+| Banco de Dados | PostgreSQL 17 |
 | ORM | SQLAlchemy 2.x, síncrono |
 | Schemas da API | Pydantic |
 | Migrations | Alembic |
@@ -168,11 +175,12 @@ axion/
 ## ADRs Relacionadas
 
 - ADR-001 — Python e FastAPI
-- ADR-002 — SQLite
+- ADR-002 — SQLite (substituída pela ADR-009)
 - ADR-003 — Monorepo
 - ADR-004 — Arquitetura em Camadas para o Backend
 - [ADR-005 — SQLAlchemy, Pydantic e Alembic](adr/0005-sqlalchemy-pydantic-alembic.md)
 - [ADR-007 — Frontend React local](adr/0007-react-frontend.md)
+- [ADR-009 — PostgreSQL como banco em rede](adr/0009-postgresql-banco-em-rede.md)
 
 ## Maquete virtual
 

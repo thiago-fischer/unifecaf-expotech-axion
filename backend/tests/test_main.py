@@ -1,11 +1,13 @@
 import subprocess
 import sys
-from pathlib import Path
 
-from app.config import BACKEND_DIR
+from sqlalchemy import URL, inspect
+
+from app.config import BACKEND_DIR, Settings
+from app.database.database import build_engine
 
 
-def test_import_does_not_start_server_or_create_database(database_path: Path) -> None:
+def test_import_does_not_start_server_or_create_schema(database_url: URL) -> None:
     # A fresh process catches import side effects hidden by pytest's module cache.
     result = subprocess.run(
         [
@@ -28,4 +30,8 @@ def test_import_does_not_start_server_or_create_database(database_path: Path) ->
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert not database_path.exists()
+    engine = build_engine(Settings())
+    try:
+        assert inspect(engine).get_table_names() == []
+    finally:
+        engine.dispose()

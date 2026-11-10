@@ -1,14 +1,12 @@
-from pathlib import Path
-
 import pytest
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
-from sqlalchemy import inspect, text
+from sqlalchemy import URL, inspect, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.config import BACKEND_DIR, Settings
+from app.config import Settings
 from app.database.database import build_engine
 from app.main import create_app
 from app.models.product import Product
@@ -35,30 +33,35 @@ def test_upgrade_repeat_downgrade_and_upgrade(alembic_config: Config) -> None:
         assert client.post("/machines", json={"name": "Nova"}).status_code == 201
 
 
-def test_overridden_path_is_shared(
+def test_overridden_url_is_shared(
     alembic_config: Config,
-    database_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+    database_url: URL,
 ) -> None:
-    monkeypatch.chdir(tmp_path)
     command.upgrade(alembic_config, "head")
-    assert Settings().database_path == database_path
-    assert database_path.exists()
+    assert Settings().database_url == database_url
     with TestClient(create_app()) as client:
         assert client.post("/machines", json={"name": "Mesmo banco"}).status_code == 201
     command.check(alembic_config)
 
 
-def test_default_and_relative_paths_are_module_relative(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+@pytest.mark.parametrize(
+    "value,message",
+    [
+        (None, "Defina AXION_DATABASE_URL"),
+        ("not a url", "URL inválida"),
+        ("sqlite+pysqlite:///data/axion.db", "postgresql\\+psycopg"),
+        ("postgresql+psycopg:///axion", "host e nome do banco"),
+    ],
+)
+def test_database_url_validation(
+    monkeypatch: pytest.MonkeyPatch, value: str | None, message: str
 ) -> None:
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("AXION_DATABASE_PATH", raising=False)
-    assert Settings().database_path == BACKEND_DIR / "data" / "axion.db"
-    monkeypatch.setenv("AXION_DATABASE_PATH", "custom/machines.db")
-    assert Settings().database_path == BACKEND_DIR / "custom" / "machines.db"
+    if value is None:
+        monkeypatch.delenv("AXION_DATABASE_URL")
+    else:
+        monkeypatch.setenv("AXION_DATABASE_URL", value)
+    with pytest.raises(RuntimeError, match=message):
+        Settings()
 
 
 def test_products_upgrade_existing_database_and_downgrade(alembic_config: Config) -> None:
@@ -120,7 +123,6 @@ def test_product_step_database_constraints(session: Session, changes: dict[str, 
     }
     session.add(ProductStep(**values))
     session.commit()
-    assert session.scalar(text("PRAGMA foreign_keys")) == 1
     # Direct SQL bypasses both service validation and ORM identity handling.
     with pytest.raises(IntegrityError):
         session.execute(
@@ -137,12 +139,18 @@ def test_product_step_database_constraints(session: Session, changes: dict[str, 
         session.rollback()
 
 
-def test_foreign_keys_on_each_connection(migrated_database: Path) -> None:
+def test_foreign_keys_on_each_connection(migrated_database: URL) -> None:
     engine = build_engine(Settings())
     try:
-        with engine.connect() as first, engine.connect() as second:
-            assert first.scalar(text("PRAGMA foreign_keys")) == 1
-            assert second.scalar(text("PRAGMA foreign_keys")) == 1
+        for _ in range(2):
+            with engine.connect() as connection, pytest.raises(IntegrityError):
+                connection.execute(
+                    text(
+                        "INSERT INTO product_steps "
+                        "(product_id, sequence, machine_id, processing_time_seconds) "
+                        "VALUES (999999, 1, 999999, 1)"
+                    )
+                )
     finally:
         engine.dispose()
 

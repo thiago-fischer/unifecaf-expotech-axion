@@ -1,7 +1,11 @@
 # ADR-002 — Utilização de SQLite como banco de dados inicial
 
-- Status: Aceita
+- Status: Substituída pela ADR-009
 - Data: 15/09/2026
+
+> Substituída em 09/11/2026 pela
+> [ADR-009 — PostgreSQL como banco de dados em rede](0009-postgresql-banco-em-rede.md).
+> A implementação foi retirada do backend pela SPEC-0008 em 10/11/2026.
 
 ## Contexto
 

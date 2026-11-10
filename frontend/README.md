@@ -97,7 +97,9 @@ e React Testing Library em jsdom. Não foi adicionado linter separado.
 Para teste de navegador com API real:
 
 ```powershell
-cd ../backend
+cd ..
+docker compose up -d database
+cd backend
 uv sync --locked --python 3.12
 cd ../frontend
 npx playwright install chromium
@@ -106,8 +108,12 @@ npm run test:e2e
 
 O Playwright inicia a API em `127.0.0.1:8765` e o Vite em `127.0.0.1:5174`.
 Essas portas devem estar livres; servidores existentes não são reutilizados.
-O script `scripts/serve_test_api.py` cria um SQLite temporário fora do repositório
-e aplica as migrations reais. Não utiliza o banco de desenvolvimento.
+O script `scripts/serve_test_api.py` recria o banco PostgreSQL descartável
+`axion_frontend_e2e`, aplica as migrations reais e tenta removê-lo ao encerrar.
+Como o Playwright pode finalizar o servidor à força, a próxima execução também
+remove qualquer banco E2E remanescente antes de recriá-lo. O script usa
+`AXION_TEST_ADMIN_DATABASE_URL` quando definida e não acessa o banco de
+desenvolvimento.
 Em Linux CI, use `npx playwright install --with-deps chromium`.
 
 Os testes percorrem cadastro → consulta → planejamento, incluindo nomes repetidos,

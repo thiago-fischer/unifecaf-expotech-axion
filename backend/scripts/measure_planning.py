@@ -3,27 +3,58 @@
 import argparse
 import json
 import os
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from pathlib import Path
 from statistics import mean
-from tempfile import TemporaryDirectory
 from threading import Event
 from time import monotonic
+from uuid import uuid4
 
 from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, make_url
 
 from app.config import BACKEND_DIR
-from app.main import create_app
 from app.services import planning_service
+
+LOCAL_ADMIN_DATABASE_URL = "postgresql+psycopg://axion:axion_local@127.0.0.1:5432/postgres"
+
+
+@contextmanager
+def disposable_database() -> Iterator[None]:
+    admin_url = make_url(os.environ.get("AXION_TEST_ADMIN_DATABASE_URL", LOCAL_ADMIN_DATABASE_URL))
+    database_name = f"axion_measurement_{uuid4().hex}"
+    admin_engine = create_engine(admin_url, isolation_level="AUTOCOMMIT", pool_pre_ping=True)
+    previous = os.environ.get("AXION_DATABASE_URL")
+    created = False
+    try:
+        with admin_engine.connect() as connection:
+            connection.exec_driver_sql(f'CREATE DATABASE "{database_name}"')
+        created = True
+        os.environ["AXION_DATABASE_URL"] = admin_url.set(database=database_name).render_as_string(
+            hide_password=False
+        )
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop("AXION_DATABASE_URL", None)
+        else:
+            os.environ["AXION_DATABASE_URL"] = previous
+        if created:
+            with admin_engine.connect() as connection:
+                connection.exec_driver_sql(
+                    f'DROP DATABASE IF EXISTS "{database_name}" WITH (FORCE)'
+                )
+        admin_engine.dispose()
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    previous = os.environ.get("AXION_DATABASE_PATH")
     original = planning_service.plan_problem
     entered = Event()
 
@@ -32,8 +63,9 @@ def main() -> None:
         return original(*args, **kwargs)
 
     try:
-        with TemporaryDirectory(prefix="axion-planning-") as folder:
-            os.environ["AXION_DATABASE_PATH"] = str(Path(folder) / "measurement.db")
+        with disposable_database():
+            from app.main import create_app
+
             command.upgrade(Config(str(BACKEND_DIR / "alembic.ini")), "head")
             with TestClient(create_app()) as client:
                 machines = [
@@ -87,7 +119,7 @@ def main() -> None:
                 if response.status_code not in {200, 409} or busy.status_code != 503:
                     raise RuntimeError("Unexpected response")
                 report = dict(
-                    measurement="TestClient, one process, real GA/CP-SAT, disposable SQLite",
+                    measurement="TestClient, one process, real GA/CP-SAT, disposable PostgreSQL",
                     baseline_get_machines=dict(
                         samples=len(baseline),
                         mean_seconds=mean(baseline),
@@ -105,10 +137,6 @@ def main() -> None:
                 args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     finally:
         planning_service.plan_problem = original
-        if previous is None:
-            os.environ.pop("AXION_DATABASE_PATH", None)
-        else:
-            os.environ["AXION_DATABASE_PATH"] = previous
 
 
 if __name__ == "__main__":

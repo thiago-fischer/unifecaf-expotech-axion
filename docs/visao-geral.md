@@ -1,10 +1,10 @@
 # Axion — Linha de Produção Inteligente
 
-> **Versão do documento:** 0.3
+> **Versão do documento:** 0.4
 >
 > **Status:** Em definição
 >
-> **Última atualização:** 21/09/2026
+> **Última atualização:** 10/11/2026
 
 ## Histórico de versões
 
@@ -13,6 +13,7 @@
 | 0.1 | 11/09/2026 | Definição inicial do conceito, otimização industrial, maquete e requisitos gerais. |
 | 0.2 | 15/09/2026 | Definição do transporte horizontal por fuso, retirada da transformação física do MVP, inclusão de produtos configuráveis pelo usuário, displays nas máquinas e rastreabilidade/QA das matérias-primas. |
 | 0.3 | 21/09/2026 | Alinhamento às ADRs aceitas e definição de SQLAlchemy, Pydantic e Alembic para persistência, contratos da API e migrations. |
+| 0.4 | 10/11/2026 | Substituição do SQLite por PostgreSQL em container, com conexão TCP, Psycopg 3 e testes de integração em bancos descartáveis. |
 
 ## 1. Visão Geral
 
@@ -179,10 +180,9 @@ Os dispositivos embarcados, utilizando Arduino, ESP32 ou tecnologia equivalente,
 
 O sistema também contará com persistência de dados para armazenamento das informações relacionadas à produção.
 
-O backend utiliza Python e FastAPI. SQLite permanece implementado durante a
-migração para PostgreSQL, aceita na
-[ADR-009](adr/0009-postgresql-banco-em-rede.md) e detalhada na
-[SPEC-0008](specs/0008-migracao-postgresql.md).
+O backend utiliza Python e FastAPI com PostgreSQL em container. A substituição
+do SQLite está registrada na [ADR-009](adr/0009-postgresql-banco-em-rede.md) e
+implementada pela [SPEC-0008](specs/0008-migracao-postgresql.md).
 SQLAlchemy 2.x será o ORM, com acesso síncrono no MVP; Pydantic definirá
 os schemas de entrada e saída, separados dos models de persistência.
 Alembic será utilizado para criar e evoluir a estrutura do banco por migrations

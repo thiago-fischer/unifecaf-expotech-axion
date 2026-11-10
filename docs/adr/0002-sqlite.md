@@ -5,7 +5,7 @@
 
 > Substituída em 09/11/2026 pela
 > [ADR-009 — PostgreSQL como banco de dados em rede](0009-postgresql-banco-em-rede.md).
-> SQLite permanece no código somente durante a implementação da migração.
+> A implementação foi retirada do backend pela SPEC-0008 em 10/11/2026.
 
 ## Contexto
 

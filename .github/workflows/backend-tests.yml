@@ -24,6 +24,24 @@ jobs:
   tests:
     name: Tests (Python 3.12)
     runs-on: ubuntu-latest
+    env:
+      AXION_DATABASE_URL: postgresql+psycopg://axion:axion_test@127.0.0.1:5432/postgres
+      AXION_TEST_ADMIN_DATABASE_URL: postgresql+psycopg://axion:axion_test@127.0.0.1:5432/postgres
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: axion
+          POSTGRES_USER: axion
+          POSTGRES_PASSWORD: axion_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U axion -d axion"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
 
     steps:
       - name: Checkout repository

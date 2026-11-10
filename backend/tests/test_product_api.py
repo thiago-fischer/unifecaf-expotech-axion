@@ -1,7 +1,6 @@
-from pathlib import Path
-
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import URL
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -17,7 +16,7 @@ def recipe(machine_id: int = 1) -> dict[str, object]:
     }
 
 
-def test_catalog_and_restart(empty_database: Path) -> None:
+def test_catalog_and_restart(empty_database: URL) -> None:
     with TestClient(create_app()) as client:
         assert client.get("/products").json() == []
         machine = client.post("/machines", json={"name": "M"}).json()

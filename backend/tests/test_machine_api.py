@@ -1,11 +1,13 @@
 import logging
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import URL, inspect
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from app.config import Settings
+from app.database.database import build_engine
 from app.main import create_app
 from app.repositories.machine_repository import MachineRepository
 
@@ -76,7 +78,7 @@ def test_missing_machine(client: TestClient, machine_id: int) -> None:
     assert response.json() == {"detail": "Máquina não encontrada."}
 
 
-def test_data_survives_application_restart(migrated_database: Path) -> None:
+def test_data_survives_application_restart(migrated_database: URL) -> None:
     with TestClient(create_app()) as first:
         machine = first.post("/machines", json={"name": "Persistente"}).json()
     with TestClient(create_app()) as restarted:
@@ -125,7 +127,11 @@ def test_openapi_contract(client: TestClient) -> None:
     assert schema["properties"]["name"]["maxLength"] == 100
 
 
-def test_startup_does_not_create_database(database_path: Path) -> None:
+def test_startup_does_not_create_schema(database_url: URL) -> None:
     with TestClient(create_app()) as client:
         assert client.get("/openapi.json").status_code == 200
-    assert not database_path.exists()
+    engine = build_engine(Settings())
+    try:
+        assert inspect(engine).get_table_names() == []
+    finally:
+        engine.dispose()

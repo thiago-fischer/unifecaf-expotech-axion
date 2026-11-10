@@ -1,8 +1,6 @@
-from pathlib import Path
-
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select
+from sqlalchemy import URL, func, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -37,7 +35,7 @@ def assert_no_orders(client: TestClient) -> None:
 
 
 def test_orders_and_restart(
-    client: TestClient, products: list[dict[str, object]], empty_database: Path
+    client: TestClient, products: list[dict[str, object]], empty_database: URL
 ) -> None:
     assert_no_orders(client)
     data = {"items": [{"product_id": p["id"], "quantity": i} for i, p in enumerate(products, 1)]}

@@ -6,6 +6,10 @@
 >
 > **Implementação:** 13/10/2026, por solicitação do responsável.
 
+> **Persistência substituída:** as referências desta spec a SQLite e
+> `AXION_DATABASE_PATH` são históricas. Desde 10/11/2026, prevalece a
+> [SPEC-0008](0008-migracao-postgresql.md).
+
 ## 1. Objetivo
 
 Permitir criar e consultar ordens de produção compostas por produtos existentes

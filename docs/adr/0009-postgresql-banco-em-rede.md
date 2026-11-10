@@ -145,8 +145,8 @@ A SPEC-0008 detalha a implementação e os critérios de aceite. Em resumo:
 5. atualizar documentação e CI;
 6. retirar o caminho SQLite após o corte validado.
 
-A decisão está aceita, mas sua implementação depende da SPEC-0008. Até a
-conclusão da migração, SQLite continua sendo o banco executado pelo código atual.
+A decisão foi implementada pela SPEC-0008 em 10/11/2026. O backend, o Alembic e
+os testes usam PostgreSQL; SQLite não é mais um dialeto suportado.
 
 ## Referências
 

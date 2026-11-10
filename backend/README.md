@@ -1,7 +1,8 @@
 # Backend do Axion
 
-Implementação das SPEC-0001, SPEC-0003, SPEC-0004 e SPEC-0005: cadastro, listagem e consulta
-de máquinas, produtos com etapas produtivas e ordens com produtos e quantidades.
+Implementação das SPEC-0001, SPEC-0003, SPEC-0004, SPEC-0005 e SPEC-0008:
+cadastro, listagem e consulta de máquinas, produtos com etapas produtivas e
+ordens com produtos e quantidades, persistidos em PostgreSQL.
 Inclui planejamento transitório com AG obrigatório e certificação CP-SAT.
 Execução local, sem autenticação e sem comunicação com hardware. Execução das
 ordens e estado operacional permanecem planejados.
@@ -14,8 +15,9 @@ Instale o uv conforme a [documentação oficial](https://docs.astral.sh/uv/getti
 exatas, inclusive dependências transitivas. Use `--locked` para reproduzi-las.
 
 Versões resolvidas nesta entrega: FastAPI 0.141.1, SQLAlchemy 2.0.54,
-Pydantic 2.13.5, Alembic 1.20.0 e Uvicorn 0.53.0. Testes usam pytest 9.1.1
-e HTTPX 0.28.1; lint e formatação usam Ruff 0.16.8. A escolha de uv mantém
+Pydantic 2.13.5, Alembic 1.20.0, Psycopg 3.3.8 e Uvicorn 0.53.0. O banco local
+usa a imagem `postgres:17-alpine`. Testes usam pytest 9.1.1 e HTTPX 0.28.1;
+lint e formatação usam Ruff 0.16.8. A escolha de uv mantém
 ambiente e dependências isolados e reproduzíveis; pytest e Ruff oferecem uma
 base pequena para validar o módulo. Isso concretiza as ADRs aceitas, sem
 introduzir novas decisões sobre frontend, cloud ou hardware.
@@ -30,14 +32,16 @@ O ambiente validado usa Python 3.12.13. Consulte o [README do núcleo](../optimi
 A partir da raiz do repositório, no PowerShell:
 
 ```powershell
+docker compose up -d database
 cd backend
 uv sync --locked --python 3.12
-New-Item -ItemType Directory -Force data | Out-Null
+$env:AXION_DATABASE_URL = 'postgresql+psycopg://axion:axion_local@127.0.0.1:5432/axion'
 uv run --locked alembic upgrade head
 uv run --locked python -m app.main
 ```
 
-No Linux/macOS, substitua a criação de diretório por `mkdir -p data`.
+No Linux/macOS, use
+`export AXION_DATABASE_URL='postgresql+psycopg://axion:axion_local@127.0.0.1:5432/axion'`.
 Não é necessário ativar o ambiente virtual: `uv run` usa `backend/.venv`.
 Documentação interativa: [Swagger UI](http://127.0.0.1:8000/docs).
 Contrato: [OpenAPI](http://127.0.0.1:8000/openapi.json).
@@ -53,12 +57,11 @@ uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 Executar `python -m app.main` inicia o servidor; importar `app.main` apenas
 disponibiliza a aplicação e sua fábrica, sem iniciar o Uvicorn.
 
-O padrão é `backend/data/axion.db`, sempre relativo ao módulo, independentemente
-do diretório do terminal. A API não cria tabelas nem aplica migrations ao iniciar.
-Um banco recém-preparado recebe três máquinas e três produtos base pela revisão
-`bb94b7e72eb7`, descrita abaixo. Repetir `alembic upgrade head` preserva
-os registros e não duplica os dados base. Dados persistem após encerrar e
-reiniciar o servidor.
+A URL PostgreSQL é obrigatória; não existe fallback para SQLite. A API não cria
+tabelas nem aplica migrations ao iniciar. Um banco recém-preparado recebe três
+máquinas e três produtos base pela revisão `bb94b7e72eb7`, descrita abaixo.
+Repetir `alembic upgrade head` preserva os registros e não duplica os dados base.
+O container persiste os dados no volume nomeado `axion_postgres_data`.
 
 ## Dados iniciais
 
@@ -113,10 +116,10 @@ Em **Run → Edit Configurations**, adicione uma configuração **Python**:
 | Módulo | `app.main` |
 | Working directory | Caminho local da pasta `backend/` |
 | Python interpreter | `backend/.venv/Scripts/python.exe` no Windows |
-| Environment variables | `AXION_DATABASE_PATH`, se usar banco diferente do padrão |
+| Environment variables | `AXION_DATABASE_URL` com a URL PostgreSQL |
 
 Selecione essa configuração e clique em **Run**. Use **Stop** para encerrar.
-O caminho do banco deve ser o mesmo usado ao executar Alembic. Em Linux/macOS,
+O banco deve ser o mesmo usado ao executar Alembic. Em Linux/macOS,
 o interpretador fica em `backend/.venv/bin/python`.
 
 Use a execução como módulo com diretório `backend/`; não é necessário configurar
@@ -135,21 +138,37 @@ de emulação de terminal não foi informado.
 
 ## Configuração do banco
 
-API e Alembic leem `AXION_DATABASE_PATH` pela mesma configuração. Exemplo de
-sobrescrita no PowerShell, antes dos comandos de migration e execução:
+API e Alembic leem `AXION_DATABASE_URL` pela mesma configuração. A URL deve usar
+o driver `postgresql+psycopg` e informar host e banco. Exemplo no PowerShell:
 
 ```powershell
-$env:AXION_DATABASE_PATH = 'C:/axion-local/machines.db'
-New-Item -ItemType Directory -Force 'C:/axion-local' | Out-Null
+$env:AXION_DATABASE_URL = 'postgresql+psycopg://axion:axion_local@127.0.0.1:5432/axion'
 uv run --locked alembic upgrade head
 uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-No Linux/macOS, use `export AXION_DATABASE_PATH=/tmp/axion-local/machines.db`
-e `mkdir -p /tmp/axion-local`. Caminhos relativos também são resolvidos a partir
-de `backend/`. O diretório pai precisa existir e permitir escrita.
-`.env.example` documenta a variável; arquivos `.env` não são lidos automaticamente.
-Para voltar ao padrão no PowerShell: `Remove-Item Env:AXION_DATABASE_PATH`.
+No Linux/macOS, use `export AXION_DATABASE_URL='postgresql+psycopg://...'`.
+`backend/.env.example` documenta a variável; arquivos `.env` não são lidos
+automaticamente. Senhas com caracteres reservados de URL devem ser codificadas.
+
+O Compose publica o PostgreSQL somente em `127.0.0.1` e usa credenciais locais
+de desenvolvimento, configuráveis pelo `.env.example` da raiz. Para parar sem
+remover dados, execute `docker compose stop database`; `docker compose down`
+remove o container e a rede, mas preserva o volume. Não execute
+`docker compose down -v` em um ambiente com dados que precisem ser mantidos.
+
+Backup e restauração lógica do ambiente local:
+
+```powershell
+docker compose exec -T database pg_dump -U axion -d axion -Fc -f /tmp/axion.dump
+docker compose cp database:/tmp/axion.dump ./axion.dump
+docker compose cp ./axion.dump database:/tmp/axion.dump
+docker compose exec -T database pg_restore -U axion -d axion --clean --if-exists /tmp/axion.dump
+```
+
+O arquivo SQLite anterior não é lido nem removido por essa configuração. Por
+decisão do responsável, esta migração inicia apenas com o catálogo-base; ordens
+locais antigas não são transferidas.
 
 ## Contrato HTTP
 
@@ -369,8 +388,8 @@ e nome obrigatório. Foi gerada por autogenerate e revisada.
 A revisão `d8e063d489f1`, gerada por autogenerate e revisada, cria `products`
 e `product_steps`, preservando as máquinas existentes. Etapas têm chave
 composta `(product_id, sequence)`, CHECKs de sequência e duração positivas
-e referências a produtos e máquinas. Todas as conexões do engine compartilhado
-(API, Alembic e testes) habilitam `PRAGMA foreign_keys=ON`.
+e referências a produtos e máquinas. PostgreSQL aplica as chaves estrangeiras
+em todas as conexões; a suíte verifica sua rejeição em conexões independentes.
 `uv run --locked alembic downgrade 77be86445d30` remove receitas e produtos,
 preservando máquinas; use somente em banco descartável. Novo upgrade recria
 as tabelas; ao alcançar `head`, a revisão de dados iniciais recompõe os produtos
@@ -399,13 +418,16 @@ downgrade e novo upgrade sem acessar o banco de desenvolvimento.
 ## Validação
 
 ```powershell
+$env:AXION_DATABASE_URL = 'postgresql+psycopg://axion:axion_local@127.0.0.1:5432/axion'
+$env:AXION_TEST_ADMIN_DATABASE_URL = 'postgresql+psycopg://axion:axion_local@127.0.0.1:5432/postgres'
 uv run --locked pytest -q
 uv run --locked pytest -q ../optimizer/tests
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 ```
 
-Os testes preparam bancos SQLite temporários por migrations reais e cobrem
+Com o serviço do Compose saudável, os testes criam bancos PostgreSQL descartáveis
+e isolados por caso, aplicam migrations reais e os removem ao final. Eles cobrem
 contratos HTTP, regras do service, normalização, limites, duplicidade,
 persistência após reinício, rollback de falhas simuladas e OpenAPI.
 `alembic check` também verifica a coerência entre model e migration.
@@ -418,7 +440,8 @@ Os testes de ordens cobrem tipos estritos, duplicidade, referências ausentes,
 ordenação, repetição de demanda, reinício da aplicação, OpenAPI e revalidação
 do service fora de HTTP. Falhas simuladas após gravação parcial e no commit
 verificam rollback de ordem e itens. Testes de migration validam restrições
-diretamente no SQLite, preservação do catálogo e upgrade/downgrade/reaplicação.
+diretamente no PostgreSQL, preservação do catálogo e
+upgrade/downgrade/reaplicação.
 
 As versões transitivas atuais emitem dois avisos de depreciação no TestClient
 (HTTPX e alias BlockingPortal do AnyIO). Eles não impedem os testes e não são
@@ -446,7 +469,8 @@ uv run --locked pytest -q
 A CI também executa a suíte de `optimizer/`, lint/formatação dos dois módulos
 e instalação/testes do núcleo em ambiente independente pelo seu lockfile.
 
-A suíte é predominantemente de integração: usa bancos SQLite temporários,
-migrations Alembic, `TestClient` e um subprocesso controlado. Ela não acessa o
-banco de desenvolvimento, serviços externos ou a maquete. Esta etapa não realiza
-deploy, não utiliza secrets e não valida integração com hardware.
+A suíte é predominantemente de integração: o workflow inicia um serviço
+PostgreSQL 17 e cria bancos descartáveis, usando migrations Alembic, `TestClient`
+e um subprocesso controlado. Ela não acessa o banco de desenvolvimento, serviços
+externos ou a maquete. As credenciais são locais ao job e não são secrets de
+produção. Esta etapa não realiza deploy nem valida integração com hardware.

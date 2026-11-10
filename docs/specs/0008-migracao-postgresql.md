@@ -1,8 +1,12 @@
 # SPEC-0008 — Migração do SQLite para PostgreSQL
 
-> **Status:** Aprovada para implementação; implementação ainda não iniciada.
+> **Status:** Implementada e validada localmente; execução da CI e revisão de
+> outro integrante pendentes.
 >
 > **Data:** 09/11/2026
+>
+> **Implementação:** 10/11/2026, somente com o catálogo-base, conforme decisão
+> do responsável.
 >
 > **Origem:** Evolução da arquitetura para permitir que backend e Grafana se
 > conectem ao banco pela rede e para sustentar os experimentos de
@@ -20,10 +24,8 @@ uma fronteira segura para a futura integração do Grafana.
 
 ## 2. Dependência arquitetural
 
-Esta spec implementa a ADR-009, aceita em 09/11/2026. A ADR-002 está substituída,
-mas SQLite continua sendo o banco executado pelo código atual até a conclusão
-desta spec. PostgreSQL não deve ser apresentado como implementado antes que os
-critérios de aceite técnicos sejam atendidos.
+Esta spec implementa a ADR-009, aceita em 09/11/2026. A ADR-002 está substituída
+e o backend suporta somente PostgreSQL desde 10/11/2026.
 
 ## 3. Escopo
 
@@ -35,9 +37,8 @@ critérios de aceite técnicos sejam atendidos.
 - Configuração única de conexão consumida pela API e pelo Alembic.
 - Adaptação do engine para PostgreSQL, sem pragmas ou opções de SQLite.
 - Execução do histórico Alembic existente, do `base` ao `head`, em banco vazio.
-- Processo controlado para copiar os registros atuais de SQLite quando houver
-  dados que precisem ser preservados.
-- Ajuste das sequências PostgreSQL depois da importação de IDs explícitos.
+- Inicialização do PostgreSQL somente com o catálogo-base reproduzido pelo
+  histórico Alembic, conforme decisão do responsável em 10/11/2026.
 - Testes de API, services, repositories, constraints e migrations em PostgreSQL.
 - Serviço PostgreSQL descartável no workflow de CI do backend.
 - Documentação de instalação, execução, migração, backup, validação e rollback.
@@ -54,6 +55,7 @@ critérios de aceite técnicos sejam atendidos.
 - Deploy em cloud, alta disponibilidade, replicação ou recuperação contínua.
 - Mudança para SQLAlchemy assíncrono.
 - Alteração de contratos HTTP ou de regras de negócio existentes.
+- Transferência das ordens e de outros registros do arquivo SQLite local.
 
 ## 4. Arquitetura da primeira entrega
 
@@ -137,33 +139,16 @@ PostgreSQL aplica chaves estrangeiras por padrão. Testes não devem procurar
 
 ## 7. Migração de dados existentes
 
-Antes da implementação, a equipe deve identificar quais arquivos SQLite contêm
-dados que precisam ser preservados. Bancos apenas descartáveis podem ser
-recriados pelo Alembic e pela migration do catálogo inicial.
+O responsável decidiu em 10/11/2026 iniciar somente com o catálogo-base. O
+arquivo SQLite local continha três máquinas, três produtos, sete etapas e uma
+ordem com três itens. Nenhum desses registros foi importado; máquinas, produtos
+e etapas foram recriados pela migration `bb94b7e72eb7`, e o PostgreSQL iniciou
+sem ordens.
 
-Para cada banco preservado, o procedimento deverá:
-
-1. interromper escritas e fazer uma cópia de segurança do arquivo SQLite;
-2. criar um banco PostgreSQL vazio e aplicar o Alembic até a revisão
-   `d8e063d489f1`, que contém o schema de máquinas, produtos e etapas, mas ainda
-   não executa a migration do catálogo base;
-3. copiar `machines`, `products` e `product_steps`, nessa ordem, mantendo IDs;
-4. aplicar o restante do histórico até `head`; a revisão `bb94b7e72eb7` deverá
-   reutilizar receitas base equivalentes e criar somente as que estiverem
-   ausentes, e a revisão `f47c9a2e8106` criará as tabelas de ordens;
-5. copiar `production_orders` e `production_order_items`, nessa ordem, mantendo
-   IDs e referências;
-6. ajustar as sequências de `machines`, `products` e `production_orders` para o
-   maior ID presente depois da importação e dos dados base;
-7. validar contagens, referências, constraints e amostras funcionais;
-8. registrar origem, destino, horário e resultado, sem registrar credenciais.
-
-A ferramenta de transferência deve abortar diante de conflito ou dado inválido,
-marcar o destino como impróprio para corte e não alterar o arquivo SQLite de
-origem. Como o procedimento atravessa revisões de schema, não deve prometer
-rollback atômico de todas as fases: em caso de falha, o banco PostgreSQL de
-destino será descartado e recriado. A ferramenta deve recusar um destino que não
-esteja vazio ou exatamente no estado esperado, evitando duplicações na reexecução.
+O arquivo de origem permanece ignorado pelo Git e não foi apagado. Não foi criada
+ferramenta de ETL nem caminho de compatibilidade com SQLite. Se algum registro
+histórico precisar ser recuperado no futuro, a transferência deverá ser tratada
+em tarefa própria, com backup, validação de referências e ajuste das sequências.
 
 ## 8. Usuários e permissões
 
@@ -194,7 +179,6 @@ Cobertura mínima:
 - histórico `base -> head`, repetição de upgrade, downgrade e novo upgrade;
 - catálogo inicial em banco vazio e banco previamente populado;
 - persistência observada por nova instância da aplicação;
-- transferência de dados e atualização das sequências;
 - `alembic check` sem diferenças.
 
 ### 9.2 CI
@@ -211,37 +195,38 @@ persistente entre execuções.
 ### Corte
 
 1. confirmar que a ADR-009 e esta spec continuam aprovadas;
-2. criar backup verificável do SQLite selecionado;
-3. subir PostgreSQL e aplicar migrations;
-4. congelar escritas no SQLite;
-5. transferir e validar os dados;
-6. configurar API e Alembic com a URL PostgreSQL;
-7. executar smoke tests de máquinas, produtos, ordens e planejamento;
-8. liberar o backend e manter o backup SQLite sem escrita pelo período acordado.
+2. manter o arquivo SQLite antigo sem escrita e fora do Git;
+3. subir PostgreSQL e aplicar migrations até `head`;
+4. confirmar o catálogo-base e a ausência de ordens;
+5. configurar API e Alembic com a URL PostgreSQL;
+6. executar smoke tests de máquinas, produtos, ordens e planejamento;
+7. liberar o backend.
 
 ### Rollback
 
-Antes de novas escritas no PostgreSQL, o rollback pode restaurar a configuração
-anterior e reabrir a cópia SQLite. Depois que o PostgreSQL receber novas escritas,
-o retorno não é automático: será necessário interromper o serviço e reconciliar
-os dados. Essa limitação deve constar do checklist de corte.
+Antes de dados relevantes serem gravados, o volume PostgreSQL pode ser recriado e
+as migrations reaplicadas. Retornar ao SQLite exige restaurar uma versão anterior
+do código, pois o backend atual não mantém compatibilidade com dois dialetos.
+Depois de novas escritas no PostgreSQL, qualquer retorno exige interromper o
+serviço e reconciliar os dados.
 
 ## 11. Critérios de aceite
 
 - [x] ADR-009 aceita pelo responsável em 09/11/2026.
-- [ ] PostgreSQL sobe por comando documentado e atinge estado saudável.
-- [ ] API e Alembic conectam-se por TCP usando configuração de ambiente.
-- [ ] Nenhum caminho de execução depende de SQLite ou `PRAGMA`.
-- [ ] Histórico Alembic chega ao `head` em PostgreSQL vazio.
-- [ ] `alembic check` não encontra diferenças.
-- [ ] Todos os testes do backend passam contra PostgreSQL no ambiente local e CI.
-- [ ] Dados selecionados são migrados sem perda, duplicação ou quebra de referência.
-- [ ] Próximos IDs gerados não colidem com IDs importados.
-- [ ] Contratos HTTP atuais permanecem compatíveis.
-- [ ] Credenciais reais não estão no repositório nem nos logs.
-- [ ] Porta do banco não é exposta à LAN na configuração padrão.
-- [ ] README do backend e documentação arquitetural refletem o novo estado.
-- [ ] Validação descrita como software/rede; nenhuma validação em hardware é alegada.
+- [x] PostgreSQL sobe por comando documentado e atinge estado saudável.
+- [x] API e Alembic conectam-se por TCP usando configuração de ambiente.
+- [x] Nenhum caminho de execução depende de SQLite ou `PRAGMA`.
+- [x] Histórico Alembic chega ao `head` em PostgreSQL vazio.
+- [x] `alembic check` não encontra diferenças.
+- [x] Todos os 258 testes do backend passam localmente contra PostgreSQL.
+- [ ] Workflow atualizado aguarda execução no GitHub Actions.
+- [x] Nenhum dado foi selecionado para transferência; catálogo-base recriado.
+- [x] Sequências geram novos IDs sem colisão nos testes de integração.
+- [x] Contratos HTTP atuais permanecem compatíveis.
+- [x] Credenciais reais não estão no repositório nem nos logs.
+- [x] Porta do banco não é exposta à LAN na configuração padrão.
+- [x] README do backend e documentação arquitetural refletem o novo estado.
+- [x] Validação descrita como software/rede; nenhuma validação em hardware é alegada.
 
 ## 12. Validação manual mínima
 
@@ -253,9 +238,7 @@ Com o PostgreSQL saudável e as migrations aplicadas:
 4. planejar a ordem;
 5. reiniciar a API e confirmar a persistência;
 6. tentar inserir referências e quantidades inválidas diretamente em banco de
-   teste e confirmar rejeição;
-7. conectar com um usuário somente leitura de prova e confirmar que `SELECT`
-   funciona e `INSERT` é negado.
+   teste e confirmar rejeição.
 
 Essa validação comprova integração de software por rede local. Não comprova
 comunicação com Arduino/ESP32, segurança de uma rede externa, Grafana configurado

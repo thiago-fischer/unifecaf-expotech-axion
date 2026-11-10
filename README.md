@@ -19,6 +19,33 @@ As demais funcionalidades descritas abaixo permanecem planejadas.
 
 A proposta integra software, dispositivos embarcados, inteligência computacional, rastreabilidade, observabilidade e segurança de rede.
 
+## Execução completa com Docker Compose
+
+O Compose da raiz constrói e inicia o frontend, o backend e o PostgreSQL. Ele
+também aplica as migrations Alembic em uma etapa separada antes de liberar a
+API. O pacote Python local de otimização é incluído na imagem do backend.
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+No Linux/macOS, use `cp .env.example .env`. Depois que os serviços estiverem
+saudáveis, acesse a interface em <http://127.0.0.1:5173> e a documentação da
+API em <http://127.0.0.1:8000/docs>. As portas podem ser alteradas no `.env`.
+O frontend serve o build estático pelo Nginx e encaminha `/api` internamente
+para o backend, sem expor o PostgreSQL à rede local.
+
+Para executar em segundo plano ou encerrar:
+
+```powershell
+docker compose up --build -d
+docker compose down
+```
+
+O volume `axion_postgres_data` é preservado por `docker compose down`. Não use
+`docker compose down -v` se os dados locais precisarem ser mantidos.
+
 ## Sobre o projeto
 
 Em uma linha de produção com diferentes produtos, cada item pode exigir máquinas, operações e tempos de processamento distintos.

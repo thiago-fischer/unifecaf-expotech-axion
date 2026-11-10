@@ -29,6 +29,20 @@ O ambiente validado usa Python 3.12.13. Consulte o [README do núcleo](../optimi
 
 ## Instalação e execução
 
+Para construir e iniciar o projeto completo em containers, execute a partir da
+raiz do monorepo:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+No Linux/macOS, use `cp .env.example .env`. O Compose constrói esta imagem com
+o pacote local `optimizer`, aguarda o PostgreSQL, aplica `alembic upgrade head`
+em um serviço de migrations separado e somente então inicia a API. O Swagger
+fica disponível em <http://127.0.0.1:8000/docs>. As instruções abaixo permanecem
+como alternativa para executar Python diretamente no host.
+
 A partir da raiz do repositório, no PowerShell:
 
 ```powershell

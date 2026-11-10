@@ -132,10 +132,18 @@ npm run build
 npm run preview
 ```
 
+Para construir a imagem e iniciar o projeto completo, execute na raiz do
+monorepo:
+
+```powershell
+docker compose up --build
+```
+
 Prévia local em [127.0.0.1:4173](http://127.0.0.1:4173), com o mesmo proxy.
 `dist/` contém arquivos estáticos; o proxy do Vite não faz parte desses arquivos.
-Servir esse build em outro ambiente exigirá configurar o encaminhamento de
-`/api`, assunto fora do escopo desta entrega.
+Ao iniciar a aplicação completa pelo Compose da raiz, o Nginx da imagem do
+frontend serve esse diretório e encaminha `/api` para o serviço `backend`.
+Outros ambientes ainda precisam fornecer um encaminhamento equivalente.
 
 ## Escolhas
 

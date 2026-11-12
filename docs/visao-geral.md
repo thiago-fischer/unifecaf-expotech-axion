@@ -1,10 +1,10 @@
 # Axion — Linha de Produção Inteligente
 
-> **Versão do documento:** 0.4
+> **Versão do documento:** 0.5
 >
 > **Status:** Em definição
 >
-> **Última atualização:** 10/11/2026
+> **Última atualização:** 12/11/2026
 
 ## Histórico de versões
 
@@ -14,6 +14,7 @@
 | 0.2 | 15/09/2026 | Definição do transporte horizontal por fuso, retirada da transformação física do MVP, inclusão de produtos configuráveis pelo usuário, displays nas máquinas e rastreabilidade/QA das matérias-primas. |
 | 0.3 | 21/09/2026 | Alinhamento às ADRs aceitas e definição de SQLAlchemy, Pydantic e Alembic para persistência, contratos da API e migrations. |
 | 0.4 | 10/11/2026 | Substituição do SQLite por PostgreSQL em container, com conexão TCP, Psycopg 3 e testes de integração em bancos descartáveis. |
+| 0.5 | 12/11/2026 | Definição da capacidade, das estações, da captura por eletroímã, do RFID e do fluxo físico da OP. |
 
 ## 1. Visão Geral
 
@@ -49,19 +50,13 @@ O usuário poderá selecionar produtos previamente cadastrados ou criar um produ
 
 Cada produto será definido por uma sequência de etapas produtivas, indicando as máquinas pelas quais deverá passar e o tempo necessário em cada uma delas.
 
-Com base nesses produtos, o usuário criará uma ordem de produção informando as respectivas quantidades.
-
-O módulo de otimização avaliará possíveis programações e determinará uma estratégia de produção eficiente, buscando utilizar as máquinas disponíveis simultaneamente sempre que possível.
-
-Antes do início do processo físico, cada unidade de matéria-prima será identificada e associada ao produto que deverá representar durante toda a produção.
-
-A linha física executará o planejamento gerado, movimentando a matéria-prima entre as máquinas.
-
-Ao final, uma etapa de rastreabilidade e validação verificará se a unidade física corresponde ao item inicialmente identificado e se o processo esperado foi concluído.
+O usuário informa os produtos e as quantidades. O servidor gera a ordem de
+produção (OP), otimiza a programação e envia à maquete os comandos na sequência
+planejada, aproveitando o paralelismo das máquinas quando possível.
 
 **Fluxo geral:**
 
-`Cadastro/seleção de produtos → Demanda → Otimização → Identificação da matéria-prima → Execução física → Rastreabilidade → Validação final → Produto final`
+`Demanda → Geração da OP → Otimização → Envio de comandos → Coleta no armazém → Leitura RFID e associação à OP → Processamento → QA → Estoque final (peças aprovadas)`
 
 ## 5. Produtos e Ordens de Produção
 
@@ -110,11 +105,15 @@ Proposta, aguardando revisão. Não há execução física nem interface Gantt n
 
 O projeto contará com uma representação física de uma linha de produção.
 
-A maquete deverá possuir diferentes estações de processamento e um mecanismo automatizado para movimentação da matéria-prima entre elas.
+A maquete física comportará até 10 peças e terá três máquinas de
+processamento e uma estação dedicada à revisão de qualidade (QA).
+As peças serão cubos metálicos. O fluxo e a integração com o servidor
+estão registrados na [ADR-010](adr/0010-maquete-fisica.md).
 
 A movimentação horizontal da matéria-prima será realizada por meio de uma mesa deslizante acionada por fuso.
 
-O mecanismo responsável pelo movimento vertical ainda está em estudo, assim como o sistema de captura da matéria-prima. Atualmente, uma das principais alternativas consideradas para a captura é a utilização de um eletroímã.
+Um eletroímã fará a captura dos cubos no armazém. O mecanismo de elevação
+continua em estudo.
 
 No escopo inicial, as máquinas não realizarão transformação física sobre a matéria-prima.
 
@@ -129,9 +128,10 @@ Caso o desenvolvimento avance além do escopo mínimo planejado e exista tempo d
 
 ## 8. Rastreabilidade e Validação de Qualidade
 
-Cada unidade física de matéria-prima possuirá uma identificação individual.
-
-No início do processo, essa identificação será lida e associada pelo sistema ao produto que aquela matéria-prima deverá representar durante toda a ordem de produção.
+Cada cubo terá uma etiqueta RFID com um identificador único. Após a coleta
+no armazém, a maquete levará o cubo ao leitor RFID. O sistema associará o
+primeiro cubo lido à primeira unidade do produto a executar na OP e repetirá
+a associação para as demais unidades conforme a sequência planejada.
 
 Exemplo:
 
@@ -151,15 +151,8 @@ O sistema também poderá verificar o histórico daquela unidade, incluindo:
 - ordem das etapas;
 - possíveis falhas registradas.
 
-O mecanismo definitivo de identificação ainda será definido. Entre as alternativas atualmente consideradas estão:
-
-- código de barras;
-- QR Code;
-- RFID;
-- visão computacional;
-- combinação entre identificação visual por cor e um identificador individual.
-
-O resultado dessa etapa será utilizado para classificar a unidade como aprovada ou reprovada.
+A estação de QA classificará a unidade como aprovada ou reprovada. As peças
+aprovadas seguirão para o estoque final.
 
 ## 9. Sistema de Software
 
@@ -272,12 +265,11 @@ A plataforma de nuvem, estratégia de deploy, testes automatizados e demais tecn
 Neste estágio do projeto permanecem em definição:
 
 - revisão e aceitação formal da ADR-006, após implementação da SPEC-0005;
-- quantidade definitiva de máquinas;
 - configuração final das máquinas;
 - receitas e tempos dos produtos previamente cadastrados;
 - mecanismo de movimento vertical;
-- mecanismo definitivo de captura da matéria-prima;
-- tecnologia de identificação e rastreabilidade;
+- capacidade das áreas de espera, tempos de transporte e regras de uso da mesa;
+- destino físico das peças reprovadas no QA;
 - protocolo de comunicação entre dispositivos;
 - vulnerabilidade de rede que será estudada;
 - detalhes de integração entre os componentes;

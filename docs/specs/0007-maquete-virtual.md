@@ -81,17 +81,17 @@ na unidade simulada transportada; não representam uma leitura de sensor real.
 | Saída | Posições para unidades aprovadas e contador de produtos concluídos |
 | Rejeitados | Área separada para unidades que falhem na validação simulada |
 
-Três máquinas e duas vagas são parâmetros do cenário demonstrativo, não uma
-decisão sobre a quantidade definitiva de componentes da maquete física.
+Três máquinas e duas vagas são parâmetros do cenário demonstrativo.
+O escopo da maquete física está registrado na [ADR-010](../adr/0010-maquete-fisica.md).
 Almoxarifado, saída e rejeitados devem comportar todas as unidades do cenário.
 
 Todas as posições de coleta/entrega devem estar ao alcance do mecanismo
 representado. O layout inicial deve alinhar essas posições ao eixo horizontal;
 não mostrar movimentos laterais que exigiriam um eixo ausente da cena.
 
-O transporte horizontal por fuso segue o escopo do projeto. Movimento vertical
-e captura continuam em estudo: a aparência do cabeçote é ilustrativa, sem
-aprovar garra, eletroímã ou mecanismo definitivo de construção.
+O transporte horizontal por fuso segue o escopo do projeto. A aparência do
+cabeçote virtual é ilustrativa. A ADR-010 define a captura física por
+eletroímã, com o mecanismo de elevação ainda em estudo.
 
 ## 4. Direção visual e animação
 

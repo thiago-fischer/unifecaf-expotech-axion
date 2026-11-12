@@ -118,6 +118,10 @@ exploratório. Não há persistência de plano, migration nem execução física
 
 Responsáveis pelo controle da maquete, sensores, motores e displays.
 
+O servidor gera e otimiza a ordem de produção e envia os comandos de execução
+à maquete conforme a sequência planejada. O fluxo físico e seus componentes
+estão registrados na [ADR-010](adr/0010-maquete-fisica.md).
+
 **Tecnologias previstas:**
 
 - ESP32
@@ -189,3 +193,7 @@ local determinístico em TypeScript, conforme a [ADR-008](adr/0008-maquete-virtu
 A cena consome estado e interpola movimentos; regras de capacidade e tempo
 ficam separadas da renderização. Não há novos endpoints ou persistência.
 O cenário demonstrativo é independente do otimizador e não controla hardware.
+
+A [SPEC-0009](specs/0009-api-controlador-maquete.md) propõe um modo conectado
+em que o servidor envia comandos a uma API de controlador simulado e a cena
+3D acompanha o estado da execução.

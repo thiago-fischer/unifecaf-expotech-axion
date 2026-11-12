@@ -160,7 +160,11 @@ O projeto deverá demonstrar um cenário com uma vulnerabilidade real de comunic
 
 A maquete representa uma linha de produção inteligente em escala reduzida.
 
-Ela será composta por estações de processamento e por um mecanismo automatizado para movimentação da matéria-prima entre elas.
+A maquete física comportará até 10 peças e terá três máquinas de processamento
+e uma estação de revisão de qualidade (QA). A mesa deslizante acionada por fuso
+fará o transporte horizontal dos cubos metálicos, coletados por eletroímã.
+O servidor gerará e otimizará a ordem de produção (OP) e enviará os comandos
+à maquete na sequência planejada. [ADR-010](docs/adr/0010-maquete-fisica.md)
 
 No escopo inicial, as máquinas não realizarão transformação física sobre a matéria-prima. O processamento será representado por tempo de operação e por displays instalados nas estações.
 
@@ -173,9 +177,9 @@ Os displays poderão exibir:
 
 ## Rastreabilidade
 
-Cada unidade física de matéria-prima possuirá uma identificação individual.
-
-No início do processo, essa identificação será lida e associada ao produto que a matéria-prima deverá representar durante a ordem de produção.
+Cada cubo terá uma etiqueta RFID com identificador único. Após a coleta no
+armazém, a maquete levará o cubo ao leitor. O sistema associará o ID à unidade
+de produto correspondente na sequência planejada da OP.
 
 Exemplo:
 
@@ -185,7 +189,9 @@ MAT-002 → Produto A
 MAT-003 → Produto B
 ```
 
-Ao final do processo, uma nova leitura será realizada para validar se a unidade corresponde ao item esperado e se percorreu corretamente as etapas definidas.
+Após o processamento, o cubo passará pela estação de QA para nova leitura e
+conferência do histórico das etapas. As peças aprovadas seguirão ao estoque
+final.
 
 ## Estrutura do repositório
 

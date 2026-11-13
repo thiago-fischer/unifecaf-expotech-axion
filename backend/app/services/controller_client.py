@@ -2,7 +2,7 @@ import json
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 
 class ControllerError(Exception):
@@ -14,6 +14,13 @@ class Table(BaseModel):
     com_peca: bool
     movimento: dict[str, object] | None
     cabecote: str
+    posicao: str | None = None
+    progresso_cabecote: float = 0
+
+
+class Machine(BaseModel):
+    estado: str
+    tempo_restante_ms: int | None
 
 
 class ControllerStatus(BaseModel):
@@ -21,6 +28,11 @@ class ControllerStatus(BaseModel):
     mesa: Table
     ocupacao: dict[str, bool]
     falhas: list[dict[str, object]]
+    maquinas: dict[str, Machine] = Field(default_factory=dict)
+    pecas: dict[str, str] = Field(default_factory=dict)
+    rfid_transportado: str | None = None
+    resultados_qa: dict[str, str] = Field(default_factory=dict)
+    leitura_rfid: str | None = None
 
 
 class CommandStatus(BaseModel):

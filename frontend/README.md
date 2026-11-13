@@ -173,6 +173,15 @@ oculta pausa a execução; sair da área descarta o cenário. Movimento reduzido
 troca as posições apenas nas mudanças de fase; Próximo evento permite acompanhar sem reprodução
 contínua. Sem WebGL, os controles e o acompanhamento textual permanecem disponíveis.
 
+Em **Simulação → Execução do servidor**, a cena acompanha as OPs iniciadas
+no backend e mostra os RFIDs, a posição da mesa, o estado das máquinas e o
+resultado do QA. A execução continua no servidor com a tela fechada.
+
+As esteiras de entrada e saída comportam dez cubos cada e correm no sentido frente–fundo, com um
+ponto fixo de coleta ou depósito ao alcance da garra. A esteira de saída
+recebe todas as peças. Verde indica aprovação e vermelho indica rejeição,
+com o resultado disponível também no histórico de cada unidade.
+
 O cenário contém seis unidades, três máquinas, duas vagas auxiliares e um
 transportador. Receitas: A = M1/6s → M2/16s → M3/5s; B = M1/4s → M3/8s;
 C = M3/5s → M2/30s. O tempo de C em M2 foi ajustado para evidenciar paralelismo.

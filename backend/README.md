@@ -408,15 +408,17 @@ No [Swagger do backend](http://127.0.0.1:8000/docs):
 
 3. Copie o `id` da resposta `202` e consulte
    `GET /orders/{order_id}/executions/{execution_id}`. A resposta mostra
-   operações concluídas, RFIDs, unidades aprovadas e o motivo de interrupção,
+   operações concluídas, RFIDs, unidades aprovadas e rejeitadas e o motivo de interrupção,
    quando houver. O [Swagger do controlador](http://127.0.0.1:8001/docs)
-   também permite consultar a ocupação em `GET /api/status`.
+   também permite consultar a ocupação em `GET /api/status`. Para acompanhar
+   em 3D, abra **Simulação → Execução do servidor** no frontend.
 
 O coordenador executa uma OP por vez em um único processo. Seu estado fica
 em memória. Se o servidor ou o controlador reiniciar durante uma execução,
 confira o estado da maquete antes de iniciar outra OP. Um bloqueio entre
-máquinas, uma falha de comunicação ou RFID divergente interrompe a execução.
-No caso de RFID divergente, a peça permanece no QA.
+máquinas ou uma falha de comunicação pode interromper a execução. Se o RFID
+divergir no QA, a peça é registrada como rejeitada e segue à esteira de
+saída compartilhada.
 
 A simulação usa até 10 peças e mantém o tempo de processamento da receita.
 O estoque de entrada é consumido à medida que as ordens são executadas.

@@ -56,7 +56,7 @@ planejada, aproveitando o paralelismo das máquinas quando possível.
 
 **Fluxo geral:**
 
-`Demanda → Geração da OP → Otimização → Envio de comandos → Coleta no armazém → Leitura RFID e associação à OP → Processamento → QA → Estoque final (peças aprovadas)`
+`Demanda → Geração da OP → Otimização → Envio de comandos → Coleta na esteira de entrada → Leitura RFID e associação à OP → Processamento → QA → Esteira final`
 
 ## 5. Produtos e Ordens de Produção
 
@@ -151,8 +151,10 @@ O sistema também poderá verificar o histórico daquela unidade, incluindo:
 - ordem das etapas;
 - possíveis falhas registradas.
 
-A estação de QA classificará a unidade como aprovada ou reprovada. As peças
-aprovadas seguirão para o estoque final.
+A estação de QA classificará a unidade como aprovada ou reprovada. Ambas
+seguirão para a mesma esteira final, com o resultado associado ao RFID.
+As esteiras de entrada e saída terão um ponto fixo de acesso cada, e o
+estoque auxiliar terá inicialmente duas vagas.
 
 ## 9. Sistema de Software
 
@@ -268,8 +270,7 @@ Neste estágio do projeto permanecem em definição:
 - configuração final das máquinas;
 - receitas e tempos dos produtos previamente cadastrados;
 - mecanismo de movimento vertical;
-- capacidade das áreas de espera, tempos de transporte e regras de uso da mesa;
-- destino físico das peças reprovadas no QA;
+- dimensionamento das esteiras, tempos de transporte e regras de uso da mesa;
 - protocolo de comunicação entre dispositivos;
 - vulnerabilidade de rede que será estudada;
 - detalhes de integração entre os componentes;

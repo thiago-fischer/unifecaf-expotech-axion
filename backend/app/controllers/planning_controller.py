@@ -17,11 +17,12 @@ from app.schemas.planning_schema import (
     PlanResponse,
 )
 from app.schemas.product_schema import InvalidInputResponse
+from app.services.controller_client import ControllerError, ControllerStatus
 from app.services.execution_service import ExecutionBusy, ExecutionManager, InvalidExecution
 from app.services.order_service import OrderNotFoundError
 from app.services.planning_service import PlanningBusyError, PlanningService, build_machine_queues
 
-router = APIRouter(prefix="/orders", tags=["planning"])
+router = APIRouter(tags=["planning"])
 logger = logging.getLogger(__name__)
 PLAN_ERRORS = {
     404: {"model": OrderNotFoundResponse},
@@ -47,7 +48,7 @@ def get_execution_manager(request: Request) -> ExecutionManager:
 
 
 @router.post(
-    "/{order_id}/plan",
+    "/orders/{order_id}/plan",
     response_model=PlanResponse,
     responses=PLAN_ERRORS,
 )
@@ -59,7 +60,7 @@ def plan_order(
     return _plan(order_id, data, service)
 
 
-@router.post("/{order_id}/plan/queues", response_model=MachineQueues, responses=PLAN_ERRORS)
+@router.post("/orders/{order_id}/plan/queues", response_model=MachineQueues, responses=PLAN_ERRORS)
 def plan_machine_queues(
     order_id: Annotated[int, Path(gt=0), BeforeValidator(integer_path)],
     data: PlanRequest,
@@ -72,7 +73,7 @@ def plan_machine_queues(
 
 
 @router.post(
-    "/{order_id}/executions",
+    "/orders/{order_id}/executions",
     status_code=202,
     response_model=ExecutionStatus,
     responses={**PLAN_ERRORS, 409: {"description": "Execução ativa ou ótimo sem comprovação"}},
@@ -94,7 +95,7 @@ def start_execution(
         raise HTTPException(422, detail=str(exc)) from exc
 
 
-@router.get("/{order_id}/executions/{execution_id}", response_model=ExecutionStatus)
+@router.get("/orders/{order_id}/executions/{execution_id}", response_model=ExecutionStatus)
 def execution_status(
     order_id: Annotated[int, Path(gt=0), BeforeValidator(integer_path)],
     execution_id: str,
@@ -104,6 +105,21 @@ def execution_status(
     if status is None or status.order_id != order_id:
         raise HTTPException(404, detail="Execução não encontrada.")
     return status
+
+
+class SimulationStatus(ControllerStatus):
+    execution: ExecutionStatus | None
+
+
+@router.get("/simulation/status", response_model=SimulationStatus)
+def simulation_status(
+    manager: Annotated[ExecutionManager, Depends(get_execution_manager)],
+) -> SimulationStatus:
+    try:
+        status = manager.controller.status()
+    except ControllerError as exc:
+        raise HTTPException(503, detail=str(exc)) from exc
+    return SimulationStatus(**status.model_dump(), execution=manager.latest())
 
 
 def _plan(

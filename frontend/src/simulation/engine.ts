@@ -11,6 +11,7 @@ export type Unit = {
   history: string[];
   completed: string[];
   rejected?: boolean;
+  reviewed?: boolean;
 };
 export type Trip = {
   unit: string;
@@ -34,14 +35,46 @@ export type State = {
   x: number;
   events: { time: number; unit: string; text: string }[];
   status: 'ready' | 'active' | 'complete' | 'blocked';
+  live?: {
+    session: string;
+    pose: { x: number; y: number; carrying: boolean };
+    rfid: string | null;
+    machines: Record<string, { estado: string; tempo_restante_ms: number | null }>;
+  };
 };
-export const RFID_POSITION = -5.4;
 export const RFID_SCAN_DURATION = 0.01;
-export const positions: Record<string, number> = { M1: -4, M2: -1, M3: 2, B1: 4, B2: 5.3, QA: 7.3 };
-for (let i = 0; i < 6; i++) {
-  positions[`IN${i}`] = -10 + i * 0.8;
-  positions[`OUT${i}`] = 9.5 + i * 0.8;
-  positions[`REJ${i}`] = 15 + i * 0.8;
+export const positions: Record<string, number> = {
+  IN: -10,
+  B1: -8.5,
+  B2: -7.2,
+  M1: -4,
+  M2: -1,
+  M3: 2,
+  QA: 5,
+  OUT: 7.6,
+};
+export const stationWidth = 2.4;
+export const bufferWidth = 0.68;
+const bufferRightEdge = positions.B2 + bufferWidth / 2;
+const firstStationLeftEdge = positions.M1 - stationWidth / 2;
+export const RFID_POSITION = (bufferRightEdge + firstStationLeftEdge) / 2;
+export const conveyorCapacity = 10;
+export const conveyorPitch = 0.8;
+
+export function positionX(location: string) {
+  if (location.startsWith('IN')) return positions.IN;
+  if (location.startsWith('OUT')) return positions.OUT;
+  return positions[location];
+}
+
+export function conveyorProgress(s: State) {
+  const t = s.trip;
+  if (!t) return { input: 0, output: 0 };
+  const progress = (start: number) => Math.max(0, Math.min(1, (s.time - start) / 0.5));
+  return {
+    input: t.from.startsWith('IN') && s.time >= t.pickup ? 1 - progress(t.lifted) : 0,
+    output: t.to.startsWith('OUT') ? progress(t.lifted) : 0,
+  };
 }
 export const colors: Record<string, string> = { A: '#39d6bc', B: '#f6b44c', C: '#a79aff' };
 export function createState(): State {
@@ -62,7 +95,7 @@ export function createState(): State {
   };
   return {
     time: 0,
-    x: -10,
+    x: positions.IN,
     events: [],
     status: 'ready',
     units: ['A', 'A', 'B', 'B', 'C', 'C'].map((product, i) => ({
@@ -98,23 +131,33 @@ function dispatch(s: State) {
   if (s.trip) return;
   const rank = (u: Unit) =>
     u.location === 'QA' ? 0 : u.location.startsWith('M') ? 1 : u.location.startsWith('B') ? 2 : 3;
+  const firstInput = s.units
+    .filter((u) => u.location.startsWith('IN'))
+    .sort((a, b) => a.location.localeCompare(b.location))[0];
   const candidates = s.units
-    .filter((u) => u.until === undefined && !/^(OUT|REJ|TRANS)/.test(u.location))
+    .filter(
+      (u) =>
+        u.until === undefined &&
+        !/^(OUT|TRANS)/.test(u.location) &&
+        (!u.location.startsWith('IN') || u === firstInput),
+    )
     .sort((a, b) => rank(a) - rank(b) || a.ready - b.ready || a.id.localeCompare(b.id));
   for (const u of candidates) {
     let to: string | undefined;
-    if (u.location === 'QA') to = `${u.rejected ? 'REJ' : 'OUT'}${s.units.indexOf(u)}`;
-    else {
+    if (u.location === 'QA') {
+      const count = s.units.filter((unit) => unit.location.startsWith('OUT')).length;
+      if (count < conveyorCapacity) to = `OUT${count}`;
+    } else {
       const next = u.recipe[u.step]?.machine ?? 'QA';
       if (free(s, next)) to = next;
       else if (u.location.startsWith('M')) to = ['B1', 'B2'].find((p) => free(s, p));
     }
     if (!to) continue;
-    const approach = s.time + 0.3 + Math.abs(s.x - positions[u.location]) / 0.9;
+    const approach = s.time + 0.3 + Math.abs(s.x - positionX(u.location)) / 0.9;
     const pickup = approach + 0.6,
       lifted = pickup + 0.6,
-      fromX = positions[u.location],
-      toX = positions[to],
+      fromX = positionX(u.location),
+      toX = positionX(to),
       distance = Math.abs(toX - fromX),
       crossesRfid = Math.min(fromX, toX) < RFID_POSITION && RFID_POSITION < Math.max(fromX, toX),
       scanDistance = Math.abs(RFID_POSITION - fromX),
@@ -139,7 +182,7 @@ function dispatch(s: State) {
     log(s, u, `Transporte ${u.location} → ${to} · destino reservado`);
     return;
   }
-  if (s.units.every((u) => /^(OUT|REJ)/.test(u.location))) s.status = 'complete';
+  if (s.units.every((u) => u.location.startsWith('OUT'))) s.status = 'complete';
   else if (!s.units.some((u) => u.until !== undefined)) s.status = 'blocked';
 }
 export function nextTime(s: State): number {
@@ -183,7 +226,7 @@ function settle(s: State) {
     if (s.time >= t.end - 1e-8) {
       u.location = t.to;
       u.ready = s.time;
-      s.x = positions[t.to];
+      s.x = positionX(t.to);
       s.trip = undefined;
       log(s, u, `Entregue em ${t.to}`);
       startOperation(s, u);
@@ -214,16 +257,14 @@ export function locationLabel(p: string) {
   return p.startsWith('IN')
     ? 'Almoxarifado'
     : p.startsWith('OUT')
-      ? 'Saída'
-      : p.startsWith('REJ')
-        ? 'Rejeitados'
-        : p === 'TRANS'
-          ? 'Em transporte'
-          : p === 'QA'
-            ? 'Validação'
-            : p.startsWith('B')
-              ? `Estoque auxiliar · ${p}`
-              : p;
+      ? 'Esteira de saída'
+      : p === 'TRANS'
+        ? 'Em transporte'
+        : p === 'QA'
+          ? 'Validação'
+          : p.startsWith('B')
+            ? `Estoque auxiliar · ${p}`
+            : p;
 }
 export function pose(s: State) {
   const t = s.trip;
@@ -232,8 +273,8 @@ export function pose(s: State) {
     const p = Math.max(0, Math.min(1, (s.time - a) / (b - a)));
     return p * p * (3 - 2 * p);
   };
-  const from = positions[t.from],
-    to = positions[t.to];
+  const from = positionX(t.from),
+    to = positionX(t.to);
   let x = from,
     y = 3.4;
   if (s.time < t.approach) x = t.originX + (from - t.originX) * ease(t.start, t.approach);

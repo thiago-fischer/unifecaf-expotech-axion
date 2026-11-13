@@ -17,6 +17,11 @@ processamento e uma estação dedicada à revisão de qualidade (QA).
 Cada peça será um cubo metálico com uma etiqueta RFID de identificador único.
 Um eletroímã fará a captura dos cubos.
 
+O layout inicial terá duas vagas de estoque auxiliar. As esteiras de
+entrada e saída serão perpendiculares ao fuso, cada uma com um ponto fixo
+de coleta ou depósito ao alcance do eletroímã. A esteira de saída recebe
+peças aprovadas e rejeitadas, com o resultado do QA associado ao RFID.
+
 1. O servidor gera a ordem de produção (OP), otimiza a programação e envia
    comandos à maquete de acordo com a sequência planejada.
 2. A maquete retira um cubo do armazém com o eletroímã e o leva até o leitor
@@ -26,8 +31,8 @@ Um eletroímã fará a captura dos cubos.
 3. A mesa transporta cada cubo entre as máquinas previstas para seu produto.
    As estações simulam as operações por tempo e displays, sem transformar o cubo.
 4. Após o processamento, a peça passa pela estação de QA. A validação confere
-   o RFID e o histórico de etapas da unidade. A peça aprovada segue ao estoque
-   final.
+   o RFID e o histórico de etapas da unidade. A peça segue à esteira final
+   com o resultado da revisão registrado.
 
 ## Justificativa
 
@@ -41,8 +46,10 @@ O projeto mecânico e a integração com o servidor deverão prever a capacidade
 de 10 peças e o percurso entre armazém, leitor, processamento, QA e estoque
 final. A execução física permanece planejada e depende de validação em hardware.
 
-Continuam em aberto o mecanismo de elevação, a capacidade das áreas de espera,
-os tempos de deslocamento, carga e descarga, as regras de uso da mesa
-compartilhada, o protocolo de comunicação e o destino físico de peças reprovadas.
+Continuam em aberto o mecanismo de elevação, o dimensionamento das esteiras,
+os tempos de deslocamento, carga e descarga e as regras de uso da mesa
+compartilhada. O primeiro layout com esteiras foi implementado na
+[demonstração 3D](../specs/0007-maquete-virtual.md). As esteiras e as duas vagas
+também fazem parte da [execução simulada via API](../specs/0009-api-controlador-maquete.md).
 O estudo de planejamento detalha as restrições a incorporar antes da execução.
 [SPEC-0005](../specs/0005-production-planning.md#11-pendências-e-evolução-física)

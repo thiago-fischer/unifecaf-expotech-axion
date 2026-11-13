@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   advance,
+  conveyorProgress,
   createState,
   nextEvent,
+  positionX,
   pose,
   RFID_POSITION,
   RFID_SCAN_DURATION,
@@ -36,13 +38,15 @@ describe('simulação determinística', () => {
     expect(b.events).toEqual(a.events);
     expect(b.time).toBe(a.time);
   });
-  it('rejeita histórico inconsistente', () => {
+  it('mantém aprovadas e rejeitadas na mesma esteira com resultados distintos', () => {
     const s = createState();
     s.units[0].completed.push('M9');
     s.units[1].product = 'C';
     finish(s);
-    expect(s.units[0].location).toBe('REJ0');
-    expect(s.units[1].location).toBe('REJ1');
+    expect(s.status).toBe('complete');
+    expect(s.units.every((unit) => unit.location.startsWith('OUT'))).toBe(true);
+    expect(s.units.filter((unit) => unit.rejected)).toEqual(s.units.slice(0, 2));
+    expect(new Set(s.units.map((unit) => positionX(unit.location))).size).toBe(1);
     expect(s.units[0].history.some((h) => h.includes('inconsistente'))).toBe(true);
   });
   it('detecta bloqueio quando máquinas e buffers estão cheios', () => {
@@ -76,6 +80,12 @@ describe('simulação determinística', () => {
     advance(s, t.pickup);
     expect(s.units[0].location).toBe('TRANS');
     expect(s.trip?.to).toBe('M1');
+    expect(positionX('IN0')).toBe(positionX('IN5'));
+    expect(conveyorProgress(s).input).toBe(1);
+    advance(s, t.lifted + 0.25 - s.time);
+    expect(conveyorProgress(s).input).toBeCloseTo(0.5);
+    advance(s, 0.25);
+    expect(conveyorProgress(s).input).toBe(0);
   });
   it('para diante do leitor RFID por 0,01 segundo simulado', () => {
     const s = createState();

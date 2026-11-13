@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from math import ceil
 from threading import Lock
 from time import monotonic
-from typing import NoReturn
+from typing import Literal, NoReturn
 from uuid import uuid4
 
 from .schemas import (
@@ -29,8 +29,17 @@ WAREHOUSE = tuple(f"ARMAZEM_{index:02}" for index in range(1, 11))
 OUTPUT = tuple(f"ESTOQUE_FINAL_{index:02}" for index in range(1, 11))
 HOME = "REFERENCIA"
 READER = "LEITOR_RFID"
-SLOTS = (*WAREHOUSE, *MACHINES, *OUTPUT)
-POSITIONS = (HOME, *WAREHOUSE, READER, *MACHINES, *OUTPUT)
+BUFFERS = ("B1", "B2")
+SLOTS = (*WAREHOUSE, *BUFFERS, *MACHINES, *OUTPUT)
+AXIS = (HOME, "ARMAZEM", *BUFFERS, READER, *MACHINES, "ESTOQUE_FINAL")
+
+
+def axis_position(slot: str) -> str:
+    if slot in WAREHOUSE:
+        return "ARMAZEM"
+    if slot in OUTPUT:
+        return "ESTOQUE_FINAL"
+    return slot
 
 
 class ControllerError(Exception):
@@ -49,6 +58,7 @@ class Execution:
     arrives: float | None = None
     completed: bool = False
     rfid: str | None = None
+    slot: str | None = None
 
     def status(self) -> CommandStatus:
         return CommandStatus(
@@ -72,6 +82,8 @@ class Simulator:
             for index, slot in enumerate(WAREHOUSE[:initial_pieces], start=1)
         }
         self._processed: set[str] = set()
+        self._quality: dict[str, Literal["aprovada", "rejeitada"]] = {}
+        self._last_read: tuple[float, str] | None = None
         self._commands: dict[str, Execution] = {}
         self._table: Execution | None = None
         self._processing: dict[str, Execution] = {}
@@ -132,6 +144,7 @@ class Simulator:
             self._advance(now)
             movement = None
             manipulating = False
+            head_progress = 0.0
             position = self._position
             table = self._table
             if table is not None and table.target is not None and table.arrives is not None:
@@ -143,6 +156,8 @@ class Simulator:
                     )
                 else:
                     manipulating = isinstance(table.command, Collect | Deposit)
+                    if manipulating:
+                        head_progress = (now - table.arrives) / (table.ends - table.arrives)
                     position = table.target
             return ControllerStatus(
                 sessao_id=self._session_id,
@@ -151,10 +166,19 @@ class Simulator:
                     posicao=position,
                     movimento=movement,
                     cabecote="manipulando" if manipulating else "recolhido",
+                    progresso_cabecote=head_progress,
                     com_peca=self._carried is not None,
                 ),
                 maquinas={machine: self._machine_status(machine, now) for machine in MACHINES},
                 ocupacao={slot: slot in self._pieces for slot in SLOTS},
+                pecas=self._pieces.copy(),
+                rfid_transportado=self._carried,
+                resultados_qa=self._quality.copy(),
+                leitura_rfid=(
+                    self._last_read[1]
+                    if self._last_read and now - self._last_read[0] < 0.6
+                    else None
+                ),
                 falhas=[],
             )
 
@@ -202,25 +226,36 @@ class Simulator:
             if isinstance(command, Collect)
             else (command.parametros.destino)
         )
-        valid_positions = POSITIONS if isinstance(command, Move) else SLOTS
-        if target not in valid_positions:
+        slot = target
+        if isinstance(command, Collect) and target == "ARMAZEM":
+            slot = next((name for name in WAREHOUSE if name in self._pieces), None)
+            if slot is None:
+                self._conflict("origem_vazia", "A esteira de entrada está vazia.")
+        if isinstance(command, Deposit) and target == "ESTOQUE_FINAL":
+            slot = next((name for name in OUTPUT if name not in self._pieces), None)
+            if slot is None:
+                self._conflict("destino_ocupado", "A esteira de saída está cheia.")
+        target = axis_position(target)
+        if target not in AXIS or (not isinstance(command, Move) and slot not in SLOTS):
             raise ControllerError(404, "posicao_desconhecida", "Posição inválida para o comando.")
         if isinstance(command, Collect):
             if self._carried is not None:
                 self._conflict("cabecote_ocupado", "O cabeçote já carrega uma peça.")
-            if target not in self._pieces:
+            if slot not in self._pieces:
                 self._conflict("origem_vazia", "A origem não contém peça.")
             if target in PROCESSING and target not in self._processed:
                 self._conflict("peca_nao_disponivel", "A operação na máquina ainda não terminou.")
         if isinstance(command, Deposit):
             if self._carried is None:
                 self._conflict("cabecote_vazio", "O cabeçote não carrega uma peça.")
-            if target in self._pieces:
+            if slot in self._pieces:
                 self._conflict("destino_ocupado", "O destino já contém uma peça.")
+            if command.parametros.resultado_qa is not None and slot not in OUTPUT:
+                self._conflict("destino_qa_invalido", "O resultado de QA pertence à saída.")
 
-        travel = 0.025 * abs(POSITIONS.index(target) - POSITIONS.index(self._position))
-        handling = 0.1 if isinstance(command, Collect | Deposit) else 0.0
-        return Execution(command, now, now + travel + handling, target, now + travel)
+        travel = 0.12 * abs(AXIS.index(target) - AXIS.index(self._position))
+        handling = 0.25 if isinstance(command, Collect | Deposit) else 0.0
+        return Execution(command, now, now + travel + handling, target, now + travel, slot=slot)
 
     def _advance(self, now: float) -> None:
         for machine, operation in tuple(self._processing.items()):
@@ -235,13 +270,24 @@ class Simulator:
         if table.target is not None:
             self._position = table.target
         if isinstance(table.command, Collect):
-            origin = table.command.parametros.origem
+            assert table.slot is not None
+            origin = table.slot
             self._carried = self._pieces.pop(origin)
             self._processed.discard(origin)
         elif isinstance(table.command, Deposit):
             assert self._carried is not None
-            self._pieces[table.command.parametros.destino] = self._carried
+            assert table.slot is not None
+            self._pieces[table.slot] = self._carried
+            quality = table.command.parametros.resultado_qa
+            if quality is not None:
+                self._quality[self._carried] = quality
             self._carried = None
+        elif (
+            isinstance(table.command, ReadRFID)
+            and table.command.parametros.ponto == READER
+            and table.rfid is not None
+        ):
+            self._last_read = (table.ends, table.rfid)
         table.completed = True
         self._table = None
 

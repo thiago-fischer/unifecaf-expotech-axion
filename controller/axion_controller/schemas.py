@@ -42,9 +42,13 @@ class Collect(Command):
     parametros: CollectParams
 
 
+class DepositParams(Destination):
+    resultado_qa: Literal["aprovada", "rejeitada"] | None = None
+
+
 class Deposit(Command):
     tipo: Literal["depositar_peca"]
-    parametros: Destination
+    parametros: DepositParams
 
 
 class ReadParams(Input):
@@ -107,6 +111,7 @@ class TableStatus(BaseModel):
     posicao: str | None
     movimento: Movement | None
     cabecote: Literal["recolhido", "manipulando"]
+    progresso_cabecote: float = 0
     com_peca: bool
 
 
@@ -115,4 +120,8 @@ class ControllerStatus(BaseModel):
     mesa: TableStatus
     maquinas: dict[MachineID, MachineStatus]
     ocupacao: dict[str, bool]
+    pecas: dict[str, str]
+    rfid_transportado: str | None
+    resultados_qa: dict[str, Literal["aprovada", "rejeitada"]]
+    leitura_rfid: str | None
     falhas: list[ErrorInfo]

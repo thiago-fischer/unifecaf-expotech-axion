@@ -48,7 +48,7 @@
 .scene-preview .sim-details,
 .scene-preview .sim-log,
 .scene-preview .simulation > .sim-top p,
-.scene-preview .simulation > p:last-child {
+.scene-preview .simulation > .sim-note:last-child {
   display: none;
 }
 @media (max-width: 600px) {

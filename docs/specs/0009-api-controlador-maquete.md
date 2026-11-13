@@ -1,6 +1,6 @@
 # SPEC-0009 — API do controlador e execução simulada
 
-- Status: API e coordenador do controlador simulado implementados. Cena 3D conectada pendente.
+- Status: Controlador simulado, coordenador e modo 3D conectado implementados.
 - Relacionadas: [ADR-010](../adr/0010-maquete-fisica.md) e [ADR-011](../adr/0011-api-controlador-maquete.md)
 
 ## 1. Componentes
@@ -12,8 +12,10 @@
 | Maquete virtual 3D | Exibe o estado e interpola os movimentos. No modo conectado, recebe o estado do controlador simulado. |
 
 O modo demonstrativo atual pode continuar operando com seu motor local.
-No modo conectado, o navegador consulta uma rota de leitura exposta pelo
-servidor Axion, que repassa o estado da maquete. O controlador simulado mantém
+No modo conectado, o navegador consulta `GET /simulation/status` no
+servidor Axion. A resposta combina a última execução com a posição da mesa,
+a ocupação por RFID, a leitura atual, os resultados do QA e o estado das
+máquinas. O controlador simulado mantém
 o relógio e a execução mesmo com o navegador fechado.
 
 ## 2. Contrato HTTP proposto
@@ -96,7 +98,12 @@ Exemplo de resposta `202 Accepted`.
 2. O controlador retorna o RFID. O servidor associa a leitura à próxima unidade prevista na OP.
 3. O servidor ordena o depósito na máquina da primeira etapa e inicia o processamento. Quando a operação termina, coleta o cubo e repete o ciclo nas demais etapas do produto.
 4. O servidor manda depositar a peça no QA e solicita a leitura final. Com o RFID e o histórico de etapas, decide se a peça foi aprovada.
-5. Para uma peça aprovada, envia a coleta no QA e o depósito no estoque final. Na primeira simulação, uma reprovação deixa a peça no QA e interrompe o cenário até que o destino de rejeitos seja definido.
+5. Peças aprovadas e rejeitadas seguem à mesma esteira de saída. O depósito leva `resultado_qa`, e o servidor registra a divergência de RFID em `rejected_units` sem interromper o restante da OP.
+
+`coletar_peca` em `ARMAZEM` retira o primeiro cubo disponível. Depositar
+em `ESTOQUE_FINAL` ocupa a próxima vaga. Cada esteira tem um único ponto
+no eixo da mesa e dez posições lógicas. Os endereços numerados continuam
+disponíveis para comandos manuais e representam vagas lógicas.
 
 ## 4. Filas por máquina no servidor
 
@@ -112,6 +119,8 @@ primeira operação de cada fila e confere a ocupação real das estações.
 Concluir o processamento deixa a máquina aguardando retirada. O coordenador
 reserva um destino livre antes de coletar e serializa os comandos
 que ocupam a mesa. Peças com a última etapa concluída ficam elegíveis para QA.
+Se nenhuma operação estiver pronta para receber uma peça, o coordenador
+pode liberar uma estação com operação concluída usando `B1` ou `B2`.
 Se houver trabalho pendente e nenhum movimento viável, a execução informa
 o bloqueio. O coordenador dá preferência a peças já em circulação e usa
 o horário planejado como prioridade entre operações elegíveis.

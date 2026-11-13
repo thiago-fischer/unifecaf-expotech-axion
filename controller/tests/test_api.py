@@ -37,7 +37,7 @@ def run_command(controller: tuple[TestClient, Clock]) -> Callable:
         response = submit(client, command_id, kind, **parameters)
         assert response.status_code == 202, response.text
         assert response.json() == {"id": command_id, "estado": "aceito"}
-        clock.advance()
+        clock.advance(2)
         result = client.get(f"/api/comandos/{command_id}").json()
         assert result["estado"] == "concluido"
         return result
@@ -159,3 +159,23 @@ def test_duas_etapas_seguidas_na_mesma_maquina(controller, run_command):
     )
     run_command("retirada", "coletar_peca", origem="M1")
     assert client.get("/api/maquinas/M1/status").json()["estado"] == "livre"
+
+
+def test_esteiras_e_estoque_auxiliar(controller, run_command):
+    client, _ = controller
+    run_command("ref", "referenciar_mesa")
+    for index, quality in enumerate(("rejeitada", "aprovada"), start=1):
+        run_command(f"coleta{index}", "coletar_peca", origem="ARMAZEM")
+        snapshot = client.get("/api/status").json()
+        assert snapshot["mesa"]["posicao"] == "ARMAZEM"
+        assert snapshot["rfid_transportado"] == f"SIM-00{index}"
+        run_command(f"buffer{index}", "depositar_peca", destino=f"B{index}")
+        assert client.get("/api/status").json()["pecas"][f"B{index}"] == f"SIM-00{index}"
+        run_command(f"retirada{index}", "coletar_peca", origem=f"B{index}")
+        run_command(
+            f"saida{index}", "depositar_peca", destino="ESTOQUE_FINAL", resultado_qa=quality
+        )
+    snapshot = client.get("/api/status").json()
+    assert snapshot["mesa"]["posicao"] == "ESTOQUE_FINAL"
+    assert snapshot["pecas"] == {"ESTOQUE_FINAL_01": "SIM-001", "ESTOQUE_FINAL_02": "SIM-002"}
+    assert snapshot["resultados_qa"] == {"SIM-001": "rejeitada", "SIM-002": "aprovada"}

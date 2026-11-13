@@ -198,4 +198,4 @@ A API do [controlador simulado](../controller/README.md) funciona como um
 serviço FastAPI separado. O backend usa as filas por máquina para comandar
 uma OP simulada por vez via HTTP. A
 [SPEC-0009](specs/0009-api-controlador-maquete.md) descreve o contrato e o
-modo conectado da cena 3D, ainda pendente.
+modo conectado da cena 3D.

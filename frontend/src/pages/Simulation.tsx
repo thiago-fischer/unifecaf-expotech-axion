@@ -1,8 +1,149 @@
 import { useEffect, useRef, useState } from 'react';
+import { request } from '../api/client';
 import Scene from '../simulation/Scene';
-import { advance, colors, createState, locationLabel, nextEvent } from '../simulation/engine';
+import {
+  advance,
+  colors,
+  createState,
+  locationLabel,
+  nextEvent,
+  type State,
+} from '../simulation/engine';
+import { liveState, type LiveStatus } from '../simulation/live';
 import '../simulation/simulation.css';
+
 export default function Simulation() {
+  const [connected, setConnected] = useState(false);
+  return (
+    <>
+      <div className="sim-controls">
+        <button aria-pressed={!connected} onClick={() => setConnected(false)}>
+          Demonstração local
+        </button>
+        <button aria-pressed={connected} onClick={() => setConnected(true)}>
+          Execução do servidor
+        </button>
+      </div>
+      {connected ? <ConnectedSimulation /> : <LocalSimulation />}
+    </>
+  );
+}
+
+function ConnectedSimulation() {
+  const state = useRef<State>({ ...createState(), units: [] });
+  const [snapshot, setSnapshot] = useState<LiveStatus | null>(null);
+  const [offline, setOffline] = useState(false);
+  const [selected, setSelected] = useState('');
+  const [camera, setCamera] = useState(0);
+  const [reduced, setReduced] = useState(
+    () => matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  useEffect(() => {
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    async function update() {
+      try {
+        const next = await request<LiveStatus>('/simulation/status');
+        if (!active) return;
+        state.current = liveState(next);
+        setSnapshot(next);
+        setOffline(false);
+      } catch {
+        if (active) setOffline(true);
+      } finally {
+        if (active) timer = setTimeout(update, 100);
+      }
+    }
+    void update();
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  const execution = snapshot?.execution;
+  const states = {
+    queued: 'Aguardando início',
+    running: 'Em execução',
+    completed: 'Ciclo concluído',
+    interrupted: 'Execução interrompida',
+  };
+  const status = offline
+    ? 'Sem comunicação com o controlador'
+    : execution
+      ? states[execution.state]
+      : snapshot
+        ? 'Aguardando uma OP'
+        : 'Conectando…';
+  const units = state.current.units;
+  const selectedUnit = units.find((unit) => unit.id === selected);
+  const rejection = selectedUnit && execution?.rejected_units[selectedUnit.product];
+  return (
+    <section className="simulation" aria-label="Execução da maquete pelo servidor">
+      <div className="sim-top">
+        <h2>{execution ? `Ordem de produção ${execution.order_id}` : 'Execução do servidor'}</h2>
+        <span className="sim-status" role="status">
+          {status}
+        </span>
+      </div>
+      {execution?.reason && <p role="alert">{execution.reason}</p>}
+      {snapshot?.falhas.map((failure, i) => (
+        <p role="alert" key={i}>
+          {failure.mensagem}
+        </p>
+      ))}
+      <div className="sim-stage">
+        <Scene state={state} select={setSelected} reset={camera} reduced={reduced} />
+        <div className="sim-stage-bottom">
+          <span>Arraste para orbitar · Role para aproximar</span>
+          <button onClick={() => setCamera((n) => n + 1)}>Restaurar câmera</button>
+        </div>
+      </div>
+      <div className="sim-controls">
+        <label>
+          <input type="checkbox" checked={reduced} onChange={(e) => setReduced(e.target.checked)} />{' '}
+          Movimento reduzido
+        </label>
+      </div>
+      {snapshot && (
+        <div className="sim-machines">
+          {Object.entries(snapshot.maquinas).map(([name, machine]) => (
+            <article key={name}>
+              <span>{name}</span>
+              <b>{machine.estado.replaceAll('_', ' ')}</b>
+              {machine.tempo_restante_ms !== null && (
+                <small>{(machine.tempo_restante_ms / 1000).toFixed(1)} s restantes</small>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+      <div className="sim-units">
+        {units.map((unit) => (
+          <button
+            key={unit.id}
+            aria-pressed={selected === unit.id}
+            onClick={() => setSelected(unit.id)}
+          >
+            <span>
+              <b>
+                {unit.id}
+                {unit.product ? ` · ${unit.product}` : ''}
+              </b>
+              <small>
+                {locationLabel(unit.location)}
+                {unit.reviewed ? (unit.rejected ? ' · Rejeitada' : ' · Aprovada') : ''}
+              </small>
+            </span>
+          </button>
+        ))}
+      </div>
+      {rejection && <p>{rejection}</p>}
+    </section>
+  );
+}
+
+function LocalSimulation() {
   const state = useRef(createState());
   const [, refresh] = useState(0);
   const [running, setRunning] = useState(false);
@@ -136,7 +277,8 @@ export default function Simulation() {
         <div>
           <small>APROVADAS</small>
           <strong>
-            {s.units.filter((u) => u.location.startsWith('OUT')).length} <em>/ 6</em>
+            {s.units.filter((u) => u.location.startsWith('OUT') && !u.rejected).length}{' '}
+            <em>/ {s.units.length}</em>
           </strong>
         </div>
         <div>
@@ -147,7 +289,9 @@ export default function Simulation() {
         </div>
         <div>
           <small>REJEITADAS</small>
-          <strong>{s.units.filter((u) => u.location.startsWith('REJ')).length}</strong>
+          <strong>
+            {s.units.filter((u) => u.location.startsWith('OUT') && u.rejected).length}
+          </strong>
         </div>
       </div>
       {s.status === 'blocked' && (
@@ -201,10 +345,10 @@ export default function Simulation() {
           <p>
             {locationLabel(unit.location)} · Próxima etapa:{' '}
             {unit.location.startsWith('OUT')
-              ? 'Concluída'
-              : unit.location.startsWith('REJ')
+              ? unit.rejected
                 ? 'Rejeitada'
-                : (unit.recipe[unit.step]?.machine ?? 'Validação')}
+                : 'Aprovada'
+              : (unit.recipe[unit.step]?.machine ?? 'Validação')}
           </p>
           <p className="sim-route">
             {unit.recipe.map((r, i) => (

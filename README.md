@@ -193,8 +193,10 @@ MAT-003 → Produto B
 ```
 
 Após o processamento, o cubo passará pela estação de QA para nova leitura e
-conferência do histórico das etapas. As peças aprovadas seguirão ao estoque
-final.
+conferência do histórico das etapas. A maquete terá duas vagas de estoque
+auxiliar e esteiras de entrada e saída com um ponto fixo de acesso cada.
+Peças aprovadas e rejeitadas compartilharão a esteira de saída, com o
+resultado do QA vinculado ao RFID.
 
 ## Estrutura do repositório
 

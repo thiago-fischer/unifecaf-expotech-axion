@@ -11,6 +11,7 @@ from app.services.controller_client import ControllerClient, ControllerError, Co
 from app.services.planning_service import build_machine_queues
 
 logger = logging.getLogger(__name__)
+BUFFERS = ("B1", "B2")
 
 
 class ExecutionBusy(Exception):
@@ -73,6 +74,11 @@ class ExecutionManager:
             run = self._runs.get(run_id)
             return run.model_copy(deep=True) if run is not None else None
 
+    def latest(self) -> ExecutionStatus | None:
+        with self._lock:
+            run = next(reversed(self._runs.values()), None)
+            return run.model_copy(deep=True) if run is not None else None
+
     def close(self) -> None:
         with self._lock:
             self._stop.set()
@@ -95,7 +101,6 @@ class Execution:
         self.processing: dict[Station, Processing] = {}
         self.completed: set[str] = set()
         self.rfids: set[str] = set()
-        self.output: deque[str] = deque()
 
     def run(self) -> None:
         try:
@@ -132,7 +137,8 @@ class Execution:
             or status.mesa.movimento is not None
             or status.mesa.cabecote != "recolhido"
             or any(
-                status.ocupacao.get(station) is not False for station in ("M1", "M2", "M3", "QA")
+                status.ocupacao.get(station) is not False
+                for station in ("M1", "M2", "M3", "QA", *BUFFERS)
             )
         ):
             raise ControllerError("A execução requer mesa e estações livres no início.")
@@ -141,24 +147,16 @@ class Execution:
         for queue in self.queues.values():
             for op in queue:
                 counts[op.unit_id] = counts.get(op.unit_id, 0) + 1
-        warehouse = sorted(
-            slot
+        warehouse = sum(
+            slot.startswith("ARMAZEM_") and occupied for slot, occupied in status.ocupacao.items()
+        )
+        output = sum(
+            slot.startswith("ESTOQUE_FINAL_") and not occupied
             for slot, occupied in status.ocupacao.items()
-            if slot.startswith("ARMAZEM_") and occupied
         )
-        self.output = deque(
-            sorted(
-                slot
-                for slot, occupied in status.ocupacao.items()
-                if slot.startswith("ESTOQUE_FINAL_") and not occupied
-            )
-        )
-        if len(warehouse) < len(counts) or len(self.output) < len(counts):
+        if warehouse < len(counts) or output < len(counts):
             raise ControllerError("Peças no armazém ou vagas no estoque final insuficientes.")
-        self.units = {
-            unit_id: Unit(slot, counts[unit_id])
-            for unit_id, slot in zip(counts, warehouse, strict=False)
-        }
+        self.units = {unit_id: Unit("ARMAZEM", count) for unit_id, count in counts.items()}
         if not status.mesa.referenciada:
             self._table("referenciar_mesa")
 
@@ -166,7 +164,7 @@ class Execution:
         if status.ocupacao.get("QA") is False:
             for unit_id, unit in self.units.items():
                 if unit.remaining == 0:
-                    self._approve(unit_id, unit)
+                    self._review(unit_id, unit)
                     return True
 
         ready: list[tuple[Station, PlanOperation]] = []
@@ -181,7 +179,7 @@ class Execution:
             if unit.position == station or status.ocupacao.get(station) is False:
                 ready.append((station, operation))
         if not ready:
-            return False
+            return self._buffer_finished_piece(status)
         station, operation = min(
             ready,
             key=lambda item: (
@@ -215,6 +213,18 @@ class Execution:
         )
         return True
 
+    def _buffer_finished_piece(self, status: ControllerStatus) -> bool:
+        destination = next((slot for slot in BUFFERS if status.ocupacao.get(slot) is False), None)
+        if destination is None:
+            return False
+        for unit in self.units.values():
+            if unit.position in self.queues and unit.position not in self.processing:
+                self._table("coletar_peca", origem=unit.position)
+                self._table("depositar_peca", destino=destination)
+                unit.position = destination
+                return True
+        return False
+
     def _finish_processing(self) -> None:
         for station, active in tuple(self.processing.items()):
             result = self._command_result(active.command_id, active.deadline)
@@ -227,16 +237,24 @@ class Execution:
             with self.manager._lock:
                 self.manager._runs[self.run_id].completed_operations.append(operation.operation_id)
 
-    def _approve(self, unit_id: str, unit: Unit) -> None:
+    def _review(self, unit_id: str, unit: Unit) -> None:
         self._table("coletar_peca", origem=unit.position)
         self._table("depositar_peca", destino="QA")
-        if self._read("QA") != unit.rfid:
-            raise ControllerError(f"RFID divergente no QA para a unidade {unit_id}.")
+        read = self._read("QA")
+        approved = read == unit.rfid
         self._table("coletar_peca", origem="QA")
-        self._table("depositar_peca", destino=self.output.popleft())
+        self._table(
+            "depositar_peca",
+            destino="ESTOQUE_FINAL",
+            resultado_qa="aprovada" if approved else "rejeitada",
+        )
         del self.units[unit_id]
         with self.manager._lock:
-            self.manager._runs[self.run_id].approved_units.append(unit_id)
+            run = self.manager._runs[self.run_id]
+            if approved:
+                run.approved_units.append(unit_id)
+            else:
+                run.rejected_units[unit_id] = f"RFID divergente no QA: {read}."
 
     def _read(self, point: str) -> str:
         result = self._table("ler_rfid", ponto=point)

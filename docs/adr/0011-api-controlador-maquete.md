@@ -36,7 +36,8 @@ A API do simulador está disponível no módulo
 [`controller`](../../controller/README.md). O
 [backend](../../backend/README.md#executar-a-ordem-na-maquete-simulada)
 coordena uma OP simulada por vez a partir das filas por máquina.
-A adaptação da cena é uma etapa posterior. Quando o controlador físico
-estiver disponível, ele poderá implementar o mesmo contrato.
+A cena 3D tem um modo conectado que consulta o estado pelo backend.
+Quando o controlador físico estiver disponível, ele poderá implementar o
+mesmo contrato.
 Sensores, tempos reais, comportamento em falhas e regras de recuperação no
 hardware precisarão de validação na maquete física.

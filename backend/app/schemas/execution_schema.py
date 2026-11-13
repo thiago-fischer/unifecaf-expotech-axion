@@ -18,5 +18,6 @@ class ExecutionStatus(BaseModel):
     state: Literal["queued", "running", "completed", "interrupted"]
     completed_operations: list[str] = Field(default_factory=list)
     approved_units: list[str] = Field(default_factory=list)
+    rejected_units: dict[str, str] = Field(default_factory=dict)
     unit_rfids: dict[str, str] = Field(default_factory=dict)
     reason: str | None = None

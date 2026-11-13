@@ -2,10 +2,19 @@ import { positions, RFID_POSITION, type State, type Unit } from './engine';
 
 export type LiveStatus = {
   sessao_id: string;
+  velocidade: number;
+  idade_ms?: number;
   mesa: {
     posicao: string | null;
-    movimento: { origem: string | null; destino: string; progresso: number } | null;
+    movimento: {
+      origem: string | null;
+      destino: string;
+      progresso: number;
+      duracao_ms?: number;
+      manipulacao_ms?: number;
+    } | null;
     progresso_cabecote: number;
+    manipulacao_ms?: number;
   };
   pecas: Record<string, string>;
   rfid_transportado: string | null;
@@ -14,9 +23,12 @@ export type LiveStatus = {
   maquinas: NonNullable<State['live']>['machines'];
   falhas: { mensagem?: string }[];
   execution: {
+    id: string;
     order_id: number;
     state: 'queued' | 'running' | 'completed' | 'interrupted';
     unit_rfids: Record<string, string>;
+    completed_operations: string[];
+    approved_units: string[];
     rejected_units: Record<string, string>;
     reason: string | null;
   } | null;
@@ -47,14 +59,33 @@ export function liveState(snapshot: LiveStatus): State {
     units.push({ ...liveUnit(snapshot.rfid_transportado), location: 'TRANS' });
   }
   const move = snapshot.mesa.movimento;
-  const x = move
-    ? axis(move.origem) + (axis(move.destino) - axis(move.origem)) * move.progresso
-    : axis(snapshot.mesa.posicao);
-  const y = 3.4 - 2 * (1 - Math.abs(2 * snapshot.mesa.progresso_cabecote - 1));
+  const elapsed = (snapshot.idade_ms ?? 0) * snapshot.velocidade;
+  const travel = move?.duracao_ms ?? 0;
+  const handling = (move ? move.manipulacao_ms : snapshot.mesa.manipulacao_ms) ?? 0;
+  const receivedAt = performance.now();
+  const travelLeft = move ? travel * (1 - move.progresso) : 0;
+  const handlingLeft = handling * (1 - snapshot.mesa.progresso_cabecote);
+  const movingUntil =
+    receivedAt + Math.max(0, travelLeft + handlingLeft - elapsed) / snapshot.velocidade;
+  function poseAt(now: number) {
+    const age = elapsed + Math.max(0, now - receivedAt) * snapshot.velocidade;
+    const progress = move ? Math.min(1, move.progresso + (travel ? age / travel : 0)) : 0;
+    const x = move
+      ? axis(move.origem) + (axis(move.destino) - axis(move.origem)) * progress
+      : axis(snapshot.mesa.posicao);
+    const head = Math.min(
+      1,
+      snapshot.mesa.progresso_cabecote + (handling ? Math.max(0, age - travelLeft) / handling : 0),
+    );
+    const depth = 1 - Math.abs(2 * head - 1);
+    const y = 3.4 - 2 * depth * depth * (3 - 2 * depth);
+    return { x, y, carrying: snapshot.rfid_transportado !== null };
+  }
+  const pose = poseAt(receivedAt);
   return {
-    time: performance.now() / 1000,
+    time: receivedAt / 1000,
     units,
-    x,
+    x: pose.x,
     events: [],
     status:
       snapshot.execution?.state === 'completed'
@@ -64,9 +95,22 @@ export function liveState(snapshot: LiveStatus): State {
           : 'active',
     live: {
       session: snapshot.sessao_id,
-      pose: { x, y, carrying: snapshot.rfid_transportado !== null },
+      pose,
+      poseAt,
+      movingUntil,
       rfid: snapshot.leitura_rfid,
-      machines: snapshot.maquinas,
+      machines: Object.fromEntries(
+        Object.entries(snapshot.maquinas).map(([name, machine]) => [
+          name,
+          {
+            ...machine,
+            tempo_restante_ms:
+              machine.tempo_restante_ms === null
+                ? null
+                : Math.max(0, machine.tempo_restante_ms - elapsed),
+          },
+        ]),
+      ),
     },
   };
 

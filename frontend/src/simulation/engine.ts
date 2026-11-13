@@ -38,6 +38,8 @@ export type State = {
   live?: {
     session: string;
     pose: { x: number; y: number; carrying: boolean };
+    poseAt: (now: number) => { x: number; y: number; carrying: boolean };
+    movingUntil: number;
     rfid: string | null;
     machines: Record<string, { estado: string; tempo_restante_ms: number | null }>;
   };

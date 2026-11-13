@@ -7,11 +7,19 @@ from uuid import uuid4
 
 from app.schemas.execution_schema import ExecutionStatus, Station
 from app.schemas.planning_schema import PlanOperation, PlanResponse
-from app.services.controller_client import ControllerClient, ControllerError, ControllerStatus
+from app.services.controller_client import (
+    CommandStatus,
+    ControllerClient,
+    ControllerError,
+    ControllerEvent,
+    ControllerStatus,
+    SimulationSpeed,
+)
 from app.services.planning_service import build_machine_queues
 
 logger = logging.getLogger(__name__)
 BUFFERS = ("B1", "B2")
+MIN_SIMULATION_SPEED = 0.5
 
 
 class ExecutionBusy(Exception):
@@ -43,6 +51,15 @@ class ExecutionManager:
         self._lock = Lock()
         self._worker: Thread | None = None
         self._runs: dict[str, ExecutionStatus] = {}
+        self._latest_id: str | None = None
+        self._controller_lock = Lock()
+        self._snapshot: ControllerStatus | None = None
+        self._snapshot_at = 0.0
+        self._retry_at = 0.0
+        self._status_error: ControllerError | None = None
+        self._retired_sessions: set[str] = set()
+        self._results: dict[str, CommandStatus] = {}
+        self._changed = Event()
 
     def start(self, plan: PlanResponse, mapping: dict[int, Station]) -> ExecutionStatus:
         queues = build_machine_queues(plan).machine_queues
@@ -60,6 +77,7 @@ class ExecutionManager:
                 raise ExecutionBusy
             run = ExecutionStatus(id=uuid4().hex, order_id=plan.order_id, state="queued")
             self._runs[run.id] = run
+            self._latest_id = run.id
             execution = Execution(
                 self,
                 run.id,
@@ -74,14 +92,84 @@ class ExecutionManager:
             run = self._runs.get(run_id)
             return run.model_copy(deep=True) if run is not None else None
 
-    def latest(self) -> ExecutionStatus | None:
+    def snapshot(self) -> tuple[ControllerStatus, ExecutionStatus | None, float]:
         with self._lock:
-            run = next(reversed(self._runs.values()), None)
-            return run.model_copy(deep=True) if run is not None else None
+            self.controller_status()
+            with self._controller_lock:
+                status = self._snapshot
+                age_ms = max(0, (monotonic() - self._snapshot_at) * 1000)
+            assert status is not None
+            run = self._runs[self._latest_id] if self._latest_id else None
+            return status, run.model_copy(deep=True) if run is not None else None, age_ms
+
+    def _save_status(self, status: ControllerStatus) -> bool:
+        if status.sessao_id in self._retired_sessions:
+            return False
+        if self._snapshot:
+            if status.sessao_id != self._snapshot.sessao_id:
+                self._retired_sessions.add(self._snapshot.sessao_id)
+                self._results.clear()
+            elif status.sequencia and status.sequencia <= self._snapshot.sequencia:
+                return True
+        self._snapshot = status
+        self._snapshot_at = monotonic()
+        self._status_error = None
+        return True
+
+    def controller_status(self, *, max_age: float = 10) -> ControllerStatus:
+        with self._controller_lock:
+            now = monotonic()
+            if self._status_error is not None and now < self._retry_at:
+                raise self._status_error
+            if self._snapshot is None or now - self._snapshot_at >= max_age:
+                try:
+                    if not self._save_status(self.controller.status()):
+                        raise ControllerError("O controlador respondeu com uma sessão anterior.")
+                except ControllerError as exc:
+                    self._status_error = exc
+                    self._retry_at = monotonic() + 2
+                    raise
+            assert self._snapshot is not None
+            return self._snapshot
+
+    def accept_event(self, event: ControllerEvent) -> None:
+        with self._controller_lock:
+            if self._save_status(event.status):
+                for result in event.resultados:
+                    if result.estado in ("concluido", "falhou"):
+                        self._results[result.id] = result
+                # Reenvios e comandos manuais também podem chegar fora de uma OP.
+                while len(self._results) > 1100:
+                    del self._results[next(iter(self._results))]
+                self._changed.set()
+
+    def take_result(self, command_id: str) -> CommandStatus | None:
+        with self._controller_lock:
+            return self._results.pop(command_id, None)
+
+    def set_speed(self, speed: SimulationSpeed) -> None:
+        with self._controller_lock:
+            self.controller.set_simulation_speed(speed)
+            self._snapshot_at = float("-inf")
+
+    def reset_simulation(self) -> None:
+        with self._lock:
+            run = self._runs[self._latest_id] if self._latest_id else None
+            if self._stop.is_set() or (run is not None and run.state in ("queued", "running")):
+                raise ExecutionBusy
+            with self._controller_lock:
+                self.controller.reset_simulation()
+                if self._snapshot:
+                    self._retired_sessions.add(self._snapshot.sessao_id)
+                self._snapshot = None
+                self._results.clear()
+                self._status_error = None
+            self._latest_id = None
 
     def close(self) -> None:
         with self._lock:
             self._stop.set()
+            self._changed.set()
             worker = self._worker
         if worker is not None:
             worker.join()
@@ -101,6 +189,8 @@ class Execution:
         self.processing: dict[Station, Processing] = {}
         self.completed: set[str] = set()
         self.rfids: set[str] = set()
+        self.recover_at: dict[str, float] = {}
+        self.sent_at: dict[str, float] = {}
 
     def run(self) -> None:
         try:
@@ -108,8 +198,8 @@ class Execution:
                 self.manager._runs[self.run_id].state = "running"
             self._initialize()
             while self.units:
-                status = self._status()
                 self._finish_processing()
+                status = self._status()
                 if self._dispatch(status):
                     continue
                 if not self.processing:
@@ -130,7 +220,7 @@ class Execution:
             run.reason = reason
 
     def _initialize(self) -> None:
-        status = self._status()
+        status = self._status(max_age=0)
         self.session = status.sessao_id
         if (
             status.mesa.com_peca
@@ -209,7 +299,7 @@ class Execution:
             **({"continuar_na_maquina": True} if continuing else {}),
         )
         self.processing[station] = Processing(
-            command_id, monotonic() + operation.duration_seconds + 10
+            command_id, monotonic() + operation.duration_seconds / MIN_SIMULATION_SPEED + 10
         )
         return True
 
@@ -264,7 +354,7 @@ class Execution:
 
     def _table(self, kind: str, **params: object) -> dict[str, str]:
         command_id = self._send(kind, **params)
-        deadline = monotonic() + 10
+        deadline = monotonic() + 10 / MIN_SIMULATION_SPEED
         while (result := self._command_result(command_id, deadline)) is None:
             self._wait()
         return result
@@ -274,17 +364,54 @@ class Execution:
         assert self.session is not None
         self.next_command += 1
         command_id = f"{self.run_id}-{self.next_command}"
+        started = monotonic()
         response = self.controller.command(command_id, kind, params, self.session)
+        logger.debug(
+            "Admissão de %s (%s) em %.1f ms", command_id, kind, (monotonic() - started) * 1000
+        )
         if response.id != command_id:
             raise ControllerError("Controlador respondeu com outro ID de comando.")
+        self.recover_at[command_id] = monotonic() + self.recovery_interval
+        self.sent_at[command_id] = started
         return command_id
 
     def _command_result(self, command_id: str, deadline: float) -> dict[str, str] | None:
-        self._status()
-        response = self.controller.command_status(command_id)
+        status = self._status()
+        now = monotonic()
+        response = self.manager.take_result(command_id)
+        if response is None:
+            if now < min(self.recover_at[command_id], deadline):
+                return None
+            station = next(
+                (
+                    name
+                    for name, active in self.processing.items()
+                    if active.command_id == command_id
+                ),
+                None,
+            )
+            if station and command_id in status.comandos_ativos and now < deadline:
+                machine = status.maquinas.get(station)
+                if machine and machine.tempo_restante_ms:
+                    with self.manager._controller_lock:
+                        elapsed = (now - self.manager._snapshot_at) * status.velocidade
+                    if machine.tempo_restante_ms > elapsed * 1000:
+                        self.recover_at[command_id] = now + self.recovery_interval
+                        return None
+            self.recover_at[command_id] = now + self.recovery_interval
+            logger.debug("Consultando recuperação do comando %s", command_id)
+            response = self.controller.command_status(command_id)
+            if response.estado == "concluido":
+                self._status(max_age=0)
         if response.id != command_id:
             raise ControllerError("Controlador respondeu com outro ID de comando.")
         if response.estado == "concluido":
+            self.recover_at.pop(command_id, None)
+            logger.debug(
+                "Conclusão de %s em %.1f ms",
+                command_id,
+                (monotonic() - self.sent_at.pop(command_id)) * 1000,
+            )
             return response.resultado or {}
         if response.estado == "falhou":
             raise ControllerError(f"Comando {command_id} falhou: {response.erro}.")
@@ -292,10 +419,11 @@ class Execution:
             raise ControllerError(f"Estado inesperado ou tempo excedido no comando {command_id}.")
         return None
 
-    def _status(self) -> ControllerStatus:
+    def _status(self, *, max_age: float = 10) -> ControllerStatus:
         if self.manager._stop.is_set():
             raise ControllerError("Servidor encerrou a execução.")
-        status = self.controller.status()
+        status = self.manager.controller_status(max_age=max_age)
+        self.recovery_interval = 2 if status.sequencia else self.manager.poll_interval
         if self.session is not None and status.sessao_id != self.session:
             raise ControllerError("Sessão do controlador mudou. Reconcilie a maquete.")
         if status.falhas:
@@ -303,4 +431,5 @@ class Execution:
         return status
 
     def _wait(self) -> None:
-        self.manager._stop.wait(self.manager.poll_interval)
+        self.manager._changed.wait(self.manager.poll_interval)
+        self.manager._changed.clear()

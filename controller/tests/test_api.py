@@ -37,7 +37,7 @@ def run_command(controller: tuple[TestClient, Clock]) -> Callable:
         response = submit(client, command_id, kind, **parameters)
         assert response.status_code == 202, response.text
         assert response.json() == {"id": command_id, "estado": "aceito"}
-        clock.advance(2)
+        clock.advance(5)
         result = client.get(f"/api/comandos/{command_id}").json()
         assert result["estado"] == "concluido"
         return result
@@ -75,7 +75,7 @@ def test_reenvio_preserva_o_comando_e_nao_repete_coleta(controller, run_command)
     duplicate = submit(client, "coleta", "coletar_peca", origem="ARMAZEM_01")
     assert duplicate.status_code == 200
     assert duplicate.json()["estado"] == "em_execucao"
-    clock.advance()
+    clock.advance(2)
     assert submit(client, "coleta", "coletar_peca", origem="ARMAZEM_01").json()["estado"] == (
         "concluido"
     )
@@ -161,6 +161,35 @@ def test_duas_etapas_seguidas_na_mesma_maquina(controller, run_command):
     assert client.get("/api/maquinas/M1/status").json()["estado"] == "livre"
 
 
+def test_velocidade_altera_o_relogio_sem_reiniciar_comandos(controller, run_command):
+    client, clock = controller
+    run_command("ref", "referenciar_mesa")
+    run_command("coleta", "coletar_peca", origem="ARMAZEM")
+    run_command("deposito", "depositar_peca", destino="M1")
+    assert (
+        submit(
+            client, "processo", "iniciar_processamento", maquina_id="M1", duracao_ms=2000
+        ).status_code
+        == 202
+    )
+    clock.advance(0.5)
+    assert client.post("/api/simulacao/velocidade", json={"velocidade": 0.5}).status_code == 204
+    clock.advance(1)
+    assert client.get("/api/maquinas/M1/status").json()["tempo_restante_ms"] == 1000
+    assert client.get("/api/comandos/processo").json()["estado"] == "em_execucao"
+    assert client.post("/api/simulacao/velocidade", json={"velocidade": 4}).status_code == 204
+    assert submit(client, "mover", "mover_para", destino="M2").status_code == 202
+    clock.advance(0.0525)
+    snapshot = client.get("/api/status").json()
+    assert snapshot["velocidade"] == 4
+    assert abs(snapshot["mesa"]["movimento"]["progresso"] - 0.5) < 0.001
+    clock.advance(0.1975)
+    assert client.get("/api/comandos/processo").json()["estado"] == "concluido"
+    assert client.post("/api/simulacao/velocidade", json={"velocidade": 0}).status_code == 422
+    assert client.post("/api/simulacao/reset").status_code == 204
+    assert client.get("/api/status").json()["velocidade"] == 1
+
+
 def test_esteiras_e_estoque_auxiliar(controller, run_command):
     client, _ = controller
     run_command("ref", "referenciar_mesa")
@@ -179,3 +208,11 @@ def test_esteiras_e_estoque_auxiliar(controller, run_command):
     assert snapshot["mesa"]["posicao"] == "ESTOQUE_FINAL"
     assert snapshot["pecas"] == {"ESTOQUE_FINAL_01": "SIM-001", "ESTOQUE_FINAL_02": "SIM-002"}
     assert snapshot["resultados_qa"] == {"SIM-001": "rejeitada", "SIM-002": "aprovada"}
+
+    assert client.post("/api/simulacao/reset").status_code == 204
+    restored = client.get("/api/status").json()
+    assert restored["sessao_id"] != snapshot["sessao_id"]
+    assert restored["pecas"] == {"ARMAZEM_01": "SIM-001", "ARMAZEM_02": "SIM-002"}
+    assert restored["resultados_qa"] == {}
+    assert not restored["mesa"]["referenciada"]
+    assert client.get("/api/comandos/ref").status_code == 404

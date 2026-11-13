@@ -173,9 +173,23 @@ oculta pausa a execução; sair da área descarta o cenário. Movimento reduzido
 troca as posições apenas nas mudanças de fase; Próximo evento permite acompanhar sem reprodução
 contínua. Sem WebGL, os controles e o acompanhamento textual permanecem disponíveis.
 
-Em **Simulação → Execução do servidor**, a cena acompanha as OPs iniciadas
-no backend e mostra os RFIDs, a posição da mesa, o estado das máquinas e o
-resultado do QA. A execução continua no servidor com a tela fechada.
+Em **Simulação → Execução do servidor**, selecione uma OP, associe as
+máquinas da receita às estações M1, M2 e M3 e clique em **Iniciar simulação**.
+Você também pode abrir essa tela em **Ordens** ou no resultado do
+**Planejamento**, com a OP já selecionada. Ao iniciar, o servidor calcula
+um novo plano com a política de otimalidade selecionada na tela de simulação.
+
+A cena acompanha os RFIDs, a posição da mesa, o estado das máquinas e o
+resultado do QA. Entre atualizações do servidor, a cena calcula a posição
+da garra a cada quadro com a duração informada pelo controlador.
+Os contadores mostram o progresso da última execução, que
+continua no servidor com a tela fechada.
+
+Ao terminar uma OP, use **Restaurar maquete** para repor os cubos na
+esteira de entrada e liberar a saída antes de repetir a simulação.
+O seletor **Velocidade** ajusta o relógio do controlador simulado de
+0,5× a 4×, inclusive durante uma OP. Os tempos da receita são expressos
+em segundos simulados. Restaurar a maquete volta a velocidade para 1×.
 
 As esteiras de entrada e saída comportam dez cubos cada e correm no sentido frente–fundo, com um
 ponto fixo de coleta ou depósito ao alcance da garra. A esteira de saída

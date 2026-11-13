@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from math import ceil
-from threading import Lock
+from threading import RLock
 from time import monotonic
 from typing import Literal, NoReturn
 from uuid import uuid4
@@ -20,6 +20,7 @@ from .schemas import (
     Process,
     ReadRFID,
     Reference,
+    SimulationSpeed,
     TableStatus,
 )
 
@@ -32,6 +33,8 @@ READER = "LEITOR_RFID"
 BUFFERS = ("B1", "B2")
 SLOTS = (*WAREHOUSE, *BUFFERS, *MACHINES, *OUTPUT)
 AXIS = (HOME, "ARMAZEM", *BUFFERS, READER, *MACHINES, "ESTOQUE_FINAL")
+TRAVEL_SECONDS_PER_INTERVAL = 0.42
+HANDLING_SECONDS = 0.85
 
 
 def axis_position(slot: str) -> str:
@@ -73,13 +76,24 @@ class Simulator:
         if not 0 <= initial_pieces <= len(WAREHOUSE):
             raise ValueError("A quantidade inicial deve estar entre 0 e 10.")
         self._clock = clock
-        self._lock = Lock()
+        self._lock = RLock()
+        self._initial_pieces = initial_pieces
+        self._reset()
+
+    def reset(self) -> None:
+        with self._lock:
+            self._reset()
+
+    def _reset(self) -> None:
         self._session_id = str(uuid4())
+        self._speed: SimulationSpeed = 1
+        self._clock_anchor = self._clock()
+        self._simulation_anchor = 0.0
         self._position: str | None = None
         self._carried: str | None = None
         self._pieces = {
             slot: f"SIM-{index:03}"
-            for index, slot in enumerate(WAREHOUSE[:initial_pieces], start=1)
+            for index, slot in enumerate(WAREHOUSE[: self._initial_pieces], start=1)
         }
         self._processed: set[str] = set()
         self._quality: dict[str, Literal["aprovada", "rejeitada"]] = {}
@@ -87,6 +101,19 @@ class Simulator:
         self._commands: dict[str, Execution] = {}
         self._table: Execution | None = None
         self._processing: dict[str, Execution] = {}
+        self._sequence = 0
+        self._finished: list[CommandStatus] = []
+
+    def _now(self) -> float:
+        return self._simulation_anchor + (self._clock() - self._clock_anchor) * self._speed
+
+    def set_speed(self, speed: SimulationSpeed) -> None:
+        with self._lock:
+            clock = self._clock()
+            self._simulation_anchor += (clock - self._clock_anchor) * self._speed
+            self._clock_anchor = clock
+            self._speed = speed
+            self._advance(self._simulation_anchor)
 
     def submit(
         self, command: CommandRequest, *, expected_session: str | None = None
@@ -94,7 +121,7 @@ class Simulator:
         with self._lock:
             if expected_session is not None and expected_session != self._session_id:
                 self._conflict("sessao_alterada", "A sessão do controlador mudou.")
-            now = self._clock()
+            now = self._now()
             self._advance(now)
             existing = self._commands.get(command.id)
             if existing is not None:
@@ -124,7 +151,7 @@ class Simulator:
 
     def command_status(self, command_id: str) -> CommandStatus:
         with self._lock:
-            self._advance(self._clock())
+            self._advance(self._now())
             execution = self._commands.get(command_id)
             if execution is None:
                 raise ControllerError(404, "comando_desconhecido", "Comando inexistente.")
@@ -132,7 +159,7 @@ class Simulator:
 
     def machine_status(self, machine: str) -> MachineStatus:
         with self._lock:
-            now = self._clock()
+            now = self._now()
             self._advance(now)
             if machine not in MACHINES:
                 raise ControllerError(404, "maquina_desconhecida", "Máquina inexistente.")
@@ -140,7 +167,7 @@ class Simulator:
 
     def status(self) -> ControllerStatus:
         with self._lock:
-            now = self._clock()
+            now = self._now()
             self._advance(now)
             movement = None
             manipulating = False
@@ -153,20 +180,31 @@ class Simulator:
                         origem=self._position,
                         destino=table.target,
                         progresso=(now - table.started) / (table.arrives - table.started),
+                        duracao_ms=(table.arrives - table.started) * 1000,
+                        manipulacao_ms=(table.ends - table.arrives) * 1000,
                     )
                 else:
                     manipulating = isinstance(table.command, Collect | Deposit)
                     if manipulating:
                         head_progress = (now - table.arrives) / (table.ends - table.arrives)
                     position = table.target
+            self._sequence += 1
             return ControllerStatus(
                 sessao_id=self._session_id,
+                velocidade=self._speed,
+                sequencia=self._sequence,
+                comandos_ativos=[
+                    execution.command.id
+                    for execution in [*self._processing.values(), table]
+                    if execution is not None
+                ],
                 mesa=TableStatus(
                     referenciada=self._position is not None,
                     posicao=position,
                     movimento=movement,
                     cabecote="manipulando" if manipulating else "recolhido",
                     progresso_cabecote=head_progress,
+                    manipulacao_ms=HANDLING_SECONDS * 1000 if manipulating else 0,
                     com_peca=self._carried is not None,
                 ),
                 maquinas={machine: self._machine_status(machine, now) for machine in MACHINES},
@@ -181,6 +219,12 @@ class Simulator:
                 ),
                 falhas=[],
             )
+
+    def event_snapshot(self) -> tuple[ControllerStatus, list[CommandStatus]]:
+        with self._lock:
+            status = self.status()
+            finished, self._finished = self._finished, []
+            return status, finished
 
     def _machine_status(self, machine: MachineID, now: float) -> MachineStatus:
         occupied = machine in self._pieces
@@ -253,14 +297,15 @@ class Simulator:
             if command.parametros.resultado_qa is not None and slot not in OUTPUT:
                 self._conflict("destino_qa_invalido", "O resultado de QA pertence à saída.")
 
-        travel = 0.12 * abs(AXIS.index(target) - AXIS.index(self._position))
-        handling = 0.25 if isinstance(command, Collect | Deposit) else 0.0
+        travel = TRAVEL_SECONDS_PER_INTERVAL * abs(AXIS.index(target) - AXIS.index(self._position))
+        handling = HANDLING_SECONDS if isinstance(command, Collect | Deposit) else 0.0
         return Execution(command, now, now + travel + handling, target, now + travel, slot=slot)
 
     def _advance(self, now: float) -> None:
         for machine, operation in tuple(self._processing.items()):
             if now >= operation.ends:
                 operation.completed = True
+                self._finished.append(operation.status())
                 self._processed.add(machine)
                 del self._processing[machine]
 
@@ -289,6 +334,7 @@ class Simulator:
         ):
             self._last_read = (table.ends, table.rfid)
         table.completed = True
+        self._finished.append(table.status())
         self._table = None
 
     @staticmethod

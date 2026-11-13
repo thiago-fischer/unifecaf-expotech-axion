@@ -7,6 +7,10 @@ from app.schemas.planning_schema import PlanRequest, Positive
 Station = Literal["M1", "M2", "M3"]
 
 
+class SimulationSpeedRequest(BaseModel):
+    velocidade: Literal[0.5, 1, 2, 4]
+
+
 class ExecutionRequest(BaseModel):
     planning: PlanRequest = Field(default_factory=PlanRequest)
     machine_mapping: dict[Positive, Station] = Field(min_length=1, max_length=3)

@@ -1,6 +1,7 @@
 from pathlib import Path
 from time import monotonic, sleep
 from unittest.mock import Mock
+from uuid import uuid4
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -27,6 +28,7 @@ class SimulatedController(ControllerClient):
             "ESTOQUE_FINAL_01": False,
         }
         self.carried = False
+        self.session = uuid4().hex
         self.rfid = ""
         self.pieces = {"ARMAZEM_01": "SIM-001", "ARMAZEM_02": "SIM-002"}
         self.buffer_used = False
@@ -37,7 +39,7 @@ class SimulatedController(ControllerClient):
 
     def status(self) -> ControllerStatus:
         return ControllerStatus(
-            sessao_id="test",
+            sessao_id=self.session,
             mesa=Table(
                 referenciada=self.referenced,
                 com_peca=self.carried,
@@ -51,7 +53,7 @@ class SimulatedController(ControllerClient):
     def command(
         self, command_id: str, kind: str, params: dict[str, object], session: str
     ) -> CommandStatus:
-        assert session == "test"
+        assert session == self.session
         result = None
         if kind == "referenciar_mesa":
             self.referenced = True
@@ -102,6 +104,9 @@ class SimulatedController(ControllerClient):
             return CommandStatus(id=command_id, estado="em_execucao")
         return self.commands[command_id]
 
+    def reset_simulation(self) -> None:
+        self.__init__()
+
 
 def run_execution(controller: SimulatedController) -> dict:
     plan = PlanResponse.model_validate_json(EXAMPLE.read_text(encoding="utf-8"))
@@ -132,6 +137,13 @@ def run_execution(controller: SimulatedController) -> dict:
                     snapshot = client.get("/simulation/status")
                     assert snapshot.status_code == 200
                     assert snapshot.json()["execution"] == run
+                    assert not snapshot.json()["ocupacao"]["QA"]
+                    assert snapshot.json()["ocupacao"]["ESTOQUE_FINAL_01"]
+                    assert client.post("/simulation/reset").status_code == 204
+                    restored = client.get("/simulation/status").json()
+                    assert restored["execution"] is None
+                    assert restored["ocupacao"]["ARMAZEM_01"]
+                    assert client.get(f"{path}/{run['id']}").json() == run
                     return run
                 sleep(0.005)
     finally:
@@ -145,7 +157,6 @@ def test_executes_plan_and_tracks_rfid() -> None:
     assert run["state"] == "completed", run
     assert set(run["approved_units"]) == set(run["unit_rfids"])
     assert run["completed_operations"]
-    assert controller.occupied["ESTOQUE_FINAL_01"]
 
 
 def test_buffer_breaks_a_swap_between_occupied_machines() -> None:
@@ -193,5 +204,32 @@ def test_wrong_rfid_uses_shared_output() -> None:
     assert run["state"] == "completed", run
     assert not run["approved_units"]
     assert "RFID divergente" in next(iter(run["rejected_units"].values()))
-    assert not controller.occupied["QA"]
-    assert controller.occupied["ESTOQUE_FINAL_01"]
+
+
+def test_controller_events_share_status_without_additional_http_queries(monkeypatch) -> None:
+    monkeypatch.setenv("AXION_CONTROLLER_EVENTS_TOKEN", "test-token")
+    controller = Mock(spec=ControllerClient)
+    manager = ExecutionManager(controller)
+    app = FastAPI()
+    app.include_router(router)
+    app.state.execution_manager = manager
+    status = SimulatedController().status().model_copy(update={"sequencia": 2})
+    event = {
+        "status": status.model_dump(),
+        "resultados": [{"id": "pickup", "estado": "concluido"}],
+    }
+    with TestClient(app) as client:
+        assert client.post("/controller/events", json=event).status_code == 403
+        headers = {"X-Axion-Event-Token": "test-token"}
+        assert client.post("/controller/events", json=event, headers=headers).status_code == 204
+        event["status"]["sequencia"] = 1
+        event["status"]["ocupacao"]["ARMAZEM_01"] = False
+        assert client.post("/controller/events", json=event, headers=headers).status_code == 204
+        for _ in range(10):
+            response = client.get("/simulation/status").json()
+            assert response["sequencia"] == 2
+            assert response["ocupacao"]["ARMAZEM_01"]
+    controller.status.assert_not_called()
+    result = manager.take_result("pickup")
+    assert result is not None and result.estado == "concluido"
+    assert manager.take_result("pickup") is None

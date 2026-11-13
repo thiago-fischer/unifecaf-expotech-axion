@@ -411,7 +411,8 @@ No [Swagger do backend](http://127.0.0.1:8000/docs):
    operações concluídas, RFIDs, unidades aprovadas e rejeitadas e o motivo de interrupção,
    quando houver. O [Swagger do controlador](http://127.0.0.1:8001/docs)
    também permite consultar a ocupação em `GET /api/status`. Para acompanhar
-   em 3D, abra **Simulação → Execução do servidor** no frontend.
+   em 3D ou iniciar a OP pela interface, abra **Simulação → Execução do servidor**
+   no frontend.
 
 O coordenador executa uma OP por vez em um único processo. Seu estado fica
 em memória. Se o servidor ou o controlador reiniciar durante uma execução,
@@ -422,7 +423,17 @@ saída compartilhada.
 
 A simulação usa até 10 peças e mantém o tempo de processamento da receita.
 O estoque de entrada é consumido à medida que as ordens são executadas.
-Para restaurar o cenário simulado, reinicie o controlador entre execuções.
+Entre execuções, use **Restaurar maquete** no frontend ou
+`POST /simulation/reset`. O controlador inicia uma nova sessão, repõe as
+peças na entrada e limpa a saída e os resultados de QA. O painel volta a
+aguardar uma OP. O histórico de execuções segue consultável por ID enquanto
+o backend estiver em execução. Uma OP ativa impede a restauração.
+
+O Compose conecta os eventos HTTP do controlador a `POST /controller/events`.
+Para execução fora do Compose, configure `AXION_CONTROLLER_EVENTS_URL` no
+controlador com o endereço desse endpoint. Se usar
+`AXION_CONTROLLER_EVENTS_TOKEN`, configure o mesmo valor nos dois serviços.
+A interface consulta o estado compartilhado em `GET /simulation/status`.
 
 ## Organização das camadas
 

@@ -304,16 +304,26 @@ export default function Scene({
     });
     let lastTime = -1;
     let lastSession: string | undefined;
+    let lastFrame = performance.now();
+    let settling = false;
     let raf = 0,
       lastLabels = '',
       lastRfidLabel = 'RFID · PRONTO';
-    const render = () => {
+    const render = (now: number) => {
       const s = state.current;
-      if (!dirty && lastTime === s.time && !s.live) {
+      const delta = (now - lastFrame) / 1000;
+      lastFrame = now;
+      if (
+        !dirty &&
+        lastTime === s.time &&
+        !settling &&
+        (!s.live || reduced || now > s.live.movingUntil + 250)
+      ) {
         raf = requestAnimationFrame(render);
         return;
       }
       dirty = false;
+      settling = false;
       lastTime = s.time;
       const sameSession = lastSession === s.live?.session;
       lastSession = s.live?.session;
@@ -334,9 +344,14 @@ export default function Scene({
           )
         : s.time;
       const frame = reduced ? { ...s, time: phaseTime } : s;
-      const p = s.live?.pose ?? pose(frame);
+      const p = s.live ? (reduced ? s.live.pose : s.live.poseAt(now)) : pose(frame);
       const smooth = Boolean(s.live && sameSession && !reduced);
-      const x = smooth ? T.MathUtils.lerp(carriage.position.x, p.x, 0.23) : p.x;
+      const follow = (current: number, target: number, rate: number) => {
+        if (Math.abs(current - target) < 0.002) return target;
+        settling = true;
+        return T.MathUtils.damp(current, target, rate, delta);
+      };
+      const x = smooth ? follow(carriage.position.x, p.x, 30) : p.x;
       const belt = conveyorProgress(frame);
       conveyorRollers[0].forEach((roller) => {
         roller.rotation.x = belt.input * 2 * Math.PI;
@@ -371,7 +386,7 @@ export default function Scene({
       ledMaterial.emissiveIntensity = rfidActive ? 1.4 : 0.4;
       beamMaterial.opacity = rfidActive ? 0.38 : 0.06;
       beamMaterial.emissiveIntensity = rfidActive ? 1.1 : 0.3;
-      const y = smooth ? T.MathUtils.lerp(head.position.y, p.y, 0.23) : p.y;
+      const y = smooth ? follow(head.position.y, p.y, 32) : p.y;
       head.position.y = y;
       claws.forEach((c) => (c.position.y = y - 0.22));
       rod.position.y = (4.1 + y) / 2;
@@ -398,9 +413,7 @@ export default function Scene({
           m.position.set(
             unitX,
             1.05,
-            smooth && existing && m.position.x === unitX
-              ? T.MathUtils.lerp(m.position.z, unitZ, 0.19)
-              : unitZ,
+            smooth && existing && m.position.x === unitX ? follow(m.position.z, unitZ, 13) : unitZ,
           );
         }
         (m.material as T.MeshStandardMaterial).color.set(
@@ -448,7 +461,7 @@ export default function Scene({
       renderer.render(scene, camera);
       raf = requestAnimationFrame(render);
     };
-    render();
+    render(performance.now());
     const lost = (e: Event) => {
       e.preventDefault();
       setError(

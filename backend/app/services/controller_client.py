@@ -1,8 +1,11 @@
 import json
+from typing import Literal
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from pydantic import BaseModel, Field, ValidationError
+
+SimulationSpeed = Literal[0.5, 1, 2, 4]
 
 
 class ControllerError(Exception):
@@ -16,6 +19,7 @@ class Table(BaseModel):
     cabecote: str
     posicao: str | None = None
     progresso_cabecote: float = 0
+    manipulacao_ms: float = 0
 
 
 class Machine(BaseModel):
@@ -25,6 +29,9 @@ class Machine(BaseModel):
 
 class ControllerStatus(BaseModel):
     sessao_id: str
+    velocidade: Literal[0.5, 1, 2, 4] = 1
+    sequencia: int = 0
+    comandos_ativos: list[str] = Field(default_factory=list)
     mesa: Table
     ocupacao: dict[str, bool]
     falhas: list[dict[str, object]]
@@ -42,12 +49,37 @@ class CommandStatus(BaseModel):
     erro: dict[str, str] | None = None
 
 
+class ControllerEvent(BaseModel):
+    status: ControllerStatus
+    resultados: list[CommandStatus] = Field(max_length=100)
+
+
 class ControllerClient:
     def __init__(self, url: str) -> None:
         self.url = url.rstrip("/")
 
     def status(self) -> ControllerStatus:
         return self._request(ControllerStatus, "/api/status")
+
+    def reset_simulation(self) -> None:
+        self._post_simulation("/api/simulacao/reset")
+
+    def set_simulation_speed(self, speed: Literal[0.5, 1, 2, 4]) -> None:
+        self._post_simulation("/api/simulacao/velocidade", {"velocidade": speed})
+
+    def _post_simulation(self, path: str, data: dict[str, object] | None = None) -> None:
+        request = Request(
+            self.url + path,
+            data=json.dumps(data).encode() if data is not None else None,
+            headers={"Content-Type": "application/json"} if data is not None else {},
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=2) as response:
+                if response.status != 204:
+                    raise ControllerError("Resposta inesperada do controlador simulado.")
+        except (URLError, OSError) as exc:
+            raise ControllerError("Não foi possível atualizar a maquete simulada.") from exc
 
     def command(
         self, command_id: str, kind: str, params: dict[str, object], session: str

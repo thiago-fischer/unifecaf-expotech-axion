@@ -188,6 +188,9 @@ export default function Planning({
             Planejamento em software; não habilita execução física. A prova se refere ao modelo
             simplificado, sem transporte e setup.
           </p>
+          <button className="secondary" onClick={() => navigate('Simulação', result.order_id)}>
+            Simular ordem #{result.order_id}
+          </button>
           <h3>Operações planejadas</h3>
           <p className="hint">
             Tempos relativos ao início do plano, em segundos. As unidades são lógicas. O resultado é

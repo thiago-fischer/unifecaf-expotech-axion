@@ -5,10 +5,15 @@ from pydantic import BaseModel, ConfigDict, Field
 Identifier = Annotated[str, Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")]
 MachineID = Literal["M1", "M2", "M3", "QA"]
 ReadingPoint = Literal["LEITOR_RFID", "QA"]
+SimulationSpeed = Literal[0.5, 1, 2, 4]
 
 
 class Input(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
+
+
+class SpeedRequest(Input):
+    velocidade: SimulationSpeed
 
 
 class Command(Input):
@@ -104,6 +109,8 @@ class Movement(BaseModel):
     origem: str | None
     destino: str
     progresso: float
+    duracao_ms: float
+    manipulacao_ms: float
 
 
 class TableStatus(BaseModel):
@@ -112,11 +119,15 @@ class TableStatus(BaseModel):
     movimento: Movement | None
     cabecote: Literal["recolhido", "manipulando"]
     progresso_cabecote: float = 0
+    manipulacao_ms: float = 0
     com_peca: bool
 
 
 class ControllerStatus(BaseModel):
     sessao_id: str
+    velocidade: SimulationSpeed
+    sequencia: int
+    comandos_ativos: list[str]
     mesa: TableStatus
     maquinas: dict[MachineID, MachineStatus]
     ocupacao: dict[str, bool]

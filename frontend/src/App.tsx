@@ -60,7 +60,7 @@ export default function App() {
         {area === 'Planejamento' && <Planning initialOrder={orderId} navigate={navigate} />}
         {area === 'Simulação' && (
           <Suspense fallback={<p>Carregando maquete…</p>}>
-            <Simulation />
+            <Simulation key={orderId ?? 'simulation'} initialOrder={orderId} />
           </Suspense>
         )}
         <footer>Axion · Planejamento local da produção</footer>

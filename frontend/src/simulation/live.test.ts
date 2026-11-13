@@ -5,6 +5,7 @@ import { liveState, type LiveStatus } from './live';
 it('usa posições, RFIDs e resultados informados pelo controlador', () => {
   const snapshot: LiveStatus = {
     sessao_id: 'sim',
+    velocidade: 1,
     mesa: {
       posicao: 'ARMAZEM',
       movimento: { origem: 'ARMAZEM', destino: 'LEITOR_RFID', progresso: 0.5 },
@@ -17,9 +18,12 @@ it('usa posições, RFIDs e resultados informados pelo controlador', () => {
     maquinas: {},
     falhas: [],
     execution: {
+      id: 'run-1',
       order_id: 1,
       state: 'running',
       unit_rfids: { 'p1-u1': 'SIM-001' },
+      completed_operations: [],
+      approved_units: [],
       rejected_units: { 'p1-u1': 'RFID divergente' },
       reason: null,
     },
@@ -44,4 +48,14 @@ it('usa posições, RFIDs e resultados informados pelo controlador', () => {
       expect.objectContaining({ id: 'SIM-004', location: 'TRANS' }),
     ]),
   );
+  snapshot.idade_ms = 250;
+  snapshot.mesa.movimento!.duracao_ms = 1000;
+  snapshot.maquinas.M1 = { estado: 'processando', tempo_restante_ms: 1000 };
+  const projected = liveState(snapshot);
+  expect(projected.live?.pose.x).toBeCloseTo(positions.IN + (RFID_POSITION - positions.IN) * 0.75);
+  expect(projected.live?.machines.M1.tempo_restante_ms).toBe(750);
+  const receivedAt = projected.time * 1000;
+  const halfway = projected.live!.poseAt(receivedAt + 125);
+  expect(halfway.x).toBeCloseTo(positions.IN + (RFID_POSITION - positions.IN) * 0.875);
+  expect(projected.live!.poseAt(receivedAt + 300).x).toBeCloseTo(RFID_POSITION);
 });

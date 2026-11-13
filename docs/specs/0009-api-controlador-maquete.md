@@ -18,6 +18,32 @@ a ocupação por RFID, a leitura atual, os resultados do QA e o estado das
 máquinas. O controlador simulado mantém
 o relógio e a execução mesmo com o navegador fechado.
 
+### Eventos HTTP e recuperação
+
+O controlador publica `POST /controller/events` ao iniciar ou concluir
+comandos e quando muda a sessão, a velocidade ou a leitura RFID.
+O corpo contém `status`, com sessão e sequência crescente do snapshot, e
+`resultados`, com os comandos concluídos ou que falharam. O backend confirma
+com `204`. O simulador tenta reenviar resultados pendentes em caso de falha
+na entrega. O backend preserva o snapshot mais recente da sessão e usa o ID
+do comando para correlacionar a conclusão.
+
+As abas leem o mesmo estado no backend. O backend consulta o controlador
+para obter o estado inicial, recuperar um snapshot com 10 s de idade ou
+consultar um comando sem confirmação após 2 s. A cena usa a duração da
+trajetória e a idade do snapshot para animar o deslocamento entre eventos.
+O Compose configura `AXION_CONTROLLER_EVENTS_URL` e permite definir o
+mesmo `AXION_CONTROLLER_EVENTS_TOKEN` nos dois serviços.
+
+O backend repassa o ajuste de velocidade de `POST /simulation/speed` para
+`POST /api/simulacao/velocidade` no controlador. O campo `velocidade` aceita
+0,5×, 1×, 2× e 4× e aparece no status. A mudança preserva o progresso
+dos comandos e ajusta o tempo real de movimento, RFID e processamento.
+Restaurar o cenário volta o relógio para 1×.
+Nesse ritmo, a mesa leva 0,42 s por intervalo entre posições e a coleta
+ou o depósito acrescenta 0,85 s de manipulação. O processamento conserva a
+duração informada na receita.
+
 ## 2. Contrato HTTP proposto
 
 | Método e rota no controlador | Uso |

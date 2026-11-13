@@ -1,12 +1,14 @@
 import logging
+from os import environ
+from secrets import compare_digest
 from typing import Annotated
 
 from axion_optimizer.domain import PlanningLimitsError
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Path, Request
 from fastapi.responses import JSONResponse
 from pydantic import BeforeValidator
 
-from app.schemas.execution_schema import ExecutionRequest, ExecutionStatus
+from app.schemas.execution_schema import ExecutionRequest, ExecutionStatus, SimulationSpeedRequest
 from app.schemas.order_schema import OrderNotFoundResponse
 from app.schemas.planning_schema import (
     MachineQueues,
@@ -17,7 +19,7 @@ from app.schemas.planning_schema import (
     PlanResponse,
 )
 from app.schemas.product_schema import InvalidInputResponse
-from app.services.controller_client import ControllerError, ControllerStatus
+from app.services.controller_client import ControllerError, ControllerEvent, ControllerStatus
 from app.services.execution_service import ExecutionBusy, ExecutionManager, InvalidExecution
 from app.services.order_service import OrderNotFoundError
 from app.services.planning_service import PlanningBusyError, PlanningService, build_machine_queues
@@ -109,6 +111,19 @@ def execution_status(
 
 class SimulationStatus(ControllerStatus):
     execution: ExecutionStatus | None
+    idade_ms: float
+
+
+@router.post("/controller/events", status_code=204)
+def receive_controller_event(
+    event: ControllerEvent,
+    manager: Annotated[ExecutionManager, Depends(get_execution_manager)],
+    token: Annotated[str, Header(alias="X-Axion-Event-Token")] = "",
+) -> None:
+    expected = environ.get("AXION_CONTROLLER_EVENTS_TOKEN", "")
+    if expected and not compare_digest(token.encode(), expected.encode()):
+        raise HTTPException(403, detail="Evento do controlador não autorizado.")
+    manager.accept_event(event)
 
 
 @router.get("/simulation/status", response_model=SimulationStatus)
@@ -116,10 +131,35 @@ def simulation_status(
     manager: Annotated[ExecutionManager, Depends(get_execution_manager)],
 ) -> SimulationStatus:
     try:
-        status = manager.controller.status()
+        status, execution, age_ms = manager.snapshot()
     except ControllerError as exc:
         raise HTTPException(503, detail=str(exc)) from exc
-    return SimulationStatus(**status.model_dump(), execution=manager.latest())
+    return SimulationStatus(**status.model_dump(), execution=execution, idade_ms=age_ms)
+
+
+@router.post("/simulation/reset", status_code=204)
+def reset_simulation(
+    manager: Annotated[ExecutionManager, Depends(get_execution_manager)],
+) -> None:
+    try:
+        manager.reset_simulation()
+    except ExecutionBusy as exc:
+        raise HTTPException(
+            409, detail="Aguarde a execução terminar para restaurar a maquete."
+        ) from exc
+    except ControllerError as exc:
+        raise HTTPException(503, detail=str(exc)) from exc
+
+
+@router.post("/simulation/speed", status_code=204)
+def set_simulation_speed(
+    data: SimulationSpeedRequest,
+    manager: Annotated[ExecutionManager, Depends(get_execution_manager)],
+) -> None:
+    try:
+        manager.controller.set_simulation_speed(data.velocidade)
+    except ControllerError as exc:
+        raise HTTPException(503, detail=str(exc)) from exc
 
 
 def _plan(

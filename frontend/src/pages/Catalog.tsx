@@ -535,6 +535,9 @@ export function Orders({ navigate }: { navigate: Navigate }) {
             <button onClick={() => navigate('Planejamento', detail.detail!.id)}>
               Planejar ordem #{detail.detail.id}
             </button>
+            <button className="secondary" onClick={() => navigate('Simulação', detail.detail!.id)}>
+              Simular ordem #{detail.detail.id}
+            </button>
           </>
         )}
       </Detail>

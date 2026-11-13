@@ -13,22 +13,28 @@ from app.controllers.order_controller import router as order_router
 from app.controllers.planning_controller import router as planning_router
 from app.controllers.product_controller import router as product_router
 from app.database.database import build_engine
+from app.services.controller_client import ControllerClient
+from app.services.execution_service import ExecutionManager
 
 logger = logging.getLogger(__name__)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
-    engine = build_engine(settings or Settings())
+    settings = settings or Settings()
+    engine = build_engine(settings)
+    execution_manager = ExecutionManager(ControllerClient(settings.controller_url))
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
         try:
             yield
         finally:
+            execution_manager.close()
             engine.dispose()
 
     application = FastAPI(title="Axion API", version="0.1.0", lifespan=lifespan)
     application.state.session_factory = sessionmaker(engine, expire_on_commit=False)
+    application.state.execution_manager = execution_manager
     application.include_router(router)
     application.include_router(product_router)
     application.include_router(order_router)

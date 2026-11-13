@@ -27,3 +27,6 @@ def load_database_url() -> URL:
 @dataclass(frozen=True)
 class Settings:
     database_url: URL = field(default_factory=load_database_url)
+    controller_url: str = field(
+        default_factory=lambda: os.environ.get("AXION_CONTROLLER_URL", "http://127.0.0.1:8001")
+    )

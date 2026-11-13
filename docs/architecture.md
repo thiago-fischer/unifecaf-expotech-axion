@@ -195,5 +195,7 @@ ficam separadas da renderização. Não há novos endpoints ou persistência.
 O cenário demonstrativo é independente do otimizador e não controla hardware.
 
 A API do [controlador simulado](../controller/README.md) funciona como um
-serviço FastAPI separado. A [SPEC-0009](specs/0009-api-controlador-maquete.md)
-descreve o contrato HTTP e as próximas integrações com o servidor e a cena 3D.
+serviço FastAPI separado. O backend usa as filas por máquina para comandar
+uma OP simulada por vez via HTTP. A
+[SPEC-0009](specs/0009-api-controlador-maquete.md) descreve o contrato e o
+modo conectado da cena 3D, ainda pendente.

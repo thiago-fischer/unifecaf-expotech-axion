@@ -1,6 +1,6 @@
 # SPEC-0009 — API do controlador e execução simulada
 
-- Status: API do controlador simulado implementada. Integrações propostas.
+- Status: API e coordenador do controlador simulado implementados. Cena 3D conectada pendente.
 - Relacionadas: [ADR-010](../adr/0010-maquete-fisica.md) e [ADR-011](../adr/0011-api-controlador-maquete.md)
 
 ## 1. Componentes
@@ -107,18 +107,28 @@ específica da OP e mantém `operation_id`, `unit_id`, `step_sequence`,
 prévia em `POST /orders/{order_id}/plan/queues`. As filas são derivadas em
 memória no servidor.
 
-Para despachar, o futuro coordenador deverá aguardar a predecessora da
-primeira operação de cada fila e conferir a ocupação real das estações.
+Para despachar, o coordenador aguarda a predecessora da
+primeira operação de cada fila e confere a ocupação real das estações.
 Concluir o processamento deixa a máquina aguardando retirada. O coordenador
-deverá reservar um destino livre antes de coletar e serializar os comandos
+reserva um destino livre antes de coletar e serializa os comandos
 que ocupam a mesa. Peças com a última etapa concluída ficam elegíveis para QA.
-Se houver trabalho pendente e nenhum movimento viável, a execução deverá
-reportar o bloqueio.
+Se houver trabalho pendente e nenhum movimento viável, a execução informa
+o bloqueio. O coordenador dá preferência a peças já em circulação e usa
+o horário planejado como prioridade entre operações elegíveis.
 
-Para conectar o coordenador ao simulador, ainda é necessário mapear os IDs
-do catálogo para `M1`, `M2` e `M3`, além de definir quando a OP é iniciada
-e como recuperar seu progresso. O plano atual mantém
-`execution_ready: false`.
+O operador inicia a execução simulada com
+`POST /orders/{order_id}/executions` e fornece o mapeamento do catálogo
+para `M1`, `M2` e `M3`. O progresso fica em memória e pode ser consultado
+por `GET /orders/{order_id}/executions/{execution_id}`. O plano atual
+mantém `execution_ready: false` para execução física. O coordenador usa
+a ordem por máquina e decide o momento de cada comando com base na
+ocupação e na conclusão das dependências.
+
+O backend envia `X-Axion-Session` ao criar comandos. Se o controlador tiver
+reiniciado, o POST retorna `409` com código `sessao_alterada`.
+`iniciar_processamento` aceita `continuar_na_maquina: true` para uma nova
+etapa do mesmo cubo sem deslocamento, quando a operação anterior terminou.
+Comandos manuais no controlador devem ser executados entre OPs.
 
 ## 5. Entregas e validação
 
@@ -130,10 +140,9 @@ e como recuperar seu progresso. O plano atual mantém
    interrupção por perda de estado do controlador.
 3. Conectar a cena Three.js ao estado do controlador e verificar posições,
    ocupação, transições e continuidade da execução com a tela fechada.
-4. Integrar a programação do otimizador à execução simulada. O planejador
-   atual ainda usa um modelo simplificado. O servidor precisa respeitar os
-   recursos, a ocupação e os tempos simulados ao transformar o plano em
-   comandos. A preparação para hardware depende das restrições descritas na
+4. Validar a integração da programação do otimizador à execução simulada.
+   O coordenador aplica as restrições de ocupação e transporte ao despachar.
+   A preparação para hardware depende das restrições descritas na
    [SPEC-0005](0005-production-planning.md#11-pendências-e-evolução-física).
 
 Tempos e leituras usados nesse fluxo são simulados. A validação física

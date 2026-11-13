@@ -59,6 +59,7 @@ class ReadRFID(Command):
 class ProcessParams(Input):
     maquina_id: Literal["M1", "M2", "M3"]
     duracao_ms: Annotated[int, Field(ge=1, le=2_147_483_647)]
+    continuar_na_maquina: bool = False
 
 
 class Process(Command):

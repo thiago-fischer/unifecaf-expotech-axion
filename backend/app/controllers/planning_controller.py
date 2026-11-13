@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from fastapi.responses import JSONResponse
 from pydantic import BeforeValidator
 
+from app.schemas.execution_schema import ExecutionRequest, ExecutionStatus
 from app.schemas.order_schema import OrderNotFoundResponse
 from app.schemas.planning_schema import (
     MachineQueues,
@@ -16,6 +17,7 @@ from app.schemas.planning_schema import (
     PlanResponse,
 )
 from app.schemas.product_schema import InvalidInputResponse
+from app.services.execution_service import ExecutionBusy, ExecutionManager, InvalidExecution
 from app.services.order_service import OrderNotFoundError
 from app.services.planning_service import PlanningBusyError, PlanningService, build_machine_queues
 
@@ -38,6 +40,10 @@ def integer_path(value: object) -> object:
 
 def get_planning_service(request: Request) -> PlanningService:
     return PlanningService(request.app.state.session_factory)
+
+
+def get_execution_manager(request: Request) -> ExecutionManager:
+    return request.app.state.execution_manager
 
 
 @router.post(
@@ -63,6 +69,41 @@ def plan_machine_queues(
     if isinstance(result, JSONResponse):
         return result
     return build_machine_queues(result)
+
+
+@router.post(
+    "/{order_id}/executions",
+    status_code=202,
+    response_model=ExecutionStatus,
+    responses={**PLAN_ERRORS, 409: {"description": "Execução ativa ou ótimo sem comprovação"}},
+)
+def start_execution(
+    order_id: Annotated[int, Path(gt=0), BeforeValidator(integer_path)],
+    data: ExecutionRequest,
+    service: Annotated[PlanningService, Depends(get_planning_service)],
+    manager: Annotated[ExecutionManager, Depends(get_execution_manager)],
+) -> ExecutionStatus | JSONResponse:
+    result = _plan(order_id, data.planning, service)
+    if isinstance(result, JSONResponse):
+        return result
+    try:
+        return manager.start(result, data.machine_mapping)
+    except ExecutionBusy as exc:
+        raise HTTPException(409, detail="Já existe uma execução ativa.") from exc
+    except InvalidExecution as exc:
+        raise HTTPException(422, detail=str(exc)) from exc
+
+
+@router.get("/{order_id}/executions/{execution_id}", response_model=ExecutionStatus)
+def execution_status(
+    order_id: Annotated[int, Path(gt=0), BeforeValidator(integer_path)],
+    execution_id: str,
+    manager: Annotated[ExecutionManager, Depends(get_execution_manager)],
+) -> ExecutionStatus:
+    status = manager.status(execution_id)
+    if status is None or status.order_id != order_id:
+        raise HTTPException(404, detail="Execução não encontrada.")
+    return status
 
 
 def _plan(

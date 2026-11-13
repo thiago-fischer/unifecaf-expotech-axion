@@ -381,8 +381,46 @@ etapa da receita, a duração e o identificador da operação predecessora.
 
 As filas são derivadas no servidor para cada consulta. O coordenador de
 execução poderá usar essa mesma função sobre o plano já calculado.
-O despacho HTTP para o controlador será tratado na
-[SPEC-0009](../docs/specs/0009-api-controlador-maquete.md).
+O coordenador de execução usa essas filas para despachar comandos ao
+controlador simulado.
+
+### Executar a ordem na maquete simulada
+
+Na raiz do repositório, `docker compose up -d --build` sobe o backend,
+o PostgreSQL e o controlador simulado. Se a porta 8001 já estiver em uso,
+configure `CONTROLLER_PORT` com uma porta livre no ambiente do Compose.
+Ao executar o backend fora do Compose, defina `AXION_CONTROLLER_URL` se o
+controlador estiver em outro endereço. O padrão é `http://127.0.0.1:8001`.
+
+No [Swagger do backend](http://127.0.0.1:8000/docs):
+
+1. Consulte `GET /machines` e `GET /orders` para obter os IDs. Comece com
+   uma ordem pequena e com peças disponíveis no armazém do simulador.
+2. Envie `POST /orders/{order_id}/executions`. Ajuste as chaves de
+   `machine_mapping` aos IDs reais do catálogo.
+
+   ```json
+   {
+     "planning": {"optimality_policy": "allow_feasible"},
+     "machine_mapping": {"1": "M1", "2": "M2", "3": "M3"}
+   }
+   ```
+
+3. Copie o `id` da resposta `202` e consulte
+   `GET /orders/{order_id}/executions/{execution_id}`. A resposta mostra
+   operações concluídas, RFIDs, unidades aprovadas e o motivo de interrupção,
+   quando houver. O [Swagger do controlador](http://127.0.0.1:8001/docs)
+   também permite consultar a ocupação em `GET /api/status`.
+
+O coordenador executa uma OP por vez em um único processo. Seu estado fica
+em memória. Se o servidor ou o controlador reiniciar durante uma execução,
+confira o estado da maquete antes de iniciar outra OP. Um bloqueio entre
+máquinas, uma falha de comunicação ou RFID divergente interrompe a execução.
+No caso de RFID divergente, a peça permanece no QA.
+
+A simulação usa até 10 peças e mantém o tempo de processamento da receita.
+O estoque de entrada é consumido à medida que as ordens são executadas.
+Para restaurar o cenário simulado, reinicie o controlador entre execuções.
 
 ## Organização das camadas
 

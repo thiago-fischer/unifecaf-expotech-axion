@@ -38,6 +38,7 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       AXION_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-axion}:${POSTGRES_PASSWORD:-axion_local}@database:5432/${POSTGRES_DB:-axion}
+      AXION_CONTROLLER_URL: http://controller:8001
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     healthcheck:
@@ -55,6 +56,17 @@ services:
     depends_on:
       migrations:
         condition: service_completed_successfully
+    networks:
+      - axion
+
+  controller:
+    build:
+      context: .
+      dockerfile: controller/Dockerfile
+    environment:
+      AXION_CONTROLLER_INITIAL_PIECES: ${AXION_CONTROLLER_INITIAL_PIECES:-10}
+    ports:
+      - "127.0.0.1:${CONTROLLER_PORT:-8001}:8001"
     networks:
       - axion
 

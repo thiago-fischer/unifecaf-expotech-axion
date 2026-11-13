@@ -134,3 +134,28 @@ def test_referencia_validacao_e_nova_sessao(controller):
     restarted = TestClient(create_app(Simulator(initial_pieces=2, clock=clock)))
     assert restarted.get("/api/status").json()["sessao_id"] != original["sessao_id"]
     assert restarted.get("/api/comandos/mover").status_code == 404
+    response = restarted.post(
+        "/api/comandos",
+        headers={"X-Axion-Session": original["sessao_id"]},
+        json={"id": "ref", "tipo": "referenciar_mesa"},
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"]["codigo"] == "sessao_alterada"
+    assert restarted.get("/api/comandos/ref").status_code == 404
+
+
+def test_duas_etapas_seguidas_na_mesma_maquina(controller, run_command):
+    client, _ = controller
+    run_command("ref", "referenciar_mesa")
+    run_command("coleta", "coletar_peca", origem="ARMAZEM_01")
+    run_command("deposito", "depositar_peca", destino="M1")
+    run_command("primeira", "iniciar_processamento", maquina_id="M1", duracao_ms=500)
+    run_command(
+        "segunda",
+        "iniciar_processamento",
+        maquina_id="M1",
+        duracao_ms=500,
+        continuar_na_maquina=True,
+    )
+    run_command("retirada", "coletar_peca", origem="M1")
+    assert client.get("/api/maquinas/M1/status").json()["estado"] == "livre"

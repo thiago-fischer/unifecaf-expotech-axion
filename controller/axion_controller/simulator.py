@@ -76,8 +76,12 @@ class Simulator:
         self._table: Execution | None = None
         self._processing: dict[str, Execution] = {}
 
-    def submit(self, command: CommandRequest) -> tuple[CommandStatus, bool]:
+    def submit(
+        self, command: CommandRequest, *, expected_session: str | None = None
+    ) -> tuple[CommandStatus, bool]:
         with self._lock:
+            if expected_session is not None and expected_session != self._session_id:
+                self._conflict("sessao_alterada", "A sessão do controlador mudou.")
             now = self._clock()
             self._advance(now)
             existing = self._commands.get(command.id)
@@ -90,11 +94,15 @@ class Simulator:
                 machine = command.parametros.maquina_id
                 if machine in self._processing:
                     self._conflict("maquina_ocupada", "A máquina já está processando.")
-                if machine not in self._pieces or machine in self._processed:
-                    self._conflict("maquina_sem_peca_pronta", "A máquina precisa de uma nova peça.")
+                continuing = command.parametros.continuar_na_maquina
+                if machine not in self._pieces or continuing != (machine in self._processed):
+                    self._conflict(
+                        "maquina_sem_peca_pronta", "A peça não está pronta para a etapa."
+                    )
                 if self._table is not None and self._table.target == machine:
                     self._conflict("maquina_ocupada", "A mesa está operando nesta máquina.")
                 execution = Execution(command, now, now + command.parametros.duracao_ms / 1000)
+                self._processed.discard(machine)
                 self._processing[machine] = execution
             else:
                 execution = self._prepare_table(command, now)

@@ -56,6 +56,7 @@ uv run ruff format --check .
 ```
 
 Os testes cobrem o percurso completo, o reenvio de comandos, o paralelismo
-de estações, conflitos por ocupação e a troca de sessão. A integração com
-o backend, o modo conectado da cena 3D e a execução em firmware são etapas
-posteriores.
+de estações, conflitos por ocupação e a troca de sessão. O
+[backend](../backend/README.md#executar-a-ordem-na-maquete-simulada) já usa
+esta API para coordenar OPs simuladas. O modo conectado da cena 3D e a
+execução em firmware são etapas posteriores.

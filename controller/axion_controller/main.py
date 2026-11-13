@@ -1,6 +1,7 @@
 from os import environ
+from typing import Annotated
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Header, Request, Response
 from fastapi.responses import JSONResponse
 
 from .schemas import CommandRequest, CommandStatus, ControllerStatus, ErrorResponse, MachineStatus
@@ -32,8 +33,12 @@ def create_app(simulator: Simulator | None = None) -> FastAPI:
             409: {"model": ErrorResponse},
         },
     )
-    def submit(command: CommandRequest, response: Response) -> CommandStatus:
-        status, created = controller.submit(command)
+    def submit(
+        command: CommandRequest,
+        response: Response,
+        expected_session: Annotated[str | None, Header(alias="X-Axion-Session")] = None,
+    ) -> CommandStatus:
+        status, created = controller.submit(command, expected_session=expected_session)
         if not created:
             response.status_code = 200
         return status

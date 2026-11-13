@@ -1,0 +1,29 @@
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: axion-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_PLUGINS_PREINSTALL: frser-sqlite-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./backend/data:/var/lib/axion:ro
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: axion-postgres
+    environment:
+      POSTGRES_DB: axion
+      POSTGRES_USER: axion
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432" # opcional; necessário somente para acesso pelo Windows/IDE
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  grafana-data:
+  postgres-data:

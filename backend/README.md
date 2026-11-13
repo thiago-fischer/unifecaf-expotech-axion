@@ -370,6 +370,20 @@ Para repetir as medições HTTP reais com banco temporário, a partir de `backen
 uv run --locked python -m scripts.measure_planning --output ../docs/examples/planning-http-benchmark.json
 ```
 
+### Filas por máquina
+
+`POST /orders/{order_id}/plan/queues` recebe o mesmo corpo e aplica a mesma
+política de otimalidade que `POST /orders/{order_id}/plan`. A resposta contém
+`order_id`, `execution_ready: false` e `machine_queues`. Cada entrada de
+`machine_queues` traz o `machine_id` do catálogo e as operações daquela
+máquina em ordem de início planejado. As operações preservam a unidade, a
+etapa da receita, a duração e o identificador da operação predecessora.
+
+As filas são derivadas no servidor para cada consulta. O coordenador de
+execução poderá usar essa mesma função sobre o plano já calculado.
+O despacho HTTP para o controlador será tratado na
+[SPEC-0009](../docs/specs/0009-api-controlador-maquete.md).
+
 ## Organização das camadas
 
 `controllers` traduz HTTP e chama `services`; services validam as regras e

@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from threading import Lock
 from time import monotonic
 
@@ -8,7 +9,13 @@ from axion_optimizer.validation import validate_result
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.repositories.planning_repository import PlanningRepository
-from app.schemas.planning_schema import PlanRequest, PlanResponse
+from app.schemas.planning_schema import (
+    MachineQueue,
+    MachineQueues,
+    PlanOperation,
+    PlanRequest,
+    PlanResponse,
+)
 from app.services.order_service import OrderNotFoundError
 
 # Process-wide, including multiple app instances. No waiting queue and no DB lock during search.
@@ -17,6 +24,25 @@ _planning_lock = Lock()
 
 class PlanningBusyError(Exception):
     pass
+
+
+def build_machine_queues(plan: PlanResponse) -> MachineQueues:
+    operations_by_machine: dict[int, list[PlanOperation]] = defaultdict(list)
+    for operation in plan.operations:
+        operations_by_machine[operation.machine_id].append(operation)
+    return MachineQueues(
+        order_id=plan.order_id,
+        machine_queues=[
+            MachineQueue(
+                machine_id=machine_id,
+                operations=sorted(
+                    operations,
+                    key=lambda operation: (operation.start_seconds, operation.operation_id),
+                ),
+            )
+            for machine_id, operations in sorted(operations_by_machine.items())
+        ],
+    )
 
 
 class PlanningService:

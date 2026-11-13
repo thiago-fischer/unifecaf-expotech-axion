@@ -169,6 +169,17 @@ class PlanResponse(PlanningSchema):
     machine_metrics: list[MachineMetrics]
 
 
+class MachineQueue(PlanningSchema):
+    machine_id: Positive
+    operations: list[PlanOperation]
+
+
+class MachineQueues(PlanningSchema):
+    order_id: Positive
+    execution_ready: Literal[False] = False
+    machine_queues: list[MachineQueue]
+
+
 class OptimalityNotProven(PlanningSchema):
     code: Literal["optimality_not_proven"] = "optimality_not_proven"
     result: PlanResponse

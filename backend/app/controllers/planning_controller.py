@@ -8,6 +8,7 @@ from pydantic import BeforeValidator
 
 from app.schemas.order_schema import OrderNotFoundResponse
 from app.schemas.planning_schema import (
+    MachineQueues,
     OptimalityNotProven,
     PlanningBusy,
     PlanningLimits,
@@ -16,10 +17,17 @@ from app.schemas.planning_schema import (
 )
 from app.schemas.product_schema import InvalidInputResponse
 from app.services.order_service import OrderNotFoundError
-from app.services.planning_service import PlanningBusyError, PlanningService
+from app.services.planning_service import PlanningBusyError, PlanningService, build_machine_queues
 
 router = APIRouter(prefix="/orders", tags=["planning"])
 logger = logging.getLogger(__name__)
+PLAN_ERRORS = {
+    404: {"model": OrderNotFoundResponse},
+    409: {"model": OptimalityNotProven},
+    422: {"model": PlanningLimits | InvalidInputResponse},
+    503: {"model": PlanningBusy, "headers": {"Retry-After": {"schema": {"type": "string"}}}},
+    500: {"description": "Erro interno do servidor"},
+}
 
 
 def integer_path(value: object) -> object:
@@ -35,18 +43,30 @@ def get_planning_service(request: Request) -> PlanningService:
 @router.post(
     "/{order_id}/plan",
     response_model=PlanResponse,
-    responses={
-        404: {"model": OrderNotFoundResponse},
-        409: {"model": OptimalityNotProven},
-        422: {"model": PlanningLimits | InvalidInputResponse},
-        503: {"model": PlanningBusy, "headers": {"Retry-After": {"schema": {"type": "string"}}}},
-        500: {"description": "Erro interno do servidor"},
-    },
+    responses=PLAN_ERRORS,
 )
 def plan_order(
     order_id: Annotated[int, Path(gt=0), BeforeValidator(integer_path)],
     data: PlanRequest,
     service: Annotated[PlanningService, Depends(get_planning_service)],
+) -> PlanResponse | JSONResponse:
+    return _plan(order_id, data, service)
+
+
+@router.post("/{order_id}/plan/queues", response_model=MachineQueues, responses=PLAN_ERRORS)
+def plan_machine_queues(
+    order_id: Annotated[int, Path(gt=0), BeforeValidator(integer_path)],
+    data: PlanRequest,
+    service: Annotated[PlanningService, Depends(get_planning_service)],
+) -> MachineQueues | JSONResponse:
+    result = _plan(order_id, data, service)
+    if isinstance(result, JSONResponse):
+        return result
+    return build_machine_queues(result)
+
+
+def _plan(
+    order_id: int, data: PlanRequest, service: PlanningService
 ) -> PlanResponse | JSONResponse:
     try:
         result = service.plan(order_id, data)

@@ -98,7 +98,29 @@ Exemplo de resposta `202 Accepted`.
 4. O servidor manda depositar a peça no QA e solicita a leitura final. Com o RFID e o histórico de etapas, decide se a peça foi aprovada.
 5. Para uma peça aprovada, envia a coleta no QA e o depósito no estoque final. Na primeira simulação, uma reprovação deixa a peça no QA e interrompe o cenário até que o destino de rejeitos seja definido.
 
-## 4. Entregas e validação
+## 4. Filas por máquina no servidor
+
+O servidor agrupa as operações do plano por `machine_id` e ordena cada fila
+por `start_seconds`. Cada entrada representa uma operação de uma unidade
+específica da OP e mantém `operation_id`, `unit_id`, `step_sequence`,
+`predecessor_operation_id` e a duração planejada. O backend disponibiliza a
+prévia em `POST /orders/{order_id}/plan/queues`. As filas são derivadas em
+memória no servidor.
+
+Para despachar, o futuro coordenador deverá aguardar a predecessora da
+primeira operação de cada fila e conferir a ocupação real das estações.
+Concluir o processamento deixa a máquina aguardando retirada. O coordenador
+deverá reservar um destino livre antes de coletar e serializar os comandos
+que ocupam a mesa. Peças com a última etapa concluída ficam elegíveis para QA.
+Se houver trabalho pendente e nenhum movimento viável, a execução deverá
+reportar o bloqueio.
+
+Para conectar o coordenador ao simulador, ainda é necessário mapear os IDs
+do catálogo para `M1`, `M2` e `M3`, além de definir quando a OP é iniciada
+e como recuperar seu progresso. O plano atual mantém
+`execution_ready: false`.
+
+## 5. Entregas e validação
 
 1. Implementar a API do controlador simulado e validar o contrato por HTTP.
    Cobrir referência inicial, coleta e depósito, RFID, processamento em

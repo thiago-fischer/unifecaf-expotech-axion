@@ -11,8 +11,9 @@ SPEC-0004 e SPEC-0008.
 O planejamento transitório da SPEC-0005 usa AG obrigatório e certificação
 CP-SAT, com operações e métricas para Gantt. A execução física permanece prevista.
 O [frontend React](frontend/README.md), conforme a SPEC-0006, permite usar
-localmente os catálogos, ordens e planejamento em português, com Gantt por
-máquina, tabela de operações recolhível e identificação de resultados sem prova de ótimo.
+consultar máquinas, cadastrar produtos e criar ordens de até 10 produtos distintos.
+A interface inclui planejamento com Gantt, acompanhamento da maquete virtual
+conectada ao controlador simulado e uma guia Sobre.
 Veja os comandos de instalação,
 execução e testes no [README do backend](backend/README.md).
 As demais funcionalidades descritas abaixo permanecem planejadas.
@@ -74,8 +75,8 @@ O sistema será composto por módulos integrados, cada um com uma responsabilida
 
 Interface responsável pela interação com o usuário.
 
-Implementado em React com TypeScript e Vite para uso local. Cadastro e consulta
-de máquinas, produtos e ordens, além de planejamento em software, estão disponíveis.
+Implementado em React com TypeScript e Vite para uso local. Consulta de máquinas, cadastro e consulta de produtos e ordens, além de
+planejamento e acompanhamento da maquete simulada, estão disponíveis.
 Consulte o [README do frontend](frontend/README.md) e a
 [ADR-007](docs/adr/0007-react-frontend.md). Acompanhamento físico e rastreabilidade
 continuam planejados.

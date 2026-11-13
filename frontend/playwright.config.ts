@@ -13,8 +13,17 @@ export default defineConfig({
   },
   webServer: [
     {
+      command:
+        'uv run --project ../backend --locked --no-sync uvicorn axion_controller.main:create_app --factory --host 127.0.0.1 --port 8766',
+      cwd: '../controller',
+      env: { AXION_CONTROLLER_INITIAL_PIECES: '1' },
+      url: 'http://127.0.0.1:8766/openapi.json',
+      reuseExistingServer: false,
+    },
+    {
       command: 'uv run --locked --no-sync python ../frontend/scripts/serve_test_api.py',
       cwd: '../backend',
+      env: { AXION_CONTROLLER_URL: 'http://127.0.0.1:8766' },
       url: 'http://127.0.0.1:8765/openapi.json',
       reuseExistingServer: false,
       timeout: 60_000,

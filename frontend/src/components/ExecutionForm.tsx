@@ -61,6 +61,7 @@ export default function ExecutionForm({
     };
   });
   const mapped = rows.map(({ station }) => station);
+  const duplicateStations = mapped.filter(Boolean).length !== new Set(mapped.filter(Boolean)).size;
   const loading = orders.loading || products.loading || machines.loading;
   const loadError = orders.error || products.error || machines.error;
   const total = order?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
@@ -75,7 +76,7 @@ export default function ExecutionForm({
               order.items.some(({ product_id }) => !catalog.get(product_id)?.steps.length) ||
               machineIds.some((id) => !names.has(id)))
           ? 'O catálogo não contém todas as receitas ou máquinas da ordem.'
-          : mapped.filter(Boolean).length !== new Set(mapped.filter(Boolean)).size
+          : duplicateStations
             ? 'Selecione uma estação distinta para cada máquina.'
             : '';
   const canStart =
@@ -107,8 +108,7 @@ export default function ExecutionForm({
   }
 
   return (
-    <section className="panel" aria-label="Iniciar ordem simulada">
-      <h3>Iniciar ordem simulada</h3>
+    <section className="panel execution-form" aria-label="Iniciar ordem simulada">
       <ListState loading={loading} error={loadError} empty={!orders.data.length} />
       {loadError && (
         <button
@@ -139,47 +139,60 @@ export default function ExecutionForm({
               }}
             >
               <option value="">Selecione uma ordem</option>
-              {orders.data.map((item) => (
-                <option key={item.id} value={item.id}>
-                  Ordem #{item.id} · {item.items.reduce((sum, entry) => sum + entry.quantity, 0)}{' '}
-                  peças
-                </option>
-              ))}
+              {orders.data.map((item) => {
+                const quantity = item.items.reduce((sum, entry) => sum + entry.quantity, 0);
+                return (
+                  <option key={item.id} value={item.id}>
+                    Ordem #{item.id} · {quantity} {quantity === 1 ? 'peça' : 'peças'}
+                  </option>
+                );
+              })}
             </select>
           </label>
-          {rows.length <= 3 &&
-            rows.map(({ id, name, station }) => (
-              <label key={id}>
-                Estação para {name} (#{id})
-                <select
-                  required
-                  value={station}
-                  onChange={(event) => {
-                    setChoices({ ...choices, [id]: event.target.value as Station | '' });
-                    setError('');
-                  }}
-                >
-                  <option value="">Selecione uma estação</option>
-                  {stations.map((station) => (
-                    <option key={station}>{station}</option>
-                  ))}
-                </select>
-              </label>
-            ))}
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              checked={allowFeasible}
-              onChange={(event) => setAllowFeasible(event.target.checked)}
-            />
-            Permitir plano viável sem prova de ótimo
-          </label>
+          {rows.length > 0 && rows.length <= 3 && (
+            <details
+              className="options station-options"
+              key={orderId}
+              open={mapped.includes('') || duplicateStations || undefined}
+            >
+              <summary>Associação de estações</summary>
+              {rows.map(({ id, name, station }) => (
+                <label key={id}>
+                  Estação para {name} (#{id})
+                  <select
+                    required
+                    value={station}
+                    onChange={(event) => {
+                      setChoices({ ...choices, [id]: event.target.value as Station | '' });
+                      setError('');
+                    }}
+                  >
+                    <option value="">Selecione uma estação</option>
+                    {stations.map((station) => (
+                      <option key={station}>{station}</option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </details>
+          )}
+          <details className="options">
+            <summary>Opções de cálculo</summary>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={allowFeasible}
+                onChange={(event) => setAllowFeasible(event.target.checked)}
+              />
+              Permitir plano viável sem prova de ótimo
+            </label>
+          </details>
           <button type="submit" disabled={!canStart}>
             {busy ? 'Calculando e iniciando…' : 'Iniciar simulação'}
           </button>
         </fieldset>
       </form>
-      <div className="sim-controls">
+      <div className="execution-reset">
         <button className="secondary" disabled={!canReset || resetting || busy} onClick={onReset}>
           {resetting ? 'Restaurando…' : 'Restaurar maquete'}
         </button>

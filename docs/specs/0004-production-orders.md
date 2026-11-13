@@ -88,7 +88,7 @@ quantidade solicitada dentro da ordem.
 | Campo | Tipo | Origem | Descrição |
 |---|---|---|---|
 | `id` | Inteiro positivo | Backend/banco | Identificador único e estável |
-| `items` | Lista de itens | Cadastro | Produtos e quantidades solicitadas; deve conter ao menos um item |
+| `items` | Lista de itens | Cadastro | Produtos e quantidades solicitadas; deve conter de 1 a 10 itens |
 
 ### Item da ordem
 
@@ -113,7 +113,7 @@ preservar a interpretação histórica das ordens existentes.
 
 | Código | Regra |
 |---|---|
-| RN-01 | O corpo deve conter `items`, uma lista não vazia de itens. |
+| RN-01 | O corpo deve conter `items`, uma lista com 1 a 10 itens. O limite vale para novos cadastros. |
 | RN-02 | Cada item deve conter somente `product_id` e `quantity`; campos ausentes, nulos ou extras são rejeitados, inclusive `id`, `order_id` e `unit_id`. |
 | RN-03 | `product_id` e `quantity` devem ser inteiros JSON positivos. Rejeitar booleanos, strings numéricas e números decimais, inclusive `1.0`, sem coerção. |
 | RN-04 | Um mesmo `product_id` não pode aparecer mais de uma vez na ordem. Rejeitar duplicatas em vez de somar ou escolher uma quantidade implicitamente. |

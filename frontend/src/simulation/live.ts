@@ -1,4 +1,4 @@
-import { positions, RFID_POSITION, type State, type Unit } from './engine';
+import { positions, RFID_POSITION, type State, type Unit } from './sceneState';
 
 export type LiveStatus = {
   sessao_id: string;
@@ -20,7 +20,7 @@ export type LiveStatus = {
   rfid_transportado: string | null;
   resultados_qa: Record<string, 'aprovada' | 'rejeitada'>;
   leitura_rfid: string | null;
-  maquinas: NonNullable<State['live']>['machines'];
+  maquinas: State['live']['machines'];
   falhas: { mensagem?: string }[];
   execution: {
     id: string;
@@ -85,14 +85,6 @@ export function liveState(snapshot: LiveStatus): State {
   return {
     time: receivedAt / 1000,
     units,
-    x: pose.x,
-    events: [],
-    status:
-      snapshot.execution?.state === 'completed'
-        ? 'complete'
-        : snapshot.execution?.state === 'interrupted'
-          ? 'blocked'
-          : 'active',
     live: {
       session: snapshot.sessao_id,
       pose,
@@ -119,12 +111,6 @@ export function liveState(snapshot: LiveStatus): State {
     return {
       id: rfid,
       product: unitNames.get(rfid) ?? '',
-      expectedProduct: '',
-      recipe: [],
-      step: 0,
-      ready: 0,
-      history: [],
-      completed: [],
       reviewed: quality !== undefined,
       rejected: quality === 'rejeitada',
     };

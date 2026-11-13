@@ -4,17 +4,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {
   bufferWidth,
-  colors,
   conveyorCapacity,
   conveyorPitch,
-  conveyorProgress,
   positionX,
   positions,
-  pose,
   RFID_POSITION,
   stationWidth,
   type State,
-} from './engine';
+} from './sceneState';
 
 export default function Scene({
   state,
@@ -207,13 +204,10 @@ export default function Scene({
       roughness: 0.28,
       metalness: 0.78,
     });
-    const conveyorRollers: T.Mesh[][] = [];
     for (const [x, label] of [
       [positions.IN, 'ENTRADA'],
       [positions.OUT, 'SAÍDA'],
     ] as const) {
-      const beltRollers: T.Mesh[] = [];
-      conveyorRollers.push(beltRollers);
       box(1.38, 0.22, conveyorLength, x, 0.52, conveyorCenter, '#243747');
       for (const side of [-1, 1]) {
         const rail = x + side * 0.66;
@@ -229,7 +223,6 @@ export default function Scene({
         roller.rotation.z = Math.PI / 2;
         roller.receiveShadow = true;
         scene.add(roller);
-        beltRollers.push(roller);
       }
       text(label, x, 0.34, conveyorEnd + 0.2, 2.4);
     }
@@ -254,7 +247,7 @@ export default function Scene({
     const meshes: Record<string, T.Mesh> = {};
     const labels: Record<string, T.Sprite> = {};
     function addUnit(u: State['units'][number]) {
-      const mesh = box(0.52, 0.56, 0.52, 0, 1.05, 0, colors[u.product] ?? '#9ec4d4');
+      const mesh = box(0.52, 0.56, 0.52, 0, 1.05, 0, '#9ec4d4');
       mesh.userData.id = u.id;
       meshes[u.id] = mesh;
       labels[u.id] = text(u.id.slice(-3), 0, 0, 0, 0.65, '#ffffff').sprite;
@@ -317,7 +310,7 @@ export default function Scene({
         !dirty &&
         lastTime === s.time &&
         !settling &&
-        (!s.live || reduced || now > s.live.movingUntil + 250)
+        (reduced || now > s.live.movingUntil + 250)
       ) {
         raf = requestAnimationFrame(render);
         return;
@@ -325,54 +318,23 @@ export default function Scene({
       dirty = false;
       settling = false;
       lastTime = s.time;
-      const sameSession = lastSession === s.live?.session;
-      lastSession = s.live?.session;
-      const t = s.trip;
-      const phaseTime = t
-        ? Math.max(
-            t.start,
-            ...[
-              t.approach,
-              t.pickup,
-              t.lifted,
-              t.scanStart,
-              t.scanEnd,
-              t.arrived,
-              t.drop,
-              t.end,
-            ].filter((time): time is number => time !== undefined && time <= s.time),
-          )
-        : s.time;
-      const frame = reduced ? { ...s, time: phaseTime } : s;
-      const p = s.live ? (reduced ? s.live.pose : s.live.poseAt(now)) : pose(frame);
-      const smooth = Boolean(s.live && sameSession && !reduced);
+      const sameSession = lastSession === s.live.session;
+      lastSession = s.live.session;
+      const p = reduced ? s.live.pose : s.live.poseAt(now);
+      const smooth = sameSession && !reduced;
       const follow = (current: number, target: number, rate: number) => {
         if (Math.abs(current - target) < 0.002) return target;
         settling = true;
         return T.MathUtils.damp(current, target, rate, delta);
       };
       const x = smooth ? follow(carriage.position.x, p.x, 30) : p.x;
-      const belt = conveyorProgress(frame);
-      conveyorRollers[0].forEach((roller) => {
-        roller.rotation.x = belt.input * 2 * Math.PI;
-      });
-      conveyorRollers[1].forEach((roller) => {
-        roller.rotation.x = belt.output * 2 * Math.PI;
-      });
       const input = s.units
         .filter((u) => u.location.startsWith('IN'))
         .sort((a, b) => a.location.localeCompare(b.location));
       const outputCount = s.units.filter((u) => u.location.startsWith('OUT')).length;
       carriage.position.x = x;
       screw.rotation.x = x * 8;
-      const scannedUnit =
-        s.trip?.scanStart !== undefined &&
-        s.trip.scanEnd !== undefined &&
-        s.time >= s.trip.scanStart &&
-        s.time <= s.trip.scanEnd + 0.3
-          ? s.units.find((u) => u.id === s.trip?.unit)
-          : undefined;
-      const readRfid = s.live?.rfid ?? scannedUnit?.id;
+      const readRfid = s.live.rfid;
       const nextRfidLabel = readRfid ? `RFID · ${readRfid}` : 'RFID · PRONTO';
       if (nextRfidLabel !== lastRfidLabel) {
         lastRfidLabel = nextRfidLabel;
@@ -401,12 +363,12 @@ export default function Scene({
         if (!meshes[u.id]) addUnit(u);
         const m = meshes[u.id];
         if (u.location === 'TRANS') {
-          m.position.set(p.carrying ? x : positionX(s.trip!.to), p.carrying ? y - 0.38 : 1.05, 0);
+          m.position.set(x, y - 0.38, 0);
         } else {
           const z = u.location.startsWith('IN')
-            ? input.indexOf(u) + belt.input
+            ? input.indexOf(u)
             : u.location.startsWith('OUT')
-              ? outputCount - 1 - Number(u.location.slice(3)) + belt.output
+              ? outputCount - 1 - Number(u.location.slice(3))
               : 0;
           const unitX = positionX(u.location);
           const unitZ = z * conveyorPitch;
@@ -417,43 +379,31 @@ export default function Scene({
           );
         }
         (m.material as T.MeshStandardMaterial).color.set(
-          u.location.startsWith('OUT') && (!s.live || u.reviewed)
+          u.location.startsWith('OUT') && u.reviewed
             ? u.rejected
               ? '#fa7983'
               : '#68e2ab'
-            : (colors[u.product] ?? '#9ec4d4'),
+            : '#9ec4d4',
         );
         labels[u.id].position.copy(m.position).add(new T.Vector3(0, 0.5, 0));
       }
-      const labelKey = (s.live ? s.time : Math.floor(s.time * 5)).toString() + s.status;
+      const labelKey = s.time.toString();
       if (labelKey !== lastLabels) {
         lastLabels = labelKey;
         for (const name of Object.keys(displays)) {
-          if (s.live) {
-            const machine = s.live.machines[name];
-            const remaining = machine?.tempo_restante_ms;
-            displays[name](
-              remaining != null
-                ? `${(remaining / 1000).toFixed(1)}s`
-                : (machine?.estado ?? 'livre').replaceAll('_', ' ').toUpperCase(),
-            );
-            (lamps[name].material as T.MeshStandardMaterial).color.set(
-              remaining != null ? '#52f5bb' : machine?.estado === 'livre' ? '#607d8b' : '#ffc15b',
-            );
-            continue;
-          }
-          const u = s.units.find((u) => u.location === name);
-          const remaining = u?.until === undefined ? null : Math.max(0, u.until - s.time);
-          const stage = name === 'QA' ? 'QA' : `E${(u?.step ?? 0) + 1}`;
-          const display =
-            remaining !== null
-              ? `${u?.product} · ${stage} · ${remaining.toFixed(1)}s`
-              : u
-                ? `${u.product} · AGUARDA`
-                : 'LIVRE';
-          displays[name](display);
+          const machine = s.live.machines[name];
+          const remaining = machine?.tempo_restante_ms;
+          displays[name](
+            remaining != null
+              ? `${(remaining / 1000).toFixed(1)}s`
+              : (machine?.estado ?? 'livre').replaceAll('_', ' ').toUpperCase(),
+          );
           (lamps[name].material as T.MeshStandardMaterial).color.set(
-            u?.until ? '#52f5bb' : u ? '#ffc15b' : '#607d8b',
+            remaining != null
+              ? '#52f5bb'
+              : !machine || machine.estado === 'livre'
+                ? '#607d8b'
+                : '#ffc15b',
           );
         }
       }

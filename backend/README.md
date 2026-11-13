@@ -285,7 +285,8 @@ Invoke-RestMethod "http://127.0.0.1:8000/orders/$($order.id)"
 ```
 
 O exemplo usa um produto do catálogo inicial, sem presumir seu ID.
-Erros de estrutura e tipos retornam `422` no formato FastAPI/Pydantic.
+Novas ordens aceitam de 1 a 10 produtos distintos, com quantidade por produto.
+Erros de estrutura, tipos e tamanho da lista retornam `422` no formato FastAPI/Pydantic.
 Depois da estrutura, valida-se duplicidade e, por último, existência dos produtos:
 
 - Repetidos: `422`, `{"detail":"Cada produto pode aparecer somente uma vez na ordem."}`.

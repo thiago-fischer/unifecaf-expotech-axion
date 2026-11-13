@@ -1,70 +1,57 @@
 import { lazy, Suspense, useState } from 'react';
-import { Machines, Orders, Products } from './pages/Catalog';
+import { Production } from './pages/Catalog';
 import Planning from './pages/Planning';
+import About from './pages/About';
 import type { Area, Navigate } from './components/Common';
+import logo from './assets/axion.png';
 
 const Simulation = lazy(() => import('./pages/Simulation'));
-
-const areas: Area[] = ['Máquinas', 'Produtos', 'Ordens', 'Planejamento', 'Simulação'];
-const descriptions: Record<Area, string> = {
-  Simulação: 'Explore o movimento de cada unidade na maquete virtual.',
-  Máquinas: 'Organize as estações da sua linha de produção.',
-  Produtos: 'Transforme etapas e tempos em receitas de produção.',
-  Ordens: 'Reúna os produtos que você precisa produzir.',
-  Planejamento: 'Da demanda à programação das operações.',
-};
+const areas: Area[] = ['Produção', 'Planejamento', 'Maquete virtual', 'Sobre'];
 
 export default function App() {
-  const [area, setArea] = useState<Area>('Máquinas');
+  const [area, setArea] = useState<Area>('Produção');
   const [orderId, setOrderId] = useState<number>();
   const navigate: Navigate = (next, order) => {
     setArea(next);
     setOrderId(order);
   };
+
   return (
-    <div className="app-shell">
+    <>
       <a className="skip-link" href="#conteudo">
         Pular para o conteúdo
       </a>
-      <aside className="sidebar">
-        <a className="brand" href="#conteudo" onClick={() => navigate('Máquinas')}>
-          <span className="brand-mark">A</span>axion<span className="brand-dot">.</span>
-        </a>
-        <p className="sidebar-label">LINHA DE PRODUÇÃO</p>
-        <nav aria-label="Navegação principal">
-          {areas.map((item, index) => (
-            <button
-              key={item}
-              aria-current={area === item ? 'page' : undefined}
-              onClick={() => navigate(item)}
-            >
-              <span>0{index + 1}</span>
-              {item}
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-footer">
-          <span className="local-dot" />
-          Ambiente local<small>ExpoTech 2026.2 · NEXUS</small>
+      <header className="app-header">
+        <div className="header-inner">
+          <a className="brand" href="#conteudo" onClick={() => navigate('Produção')}>
+            <img src={logo} alt="AXION" />
+          </a>
+          <nav aria-label="Navegação principal">
+            {areas.map((item) => (
+              <button
+                key={item}
+                aria-current={area === item ? 'page' : undefined}
+                onClick={() => {
+                  if (item !== area) navigate(item);
+                }}
+              >
+                {item}
+              </button>
+            ))}
+          </nav>
         </div>
-      </aside>
+      </header>
       <main id="conteudo" tabIndex={-1}>
-        <header>
-          <div className="eyebrow">AXION / {area.toLocaleUpperCase('pt-BR')}</div>
-          <h1>{area}</h1>
-          <p>{descriptions[area]}</p>
-        </header>
-        {area === 'Máquinas' && <Machines />}
-        {area === 'Produtos' && <Products navigate={navigate} />}
-        {area === 'Ordens' && <Orders navigate={navigate} />}
+        <h1>{area === 'Sobre' ? 'Sobre o Axion' : area}</h1>
+        {area === 'Produção' && <Production navigate={navigate} />}
         {area === 'Planejamento' && <Planning initialOrder={orderId} navigate={navigate} />}
-        {area === 'Simulação' && (
-          <Suspense fallback={<p>Carregando maquete…</p>}>
-            <Simulation key={orderId ?? 'simulation'} initialOrder={orderId} />
+        {area === 'Maquete virtual' && (
+          <Suspense fallback={<p role="status">Carregando maquete…</p>}>
+            <Simulation initialOrder={orderId} />
           </Suspense>
         )}
-        <footer>Axion · Planejamento local da produção</footer>
+        {area === 'Sobre' && <About />}
       </main>
-    </div>
+    </>
   );
 }

@@ -1,35 +1,49 @@
-import { test, expect } from '@playwright/test';
-test('maquete independente da API, controles e ciclo completo', async ({ page }) => {
-  await page.route('http://127.0.0.1:5174/api/**', (r) => r.abort());
+import { expect, test } from '@playwright/test';
+
+test('executa uma ordem na maquete conectada e restaura o controlador', async ({ page }) => {
+  const machines = await (await page.request.get('/api/machines')).json();
+  const machine = machines.find((item: { name: string }) => item.name === 'Torno CNC');
+  const productResponse = await page.request.post('/api/products', {
+    data: {
+      name: 'Peça para simulação',
+      steps: [{ sequence: 1, machine_id: machine.id, processing_time_seconds: 1 }],
+    },
+  });
+  expect(productResponse.status()).toBe(201);
+  const product = await productResponse.json();
+  const orderResponse = await page.request.post('/api/orders', {
+    data: { items: [{ product_id: product.id, quantity: 1 }] },
+  });
+  expect(orderResponse.status()).toBe(201);
+  const order = await orderResponse.json();
+
   await page.goto('/');
-  await page.getByRole('button', { name: /Simulação/ }).click();
+  await page.getByRole('button', { name: 'Maquete virtual' }).click();
+  const simulation = page.getByRole('region', { name: 'Execução da maquete pelo servidor' });
+  const status = simulation.locator('.sim-status');
+  await expect(status).toHaveText('Aguardando uma OP');
   await expect(page.locator('.sim-scene canvas')).toBeVisible();
-  await page.getByRole('button', { name: 'Iniciar', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('Em execução');
-  await page.getByRole('button', { name: 'Pausar', exact: true }).click();
-  const time = await page.locator('.sim-metrics').innerText();
-  await page.waitForTimeout(200);
-  expect(await page.locator('.sim-metrics').innerText()).toBe(time);
-  await page.getByRole('button', { name: 'Reiniciar', exact: true }).click();
-  for (
-    let i = 0;
-    i < 350 && !(await page.getByRole('status').innerText()).includes('concluído');
-    i++
-  )
-    await page.getByRole('button', { name: 'Próximo evento', exact: true }).dispatchEvent('click');
-  await expect(page.getByRole('status')).toHaveText('Ciclo concluído');
-  await expect(page.locator('.sim-metrics')).toContainText('6 / 6');
-  await page.getByRole('button', { name: 'MAT-001', exact: false }).click();
-  await expect(page.locator('.sim-history')).toContainText('Validação aprovada');
+  await expect(page.getByRole('button', { name: 'Demonstração local' })).toHaveCount(0);
+  await page.getByLabel('Velocidade').selectOption('4');
+  await page.getByLabel('Ordem de produção').selectOption(String(order.id));
+  await page.getByText('Associação de estações').click();
+  await expect(page.getByLabel(/Estação para Torno CNC/)).toHaveValue('M1');
+  await page.getByText('Associação de estações').click();
+  await page.getByRole('button', { name: 'Iniciar simulação' }).click();
+  await expect(status).toHaveText('Ciclo concluído', { timeout: 35_000 });
+  await page.getByText('Estações e peças').click();
+  await expect(page.getByRole('button', { name: /SIM-001.*Aprovada/ })).toBeVisible();
+  await page.screenshot({ path: 'test-results/desktop-simulation.png', fullPage: true });
+  await page.getByRole('button', { name: 'Restaurar maquete' }).click();
+  await expect(status).toHaveText('Aguardando uma OP');
+  await expect(page.getByLabel('Velocidade')).toHaveValue('1');
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
-  await page.getByRole('button', { name: 'Reiniciar', exact: true }).click();
-  await expect(page.getByRole('status')).toHaveText('Pronta para iniciar');
 });
 
-test('sem WebGL mantém controles, teclado e rastreabilidade', async ({ page }) => {
+test('sem WebGL mantém os controles e o acompanhamento do servidor', async ({ page }) => {
   await page.addInitScript(() => {
     const get = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (
@@ -42,13 +56,10 @@ test('sem WebGL mantém controles, teclado e rastreabilidade', async ({ page }) 
     } as typeof get;
   });
   await page.goto('/');
-  await page.getByRole('button', { name: /Simulação/ }).click();
+  await page.getByRole('button', { name: 'Maquete virtual' }).click();
   await expect(page.getByText(/Visualização 3D indisponível/)).toBeVisible();
-  const next = page.getByRole('button', { name: 'Próximo evento', exact: true });
-  await next.focus();
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('status').filter({ hasText: 'Pausada' })).toBeVisible();
+  await expect(page.locator('.sim-status')).toHaveText('Aguardando uma OP');
   await page.getByLabel('Movimento reduzido').check();
-  await page.getByRole('button', { name: 'MAT-002', exact: false }).click();
-  await expect(page.locator('.sim-history')).toContainText('MAT-002');
+  await page.getByText('Estações e peças').click();
+  await expect(page.getByRole('button', { name: /SIM-001.*Almoxarifado/ })).toBeVisible();
 });

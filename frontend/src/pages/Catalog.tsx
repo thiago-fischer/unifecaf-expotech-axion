@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { request } from '../api/client';
 import type { Machine, Order, Product } from '../api/types';
 import {
@@ -10,21 +10,25 @@ import {
   type Navigate,
 } from '../components/Common';
 
-function useSave<T>(path: string, reload: () => Promise<void>) {
+const maxProductsPerOrder = 10;
+type List<T> = ReturnType<typeof useList<T>>;
+
+function useSave<T extends { id: number }>(path: string, reload: () => Promise<void>) {
+  const locked = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const locked = useRef(false);
-  async function save(build: () => unknown, clear: () => void, message: string) {
+  const [saved, setSaved] = useState<T>();
+
+  async function save(build: () => unknown, clear: () => void) {
     if (locked.current) return;
     locked.current = true;
     setBusy(true);
     setError('');
-    setSuccess('');
+    setSaved(undefined);
     try {
-      const result = await request<T & { id: number }>(path, build());
+      const result = await request<T>(path, build());
       clear();
-      setSuccess(`${message} ID: ${result.id}.`);
+      setSaved(result);
       await reload();
     } catch (error) {
       setError((error as Error).message);
@@ -33,514 +37,385 @@ function useSave<T>(path: string, reload: () => Promise<void>) {
       setBusy(false);
     }
   }
-  return { busy, error, success, save };
+  return { busy, error, saved, save };
 }
 
-function SaveStatus({ error, success }: { error: string; success: string }) {
+export function Production({ navigate }: { navigate: Navigate }) {
+  const products = useList<Product>('/products');
+  const machines = useList<Machine>('/machines');
+  const orders = useList<Order>('/orders');
+  const productNames = new Map(products.data.map(({ id, name }) => [id, name]));
+  const machineNames = new Map(machines.data.map(({ id, name }) => [id, name]));
+
   return (
-    <>
-      <ErrorNotice message={error} />
-      {success && (
-        <p className="notice success" role="status">
-          {success}
-        </p>
-      )}
-    </>
+    <div className="production-layout">
+      <div>
+        <OrderForm
+          products={products.data}
+          ready={!products.loading && !products.error}
+          reload={orders.reload}
+          navigate={navigate}
+        />
+        <details className="panel">
+          <summary>Ordens registradas</summary>
+          <ListState loading={orders.loading} error={orders.error} empty={!orders.data.length} />
+          {orders.error && (
+            <button className="secondary" onClick={() => void orders.reload()}>
+              Recarregar ordens
+            </button>
+          )}
+          <ul className="records">
+            {orders.data.map((order) => (
+              <li key={order.id}>
+                <details className="record-detail">
+                  <summary>Ordem #{order.id}</summary>
+                  <ul className="step-list">
+                    {order.items.map(({ product_id, quantity }) => (
+                      <li key={product_id}>
+                        {productNames.get(product_id) ?? `Produto #${product_id}`} · {quantity} un.
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="actions">
+                    <button
+                      className="secondary"
+                      onClick={() => navigate('Planejamento', order.id)}
+                    >
+                      Planejar ordem #{order.id}
+                    </button>
+                    <button
+                      className="secondary"
+                      onClick={() => navigate('Maquete virtual', order.id)}
+                    >
+                      Simular ordem #{order.id}
+                    </button>
+                  </div>
+                </details>
+              </li>
+            ))}
+          </ul>
+        </details>
+      </div>
+      <div>
+        <ProductCatalog products={products} machines={machines} machineNames={machineNames} />
+        <section className="panel" aria-labelledby="machine-catalog">
+          <h2 id="machine-catalog">Máquinas cadastradas</h2>
+          <ListState
+            loading={machines.loading}
+            error={machines.error}
+            empty={!machines.data.length}
+          />
+          {machines.error && (
+            <button className="secondary" onClick={() => void machines.reload()}>
+              Recarregar máquinas
+            </button>
+          )}
+          <ul className="records">
+            {machines.data.map((machine) => (
+              <li key={machine.id}>
+                {machine.name} <small>#{machine.id}</small>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </div>
   );
 }
 
-function useDetail<T>(path: string) {
-  const [detail, setDetail] = useState<T | null>(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const sequence = useRef(0);
-  async function open(id: number) {
-    const current = ++sequence.current;
-    setDetail(null);
-    setError('');
-    setLoading(true);
-    try {
-      const result = await request<T>(`${path}/${id}`);
-      if (current === sequence.current) setDetail(result);
-    } catch (error) {
-      if (current === sequence.current) setError((error as Error).message);
-    } finally {
-      if (current === sequence.current) setLoading(false);
-    }
-  }
-  function close() {
-    sequence.current++;
-    setDetail(null);
-    setError('');
-    setLoading(false);
-  }
-  return { detail, error, loading, open, close };
-}
-
-function Detail({
-  state,
-  children,
+function ProductCatalog({
+  products,
+  machines,
+  machineNames,
 }: {
-  state: ReturnType<typeof useDetail<unknown>>;
-  children: ReactNode;
+  products: List<Product>;
+  machines: List<Machine>;
+  machineNames: Map<number, string>;
 }) {
-  if (!state.detail && !state.error && !state.loading) return null;
+  const [editing, setEditing] = useState(false);
+
   return (
-    <section className="panel detail" aria-label="Consulta individual">
+    <section className="panel" aria-labelledby="product-catalog">
       <div className="panel-heading">
-        <h2>Consulta individual</h2>
-        <button className="secondary" onClick={state.close}>
-          Voltar à lista
+        <h2 id="product-catalog">Produtos</h2>
+        <button
+          className="secondary"
+          aria-expanded={editing}
+          aria-controls="product-form"
+          onClick={() => setEditing(!editing)}
+        >
+          {editing ? 'Fechar formulário' : 'Novo produto'}
         </button>
       </div>
-      <ErrorNotice message={state.error} />
-      {state.loading && <p role="status">Consultando registro…</p>}
-      {children}
+      <div id="product-form" hidden={!editing}>
+        <ProductForm machines={machines} reload={products.reload} />
+      </div>
+      <ListState loading={products.loading} error={products.error} empty={!products.data.length} />
+      {products.error && (
+        <button className="secondary" onClick={() => void products.reload()}>
+          Recarregar produtos
+        </button>
+      )}
+      <ul className="records">
+        {products.data.map((product) => (
+          <li key={product.id}>
+            <details className="record-detail">
+              <summary>
+                {product.name} <small>#{product.id}</small>
+              </summary>
+              <ol className="step-list">
+                {product.steps.map((step) => (
+                  <li key={step.sequence}>
+                    {machineNames.get(step.machine_id) ?? `Máquina #${step.machine_id}`} ·{' '}
+                    {step.processing_time_seconds} s
+                  </li>
+                ))}
+              </ol>
+            </details>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
 
-export function Machines() {
-  const list = useList<Machine>('/machines');
-  const state = useSave<Machine>('/machines', list.reload);
-  const detail = useDetail<Machine>('/machines');
-  const [name, setName] = useState('');
-  return (
-    <>
-      <div className="columns">
-        <section className="panel">
-          <h2>Nova máquina</h2>
-          <p>Cadastre uma estação para utilizar nas receitas.</p>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void state.save(
-                () => ({ name: validName(name) }),
-                () => setName(''),
-                'Máquina cadastrada.',
-              );
-            }}
-          >
-            <fieldset disabled={state.busy}>
-              <label>
-                Nome da máquina
-                <input
-                  required
-                  maxLength={100}
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Ex.: Torno CNC"
-                />
-              </label>
-              <button type="submit">{state.busy ? 'Salvando…' : 'Cadastrar máquina'}</button>
-            </fieldset>
-          </form>
-          <SaveStatus {...state} />
-        </section>
-        <section className="panel">
-          <div className="panel-heading">
-            <h2>Catálogo de máquinas</h2>
-            <button
-              className="secondary"
-              disabled={list.loading}
-              onClick={() => void list.reload()}
-            >
-              Atualizar
-            </button>
-          </div>
-          <ListState loading={list.loading} error={list.error} empty={!list.data.length} />
-          <ul className="records">
-            {list.data.map((machine) => (
-              <li key={machine.id}>
-                <div>
-                  <strong>{machine.name}</strong>
-                  <small>Máquina #{machine.id}</small>
-                </div>
-                <button className="secondary" onClick={() => void detail.open(machine.id)}>
-                  Consultar #{machine.id}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-      <Detail state={detail}>
-        {detail.detail && (
-          <>
-            <h3>{detail.detail.name}</h3>
-            <p>Máquina #{detail.detail.id}</p>
-          </>
-        )}
-      </Detail>
-    </>
-  );
-}
-
-export function Products({ navigate }: { navigate: Navigate }) {
-  const list = useList<Product>('/products');
-  const machines = useList<Machine>('/machines');
-  const state = useSave<Product>('/products', list.reload);
-  const detail = useDetail<Product>('/products');
+function ProductForm({
+  machines,
+  reload,
+}: {
+  machines: List<Machine>;
+  reload: () => Promise<void>;
+}) {
+  const state = useSave<Product>('/products', reload);
   const [name, setName] = useState('');
   const nextKey = useRef(1);
-  const initial = () => [{ key: nextKey.current++, machine: '', duration: '' }];
-  const [steps, setSteps] = useState(initial);
-  const machineName = (id: number) =>
-    machines.data.find((machine) => machine.id === id)?.name || 'Máquina';
+  const [steps, setSteps] = useState([{ key: 0, machine: '', duration: '' }]);
+
+  function updateStep(key: number, change: { machine?: string; duration?: string }) {
+    setSteps(steps.map((step) => (step.key === key ? { ...step, ...change } : step)));
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    void state.save(
+      () => ({
+        name: validName(name),
+        steps: steps.map(({ machine, duration }, index) => ({
+          sequence: index + 1,
+          machine_id: positiveInteger(machine),
+          processing_time_seconds: positiveInteger(duration),
+        })),
+      }),
+      () => {
+        setName('');
+        setSteps([{ key: nextKey.current++, machine: '', duration: '' }]);
+      },
+    );
+  }
+
   return (
-    <>
-      <div className="columns">
-        <section className="panel">
-          <h2>Novo produto</h2>
-          <p>Defina a sequência e o tempo de cada etapa.</p>
-          <ListState loading={machines.loading} error={machines.error} empty={false} />
-          <button
-            className="text-button"
-            disabled={machines.loading}
-            onClick={() => void machines.reload()}
-          >
-            Atualizar máquinas disponíveis
-          </button>
-          {!machines.loading && !machines.error && !machines.data.length && (
-            <p className="notice">
-              Cadastre uma máquina para montar a receita.{' '}
-              <button className="text-button" onClick={() => navigate('Máquinas')}>
-                Ir para máquinas
-              </button>
-            </p>
-          )}
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void state.save(
-                () => ({
-                  name: validName(name),
-                  steps: steps.map((step, index) => ({
-                    sequence: index + 1,
-                    machine_id: positiveInteger(step.machine),
-                    processing_time_seconds: positiveInteger(step.duration),
-                  })),
-                }),
-                () => {
-                  setName('');
-                  setSteps(initial());
-                },
-                'Produto cadastrado.',
-              );
-            }}
-          >
-            <fieldset disabled={state.busy || !machines.data.length}>
-              <label>
-                Nome do produto
-                <input
-                  required
-                  maxLength={100}
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Ex.: Suporte usinado"
-                />
-              </label>
-              <div className="recipe">
-                {steps.map((step, index) => (
-                  <div className="recipe-step" key={step.key}>
-                    <div className="panel-heading">
-                      <h3>Etapa {index + 1}</h3>
-                      <button
-                        type="button"
-                        className="text-button"
-                        disabled={steps.length === 1}
-                        aria-label={`Remover etapa ${index + 1}`}
-                        onClick={() => setSteps(steps.filter((item) => item.key !== step.key))}
-                      >
-                        Remover
-                      </button>
-                    </div>
-                    <label>
-                      Máquina da etapa {index + 1}
-                      <select
-                        required
-                        value={step.machine}
-                        onChange={(event) =>
-                          setSteps(
-                            steps.map((item) =>
-                              item.key === step.key
-                                ? { ...item, machine: event.target.value }
-                                : item,
-                            ),
-                          )
-                        }
-                      >
-                        <option value="">Selecione uma máquina</option>
-                        {machines.data.map((machine) => (
-                          <option key={machine.id} value={machine.id}>
-                            {machine.name} · #{machine.id}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Duração da etapa {index + 1} (s)
-                      <input
-                        required
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={step.duration}
-                        onChange={(event) =>
-                          setSteps(
-                            steps.map((item) =>
-                              item.key === step.key
-                                ? { ...item, duration: event.target.value }
-                                : item,
-                            ),
-                          )
-                        }
-                      />
-                    </label>
-                  </div>
+    <form className="product-form" onSubmit={submit}>
+      {!machines.loading && !machines.data.length && (
+        <p className="hint">A receita precisa de uma máquina cadastrada.</p>
+      )}
+      <fieldset
+        disabled={
+          state.busy || machines.loading || Boolean(machines.error) || !machines.data.length
+        }
+      >
+        <label>
+          Nome do produto
+          <input
+            required
+            maxLength={100}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </label>
+        <h3>Etapas da receita</h3>
+        {steps.map((step, index) => (
+          <div className="form-row" key={step.key}>
+            <label>
+              <span className={index ? 'sr-only' : undefined}>Máquina</span>
+              <select
+                required
+                aria-label={`Máquina da etapa ${index + 1}`}
+                value={step.machine}
+                onChange={(event) => updateStep(step.key, { machine: event.target.value })}
+              >
+                <option value="">Selecione</option>
+                {machines.data.map(({ id, name }) => (
+                  <option key={id} value={id}>
+                    {name} · #{id}
+                  </option>
                 ))}
-              </div>
-              <div className="actions">
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => setSteps([...steps, ...initial()])}
-                >
-                  Adicionar etapa
-                </button>
-                <button type="submit">{state.busy ? 'Salvando…' : 'Cadastrar produto'}</button>
-              </div>
-            </fieldset>
-          </form>
-          <SaveStatus {...state} />
-        </section>
-        <section className="panel">
-          <div className="panel-heading">
-            <h2>Catálogo de produtos</h2>
+              </select>
+            </label>
+            <label>
+              <span className={index ? 'sr-only' : undefined}>Duração (s)</span>
+              <input
+                required
+                type="number"
+                min="1"
+                step="1"
+                aria-label={`Duração da etapa ${index + 1} (s)`}
+                value={step.duration}
+                onChange={(event) => updateStep(step.key, { duration: event.target.value })}
+              />
+            </label>
             <button
-              className="secondary"
-              disabled={list.loading}
-              onClick={() => void list.reload()}
+              type="button"
+              className="remove"
+              aria-label={`Remover etapa ${index + 1}`}
+              disabled={steps.length === 1}
+              onClick={() => setSteps(steps.filter(({ key }) => key !== step.key))}
             >
-              Atualizar
+              ×
             </button>
           </div>
-          <ListState loading={list.loading} error={list.error} empty={!list.data.length} />
-          <ul className="records">
-            {list.data.map((product) => (
-              <li key={product.id}>
-                <div>
-                  <strong>{product.name}</strong>
-                  <small>
-                    Produto #{product.id} · {product.steps.length} etapas
-                  </small>
-                </div>
-                <button className="secondary" onClick={() => void detail.open(product.id)}>
-                  Consultar #{product.id}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-      <Detail state={detail}>
-        {detail.detail && (
-          <>
-            <h3>
-              {detail.detail.name} · #{detail.detail.id}
-            </h3>
-            <ol className="step-list">
-              {detail.detail.steps.map((step) => (
-                <li key={step.sequence}>
-                  {machineName(step.machine_id)} #{step.machine_id} · {step.processing_time_seconds}{' '}
-                  s
-                </li>
-              ))}
-            </ol>
-          </>
-        )}
-      </Detail>
-    </>
+        ))}
+        <div className="actions">
+          <button
+            type="button"
+            className="text-button"
+            onClick={() =>
+              setSteps([...steps, { key: nextKey.current++, machine: '', duration: '' }])
+            }
+          >
+            <span aria-hidden="true">+</span> Adicionar etapa
+          </button>
+          <button type="submit">{state.busy ? 'Salvando…' : 'Cadastrar produto'}</button>
+        </div>
+      </fieldset>
+      <ErrorNotice message={state.error} />
+      {state.saved && (
+        <p role="status" className="notice success">
+          Produto cadastrado. ID: {state.saved.id}.
+        </p>
+      )}
+    </form>
   );
 }
 
-export function Orders({ navigate }: { navigate: Navigate }) {
-  const list = useList<Order>('/orders');
-  const products = useList<Product>('/products');
-  const state = useSave<Order>('/orders', list.reload);
-  const detail = useDetail<Order>('/orders');
+function OrderForm({
+  products,
+  ready,
+  reload,
+  navigate,
+}: {
+  products: Product[];
+  ready: boolean;
+  reload: () => Promise<void>;
+  navigate: Navigate;
+}) {
+  const state = useSave<Order>('/orders', reload);
   const nextKey = useRef(1);
-  const initial = () => [{ key: nextKey.current++, product: '', quantity: '' }];
-  const [items, setItems] = useState(initial);
-  const productName = (id: number) =>
-    products.data.find((product) => product.id === id)?.name || 'Produto';
-  const orderItems = (order: Order) => (
-    <ul className="step-list">
-      {order.items.map((item) => (
-        <li key={item.product_id}>
-          {productName(item.product_id)} #{item.product_id} · {item.quantity} un.
-        </li>
-      ))}
-    </ul>
-  );
+  const [items, setItems] = useState([{ key: 0, product: '', quantity: '1' }]);
+  const canAdd = items.length < Math.min(maxProductsPerOrder, products.length);
+
+  function updateItem(key: number, change: { product?: string; quantity?: string }) {
+    setItems(items.map((item) => (item.key === key ? { ...item, ...change } : item)));
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    void state.save(
+      () => {
+        const entries = items.map(({ product, quantity }) => ({
+          product_id: positiveInteger(product),
+          quantity: positiveInteger(quantity),
+        }));
+        if (new Set(entries.map(({ product_id }) => product_id)).size !== entries.length)
+          throw new Error('Cada produto pode aparecer somente uma vez na ordem.');
+        return { items: entries };
+      },
+      () => setItems([{ key: nextKey.current++, product: '', quantity: '1' }]),
+    );
+  }
+
   return (
-    <>
-      <div className="columns">
-        <section className="panel">
-          <h2>Nova ordem</h2>
-          <p>Registre os produtos e as quantidades solicitadas.</p>
-          <ListState loading={products.loading} error={products.error} empty={false} />
-          <button
-            className="text-button"
-            disabled={products.loading}
-            onClick={() => void products.reload()}
-          >
-            Atualizar produtos disponíveis
-          </button>
-          {!products.loading && !products.error && !products.data.length && (
-            <p className="notice">
-              Cadastre um produto antes de criar uma ordem.{' '}
-              <button className="text-button" onClick={() => navigate('Produtos')}>
-                Ir para produtos
-              </button>
-            </p>
-          )}
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void state.save(
-                () => {
-                  const result = items.map((item) => ({
-                    product_id: positiveInteger(item.product),
-                    quantity: positiveInteger(item.quantity),
-                  }));
-                  if (new Set(result.map((item) => item.product_id)).size !== result.length)
-                    throw new Error('Cada produto pode aparecer somente uma vez na ordem.');
-                  return { items: result };
-                },
-                () => setItems(initial()),
-                'Ordem registrada como demanda; a produção não foi iniciada.',
-              );
-            }}
-          >
-            <fieldset disabled={state.busy || !products.data.length}>
-              {items.map((item, index) => (
-                <div className="recipe-step" key={item.key}>
-                  <div className="panel-heading">
-                    <h3>Item {index + 1}</h3>
-                    <button
-                      type="button"
-                      className="text-button"
-                      disabled={items.length === 1}
-                      aria-label={`Remover item ${index + 1}`}
-                      onClick={() => setItems(items.filter((row) => row.key !== item.key))}
-                    >
-                      Remover
-                    </button>
-                  </div>
-                  <label>
-                    Produto do item {index + 1}
-                    <select
-                      required
-                      value={item.product}
-                      onChange={(event) =>
-                        setItems(
-                          items.map((row) =>
-                            row.key === item.key ? { ...row, product: event.target.value } : row,
-                          ),
-                        )
-                      }
-                    >
-                      <option value="">Selecione um produto</option>
-                      {products.data.map((product) => (
-                        <option
-                          key={product.id}
-                          value={product.id}
-                          disabled={items.some(
-                            (row) => row.key !== item.key && row.product === String(product.id),
-                          )}
-                        >
-                          {product.name} · #{product.id}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Quantidade do item {index + 1}
-                    <input
-                      required
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={item.quantity}
-                      onChange={(event) =>
-                        setItems(
-                          items.map((row) =>
-                            row.key === item.key ? { ...row, quantity: event.target.value } : row,
-                          ),
-                        )
-                      }
-                    />
-                  </label>
-                </div>
-              ))}
-              <div className="actions">
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={items.length >= products.data.length}
-                  onClick={() => setItems([...items, ...initial()])}
+    <section className="panel" aria-labelledby="new-order">
+      <h2 id="new-order">Nova ordem de produção</h2>
+      {ready && !products.length && (
+        <p className="hint">Cadastre um produto para criar uma ordem.</p>
+      )}
+      <form onSubmit={submit}>
+        <fieldset disabled={state.busy || !ready || !products.length}>
+          {items.map((item, index) => (
+            <div className="form-row" key={item.key}>
+              <label>
+                <span className={index ? 'sr-only' : undefined}>Produto</span>
+                <select
+                  required
+                  aria-label={`Produto do item ${index + 1}`}
+                  value={item.product}
+                  onChange={(event) => updateItem(item.key, { product: event.target.value })}
                 >
-                  Adicionar produto
-                </button>
-                <button type="submit">{state.busy ? 'Salvando…' : 'Criar ordem'}</button>
-              </div>
-            </fieldset>
-          </form>
-          <SaveStatus {...state} />
-        </section>
-        <section className="panel">
-          <div className="panel-heading">
-            <h2>Ordens registradas</h2>
+                  <option value="">Selecione um produto</option>
+                  {products.map(({ id, name }) => (
+                    <option
+                      key={id}
+                      value={id}
+                      disabled={items.some(
+                        (row) => row.key !== item.key && row.product === String(id),
+                      )}
+                    >
+                      {name} · #{id}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span className={index ? 'sr-only' : undefined}>Quantidade</span>
+                <input
+                  required
+                  type="number"
+                  min="1"
+                  step="1"
+                  aria-label={`Quantidade do item ${index + 1}`}
+                  value={item.quantity}
+                  onChange={(event) => updateItem(item.key, { quantity: event.target.value })}
+                />
+              </label>
+              <button
+                type="button"
+                className="remove"
+                aria-label={`Remover item ${index + 1}`}
+                disabled={items.length === 1}
+                onClick={() => setItems(items.filter(({ key }) => key !== item.key))}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+          <div className="actions order-actions">
             <button
-              className="secondary"
-              disabled={list.loading}
-              onClick={() => void list.reload()}
+              type="button"
+              className="text-button"
+              disabled={!canAdd}
+              onClick={() => {
+                if (canAdd)
+                  setItems([...items, { key: nextKey.current++, product: '', quantity: '1' }]);
+              }}
             >
-              Atualizar
+              <span aria-hidden="true">+</span> Adicionar produto
             </button>
+            <span className="hint" aria-live="polite">
+              {items.length} de {maxProductsPerOrder} produtos
+            </span>
+            <button type="submit">{state.busy ? 'Salvando…' : 'Criar ordem'}</button>
           </div>
-          <ListState loading={list.loading} error={list.error} empty={!list.data.length} />
-          <ul className="records">
-            {list.data.map((order) => (
-              <li key={order.id}>
-                <div>
-                  <strong>Ordem #{order.id}</strong>
-                  {orderItems(order)}
-                </div>
-                <button className="secondary" onClick={() => void detail.open(order.id)}>
-                  Consultar #{order.id}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
-      <Detail state={detail}>
-        {detail.detail && (
-          <>
-            <h3>Ordem #{detail.detail.id}</h3>
-            {orderItems(detail.detail)}
-            <p>Demanda registrada. Sem reserva de máquinas ou execução física.</p>
-            <button onClick={() => navigate('Planejamento', detail.detail!.id)}>
-              Planejar ordem #{detail.detail.id}
-            </button>
-            <button className="secondary" onClick={() => navigate('Simulação', detail.detail!.id)}>
-              Simular ordem #{detail.detail.id}
-            </button>
-          </>
-        )}
-      </Detail>
-    </>
+        </fieldset>
+      </form>
+      <ErrorNotice message={state.error} />
+      {state.saved && (
+        <div className="notice success">
+          <span role="status">Ordem #{state.saved.id} criada.</span>
+          <button className="text-button" onClick={() => navigate('Planejamento', state.saved?.id)}>
+            Planejar agora
+          </button>
+        </div>
+      )}
+    </section>
   );
 }

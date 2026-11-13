@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { positions, RFID_POSITION } from './engine';
+import { positions, RFID_POSITION } from './sceneState';
 import { liveState, type LiveStatus } from './live';
 
 it('usa posições, RFIDs e resultados informados pelo controlador', () => {

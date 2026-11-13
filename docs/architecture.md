@@ -19,12 +19,12 @@ Responsável pela interface com o usuário.
 Implementado em `frontend/` com React, TypeScript e Vite para uso local,
 conforme a [SPEC-0006](specs/0006-react-frontend.md) e a
 [ADR-007](adr/0007-react-frontend.md). Componentes funcionais e hooks organizam
-as áreas de máquinas, produtos, ordens e planejamento. A navegação é em memória,
+as guias Produção, Planejamento, Maquete virtual e Sobre. A navegação é em memória,
 sem roteador; CSS responsivo atende desktop e telas menores.
 
 O cliente usa `fetch` para `/api`, encaminhado pelo proxy local do Vite à API
-configurada por ambiente. Não há acesso direto ao banco, alteração de contratos
-HTTP ou necessidade de CORS nesse fluxo. Resultados de planejamento são
+configurada por ambiente. O backend concentra as validações, incluindo o limite
+de 10 produtos distintos por nova ordem. Resultados de planejamento são
 transitórios, com nomes do snapshot e distinção entre viabilidade e prova de
 ótimo. Um Gantt por máquina apresenta as operações; a tabela detalhada começa
 recolhida e permite expansão por mouse ou teclado. Não há execução física.
@@ -188,11 +188,9 @@ axion/
 
 ## Maquete virtual
 
-A área Simulação do frontend implementa a SPEC-0007 com Three.js e motor
-local determinístico em TypeScript, conforme a [ADR-008](adr/0008-maquete-virtual-threejs.md).
-A cena consome estado e interpola movimentos; regras de capacidade e tempo
-ficam separadas da renderização. Não há novos endpoints ou persistência.
-O cenário demonstrativo é independente do otimizador e não controla hardware.
+A guia Maquete virtual usa a cena Three.js da [ADR-008](adr/0008-maquete-virtual-threejs.md)
+com o estado do servidor. A cena interpola movimentos para visualização. O
+controlador simulado é responsável pelo relógio e pelo estado das estações.
 
 A API do [controlador simulado](../controller/README.md) funciona como um
 serviço FastAPI separado. O backend usa as filas por máquina para comandar

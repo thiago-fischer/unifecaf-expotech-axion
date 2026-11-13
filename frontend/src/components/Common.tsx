@@ -71,5 +71,5 @@ export function ListState({
   );
 }
 
-export type Area = 'Máquinas' | 'Produtos' | 'Ordens' | 'Planejamento' | 'Simulação';
+export type Area = 'Produção' | 'Planejamento' | 'Maquete virtual' | 'Sobre';
 export type Navigate = (area: Area, orderId?: number) => void;

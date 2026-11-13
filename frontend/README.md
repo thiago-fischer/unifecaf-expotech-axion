@@ -1,12 +1,9 @@
 # Frontend do Axion
 
-Interface local em português implementada em React conforme a
-[SPEC-0006](../docs/specs/0006-react-frontend.md) e a
-[issue #10](https://github.com/thiago-fischer/unifecaf-expotech-axion/issues/10).
-Permite cadastrar, listar e consultar máquinas, produtos com receitas e ordens,
-além de calcular o planejamento transitório em software. Não inicia produção
-física. Autenticação, cloud, telemetria e persistência de planos continuam fora
-desta entrega.
+Interface local em React, organizada em **Produção**, **Planejamento**,
+**Maquete virtual** e **Sobre**. A interface consulta o catálogo de máquinas,
+cadastra produtos e ordens, mostra o Gantt e acompanha a execução no controlador
+simulado. A guia Sobre explica o projeto, o fluxo e a otimização.
 
 ## Instalação
 
@@ -34,10 +31,6 @@ npm run dev
 Abra [Axion local](http://127.0.0.1:5173). O processo escuta somente em
 `127.0.0.1`; encerre com `Ctrl+C`.
 
-Para editar e observar a maquete em uma página dedicada, abra
-[Pré-visualização da maquete](http://127.0.0.1:5173/preview). O Vite atualiza a
-página ao salvar alterações nos arquivos da cena, sem reiniciar o servidor.
-
 `AXION_API_TARGET` configura o endereço da API no **proxy do Vite**. O navegador
 sempre chama `/api` na mesma origem da interface; o proxy remove esse prefixo e
 encaminha a requisição, inclusive status e `Retry-After`. Reinicie o Vite ao
@@ -57,11 +50,14 @@ validado; 60 s não é garantia de resposta para todas as ordens e máquinas.
 
 ## Fluxo
 
-1. Cadastre uma máquina ou utilize uma existente.
-2. Crie um produto com etapas e tempos inteiros positivos em segundos. Etapas
-   podem revisitar a mesma máquina; a sequência é gerada pela posição visual.
-3. Crie uma ordem selecionando produtos distintos e quantidades inteiras positivas.
-4. Consulte a ordem e acesse seu planejamento, ou selecione-a na área correspondente.
+1. Em **Produção**, consulte as máquinas cadastradas e, se precisar, abra **Novo produto**.
+   Uma receita tem etapas em sequência, com máquina e duração em segundos.
+   Etapas podem revisitar a mesma máquina. A interface oferece consulta às máquinas.
+2. Crie uma ordem de produção com 1 a 10 produtos distintos e quantidades inteiras
+   positivas. O contador mostra quantas linhas a ordem contém e a API valida o mesmo limite.
+3. Selecione a ordem em **Planejamento** e clique em **Calcular OP** para ver o Gantt.
+4. Em **Maquete virtual**, selecione a ordem e acompanhe o processamento simulado.
+   O controlador aceita até 10 peças no total por execução.
 
 O padrão exige prova de ótimo. A opção “Permitir resultado viável sem prova de
 ótimo” envia `allow_feasible`. `409 optimality_not_proven` mostra o candidato em
@@ -106,8 +102,9 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-O Playwright inicia a API em `127.0.0.1:8765` e o Vite em `127.0.0.1:5174`.
-Essas portas devem estar livres; servidores existentes não são reutilizados.
+O Playwright inicia a API em `127.0.0.1:8765`, o controlador simulado em
+`127.0.0.1:8766` (com as dependências do backend) e o Vite em `127.0.0.1:5174`.
+Essas portas precisam estar livres.
 O script `scripts/serve_test_api.py` recria o banco PostgreSQL descartável
 `axion_frontend_e2e`, aplica as migrations reais e tenta removê-lo ao encerrar.
 Como o Playwright pode finalizar o servidor à força, a próxima execução também
@@ -116,14 +113,15 @@ remove qualquer banco E2E remanescente antes de recriá-lo. O script usa
 desenvolvimento.
 Em Linux CI, use `npx playwright install --with-deps chromium`.
 
-Os testes percorrem cadastro → consulta → planejamento, incluindo nomes repetidos,
-revisita à máquina, uso dos IDs retornados, validação contra o resultado da API,
+Os testes percorrem cadastro → consulta → planejamento, incluindo revisita à máquina,
+uso dos IDs retornados, validação contra o resultado da API,
 teclado e viewport de 390 px. Também conferem o Gantt com três produtos, três
 máquinas e 14 operações, além da expansão e recolhimento da tabela pelo teclado.
 Screenshots ficam em `test-results/` (ignorado).
 Os testes controlados cobrem respostas sem prova, limites, ocupação, falhas de
 rede, timeout e descarte de resultado antigo sem depender de tempo de busca.
-Essa validação é em software, sem hardware real.
+A maquete é validada em navegador com execução e restauração no controlador
+simulado, incluindo acompanhamento textual sem WebGL.
 
 ## Build e prévia
 
@@ -149,73 +147,28 @@ Outros ambientes ainda precisam fornecer um encaminhamento equivalente.
 
 React com TypeScript, Vite, CSS, `fetch` e hooks, sem roteador ou biblioteca de
 estado adicional. [ADR-007](../docs/adr/0007-react-frontend.md) registra motivos
-e consequências. Backend, contratos e migrations foram preservados.
+e consequências.
 Referências das ferramentas: [proxy do Vite](https://vite.dev/config/server-options#server-proxy)
 e [ambiente de testes do Vitest](https://vitest.dev/guide/environment.html).
 
-## Maquete virtual — SPEC-0007
+## Maquete virtual
 
-Abra **Simulação** para uma demonstração 3D independente da API. Execute
-`npm ci` e `npm run dev`; a API só é necessária para as outras áreas.
-A cena usa Three.js, materiais e geometria próprios, sem assets remotos.
+A cena Three.js acompanha exclusivamente o estado do controlador simulado via
+backend. Inicie os serviços com o Compose da raiz ou configure o backend com
+[`AXION_CONTROLLER_URL`](../backend/README.md#executar-a-ordem-na-maquete-simulada)
+apontando para o [controlador](../controller/README.md).
 
-À esquerda de M1, um suporte recuado em direção à ponte sustenta o leitor RFID
-demonstrativo: uma haste reta avança para frente, perpendicular ao eixo X, sem
-passar sobre o primeiro módulo. A garra para diante dele por 0,01 segundo
-simulado; a cena exibe o ID da unidade e aumenta o indicador durante a leitura,
-mantendo o destaque por mais 0,3 segundo simulado para facilitar a visualização.
-Isso é apenas visual e não lê etiquetas RFID físicas.
+Selecione uma ordem em **Maquete virtual**. Abra **Associação de estações** para
+revisar o vínculo entre as máquinas da receita e M1, M2 e M3. **Iniciar simulação**
+faz o servidor calcular o plano da ordem e coordenar a execução, que continua
+mesmo se você sair da guia.
 
-Use Iniciar, Pausar/Continuar, Reiniciar, Próximo evento e velocidades de
-0,5× a 4×. Arraste para orbitar, role para aproximar e use Restaurar câmera.
-Selecione uma peça na cena ou na lista para consultar seu histórico. A aba
-oculta pausa a execução; sair da área descarta o cenário. Movimento reduzido
-troca as posições apenas nas mudanças de fase; Próximo evento permite acompanhar sem reprodução
-contínua. Sem WebGL, os controles e o acompanhamento textual permanecem disponíveis.
+Acompanhe a posição da mesa, RFIDs, estados das máquinas e validação das peças.
+Arraste a cena para orbitar e role para aproximar. **Estações e peças** mostra os
+estados também em texto. **Movimento reduzido** limita as mudanças de posição
+às atualizações do servidor. **Velocidade** ajusta o relógio simulado entre 0,5× e
+4×. Ao terminar, **Restaurar maquete** repõe as peças e volta para 1×.
 
-Em **Simulação → Execução do servidor**, selecione uma OP, associe as
-máquinas da receita às estações M1, M2 e M3 e clique em **Iniciar simulação**.
-Você também pode abrir essa tela em **Ordens** ou no resultado do
-**Planejamento**, com a OP já selecionada. Ao iniciar, o servidor calcula
-um novo plano com a política de otimalidade selecionada na tela de simulação.
-
-A cena acompanha os RFIDs, a posição da mesa, o estado das máquinas e o
-resultado do QA. Entre atualizações do servidor, a cena calcula a posição
-da garra a cada quadro com a duração informada pelo controlador.
-Os contadores mostram o progresso da última execução, que
-continua no servidor com a tela fechada.
-
-Ao terminar uma OP, use **Restaurar maquete** para repor os cubos na
-esteira de entrada e liberar a saída antes de repetir a simulação.
-O seletor **Velocidade** ajusta o relógio do controlador simulado de
-0,5× a 4×, inclusive durante uma OP. Os tempos da receita são expressos
-em segundos simulados. Restaurar a maquete volta a velocidade para 1×.
-
-As esteiras de entrada e saída comportam dez cubos cada e correm no sentido frente–fundo, com um
-ponto fixo de coleta ou depósito ao alcance da garra. A esteira de saída
-recebe todas as peças. Verde indica aprovação e vermelho indica rejeição,
-com o resultado disponível também no histórico de cada unidade.
-
-O cenário contém seis unidades, três máquinas, duas vagas auxiliares e um
-transportador. Receitas: A = M1/6s → M2/16s → M3/5s; B = M1/4s → M3/8s;
-C = M3/5s → M2/30s. O tempo de C em M2 foi ajustado para evidenciar paralelismo.
-O transporte horizontal usa 0,9 unidades da cena/s mais 0,3 s por percurso;
-coleta, elevação, descida e retorno levam 0,6 s cada; validação leva 2 s.
-Movimentos usam interpolação suave. Eventos simultâneos processam conclusões
-na ordem estável das unidades, fase do transporte e despacho, nessa ordem.
-
-O estoque auxiliar só recebe peças entre operações. Destinos são reservados
-antes da coleta; estoque cheio mantém a origem ocupada. Sem ações ou eventos
-futuros, o motor sinaliza bloqueio. A validação confere identidade, produto e
-histórico. Tudo ocorre em memória, sem persistência ou execução física.
-
-Testes do motor: `npm test -- src/simulation/engine.test.ts`.
-Teste de navegador: `npm run test:e2e -- e2e/simulation.spec.ts`.
-O conjunto E2E inicia a API de testes para também atender os testes existentes;
-o teste da maquete bloqueia requisições à API para verificar sua independência.
-Opcionalmente, no Windows, use `$env:PLAYWRIGHT_CHANNEL='msedge'` para testar
-no Edge instalado. O padrão continua sendo o Chromium do Playwright.
-
-A cena é carregada sob demanda. O build pode emitir aviso de chunk acima de
-500 kB para o módulo 3D; isso não impede o build nem carrega a engine nas outras áreas.
-Veja as decisões na [ADR-008](../docs/adr/0008-maquete-virtual-threejs.md).
+A cena é carregada ao abrir a guia. O build pode emitir aviso sobre o tamanho
+do módulo 3D. O contrato e o fluxo do controlador estão na
+[ADR-011](../docs/adr/0011-api-controlador-maquete.md).

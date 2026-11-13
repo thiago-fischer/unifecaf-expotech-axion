@@ -66,23 +66,17 @@ export default function Planning({
   return (
     <>
       <section className="panel">
-        <div className="panel-heading">
-          <h2>Gerar planejamento</h2>
-          <button
-            className="secondary"
-            disabled={orders.loading}
-            onClick={() => void orders.reload()}
-          >
-            Atualizar ordens
-          </button>
-        </div>
-        <p>Calcule a programação das operações para uma ordem registrada.</p>
         <ListState loading={orders.loading} error={orders.error} empty={false} />
+        {orders.error && (
+          <button className="secondary" onClick={() => void orders.reload()}>
+            Recarregar ordens
+          </button>
+        )}
         {!orders.loading && !orders.error && !orders.data.length && (
           <p className="notice">
             Crie uma ordem para calcular seu planejamento.{' '}
-            <button className="text-button" onClick={() => navigate('Ordens')}>
-              Ir para ordens
+            <button className="text-button" onClick={() => navigate('Produção')}>
+              Ir para produção
             </button>
           </p>
         )}
@@ -92,49 +86,51 @@ export default function Planning({
             void calculate();
           }}
         >
-          <fieldset disabled={busy}>
-            <label>
-              Ordem de produção
-              <select
-                required
-                value={selected}
-                onChange={(event) => {
-                  sequence.current++;
-                  setSelected(event.target.value);
-                  setResult(null);
-                  setError('');
-                }}
-              >
-                <option value="">Selecione uma ordem</option>
-                {orders.data.map((order) => (
-                  <option key={order.id} value={order.id}>
-                    Ordem #{order.id} · {order.items.reduce((sum, item) => sum + item.quantity, 0)}{' '}
-                    unidades
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={allowFeasible}
-                onChange={(event) => {
-                  setAllowFeasible(event.target.checked);
-                  setResult(null);
-                }}
-              />
-              Permitir resultado viável sem prova de ótimo
-            </label>
-            <p className="hint">
-              Por padrão, a API exige prova de ótimo. O cálculo pode levar dezenas de segundos.
-            </p>
-            <button type="submit" disabled={!selected || wait > 0}>
-              {busy
-                ? 'Calculando planejamento…'
-                : wait > 0
-                  ? `Aguarde ${wait} s para tentar novamente`
-                  : 'Calcular planejamento'}
-            </button>
+          <fieldset disabled={busy || orders.loading || Boolean(orders.error)}>
+            <div className="planning-controls">
+              <label>
+                Ordem de produção
+                <select
+                  required
+                  value={selected}
+                  onChange={(event) => {
+                    sequence.current++;
+                    setSelected(event.target.value);
+                    setResult(null);
+                    setError('');
+                  }}
+                >
+                  <option value="">Selecione uma ordem</option>
+                  {orders.data.map((order) => (
+                    <option key={order.id} value={order.id}>
+                      Ordem #{order.id} ·{' '}
+                      {order.items.reduce((sum, item) => sum + item.quantity, 0)} unidades
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit" disabled={!selected || wait > 0}>
+                {busy
+                  ? 'Calculando planejamento…'
+                  : wait > 0
+                    ? `Aguarde ${wait} s para tentar novamente`
+                    : 'Calcular OP'}
+              </button>
+            </div>
+            <details className="options">
+              <summary>Opções de cálculo</summary>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={allowFeasible}
+                  onChange={(event) => {
+                    setAllowFeasible(event.target.checked);
+                    setResult(null);
+                  }}
+                />
+                Permitir resultado viável sem prova de ótimo
+              </label>
+            </details>
           </fieldset>
         </form>
         <ErrorNotice message={error} />
@@ -148,55 +144,43 @@ export default function Planning({
               {result.quality === 'optimal' ? 'Ótimo comprovado' : 'Viável, sem prova de ótimo'}
             </span>
           </div>
-          <div className="metrics">
-            <div>
-              <small>Tempo total planejado</small>
-              <strong>{result.metrics.makespan_seconds} s</strong>
-            </div>
-            <div>
-              <small>Unidades lógicas</small>
-              <strong>{result.metrics.unit_count}</strong>
-            </div>
-            <div>
-              <small>Operações</small>
-              <strong>{result.metrics.operation_count}</strong>
-            </div>
-          </div>
-          <dl className="facts">
-            <div>
-              <dt>Prova de ótimo</dt>
-              <dd>{result.optimality_proven ? 'Sim' : 'Não'}</dd>
-            </div>
-            <div>
-              <dt>Origem do plano</dt>
-              <dd>
-                {result.selected_source === 'genetic_algorithm' ? 'Algoritmo Genético' : 'CP-SAT'}
-              </dd>
-            </div>
-            <div>
-              <dt>Método de prova</dt>
-              <dd>
-                {
-                  { cp_sat: 'CP-SAT', analytical_bound: 'Limite analítico', none: 'Sem prova' }[
-                    result.proof.method
-                  ]
-                }
-              </dd>
-            </div>
-          </dl>
-          <p className="notice">
-            Planejamento em software; não habilita execução física. A prova se refere ao modelo
-            simplificado, sem transporte e setup.
-          </p>
-          <button className="secondary" onClick={() => navigate('Simulação', result.order_id)}>
-            Simular ordem #{result.order_id}
-          </button>
-          <h3>Operações planejadas</h3>
-          <p className="hint">
-            Tempos relativos ao início do plano, em segundos. As unidades são lógicas. O resultado é
-            transitório e se perde ao sair desta área ou recarregar a página.
+          <p className="plan-time">
+            Tempo total <strong>{result.metrics.makespan_seconds} s</strong>
           </p>
           <PlanningGantt plan={result} />
+          <div className="plan-next">
+            <button
+              className="secondary"
+              onClick={() => navigate('Maquete virtual', result.order_id)}
+            >
+              Simular ordem #{result.order_id}
+            </button>
+          </div>
+          <details className="operations-details">
+            <summary>Detalhes do plano</summary>
+            <dl className="facts">
+              <div>
+                <dt>Origem do plano</dt>
+                <dd>
+                  {result.selected_source === 'genetic_algorithm' ? 'Algoritmo Genético' : 'CP-SAT'}
+                </dd>
+              </div>
+              <div>
+                <dt>Método de prova</dt>
+                <dd>
+                  {
+                    { cp_sat: 'CP-SAT', analytical_bound: 'Limite analítico', none: 'Sem prova' }[
+                      result.proof.method
+                    ]
+                  }
+                </dd>
+              </div>
+            </dl>
+            <p className="notice">
+              A prova de ótimo vale para o modelo de planejamento, que considera as etapas, durações
+              e máquinas.
+            </p>
+          </details>
           <details className="operations-details">
             <summary>Tabela de operações ({result.operations.length})</summary>
             <div

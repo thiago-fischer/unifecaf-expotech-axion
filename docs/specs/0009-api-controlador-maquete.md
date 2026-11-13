@@ -1,6 +1,6 @@
 # SPEC-0009 — API do controlador e execução simulada
 
-- Status: Proposta
+- Status: API do controlador simulado implementada. Integrações propostas.
 - Relacionadas: [ADR-010](../adr/0010-maquete-fisica.md) e [ADR-011](../adr/0011-api-controlador-maquete.md)
 
 ## 1. Componentes
@@ -58,6 +58,16 @@ As posições são nomes cadastrados no controlador, como `ARMAZEM_01`,
 `LEITOR_RFID`, `M1`, `M2`, `M3`, `QA` e `ESTOQUE_FINAL_01`.
 A capacidade de referência da simulação conectada segue a ADR-010, com até
 10 cubos, três máquinas de processamento e uma estação de QA.
+
+O cenário inicial do serviço contém um cubo por padrão e aceita uma
+quantidade configurável de 0 a 10. As leituras devolvem `resultado.rfid`.
+O leitor de entrada lê o cubo no cabeçote quando a mesa está no ponto
+`LEITOR_RFID`. A leitura de QA usa o cubo depositado naquela estação.
+Os tempos de movimentação são valores simulados. O estado `falhou` faz
+parte do contrato para falhas durante a execução. O simulador atual
+valida as condições antes da admissão e não injeta falhas em comandos aceitos.
+Os comandos de instalação e o roteiro HTTP estão no
+[README do controlador](../../controller/README.md).
 
 Exemplo de envio para `POST /api/comandos`.
 

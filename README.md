@@ -160,6 +160,9 @@ O projeto deverá demonstrar um cenário com uma vulnerabilidade real de comunic
 
 A maquete representa uma linha de produção inteligente em escala reduzida.
 
+O [controlador simulado](controller/README.md) já recebe comandos por HTTP
+e permite testar o percurso das peças sem hardware.
+
 A maquete física comportará até 10 peças e terá três máquinas de processamento
 e uma estação de revisão de qualidade (QA). A mesa deslizante acionada por fuso
 fará o transporte horizontal dos cubos metálicos, coletados por eletroímã.

@@ -194,6 +194,6 @@ A cena consome estado e interpola movimentos; regras de capacidade e tempo
 ficam separadas da renderização. Não há novos endpoints ou persistência.
 O cenário demonstrativo é independente do otimizador e não controla hardware.
 
-A [SPEC-0009](specs/0009-api-controlador-maquete.md) propõe um modo conectado
-em que o servidor envia comandos a uma API de controlador simulado e a cena
-3D acompanha o estado da execução.
+A API do [controlador simulado](../controller/README.md) funciona como um
+serviço FastAPI separado. A [SPEC-0009](specs/0009-api-controlador-maquete.md)
+descreve o contrato HTTP e as próximas integrações com o servidor e a cena 3D.

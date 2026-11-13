@@ -1,6 +1,6 @@
 # ADR-011 — API HTTP para o controlador da maquete
 
-- Status: Proposta
+- Status: Implementada no controlador simulado; revisão por outro integrante pendente
 - Data: 12/11/2026
 - Relacionadas: [ADR-010](0010-maquete-fisica.md) e [SPEC-0009](../specs/0009-api-controlador-maquete.md)
 
@@ -32,7 +32,9 @@ de um comando cujo retorno inicial se perdeu.
 
 ## Consequências
 
-A API e a adaptação da cena serão entregas de implementação. Quando o
-controlador físico estiver disponível, ele poderá implementar o mesmo contrato.
+A API do simulador está disponível no módulo
+[`controller`](../../controller/README.md). A adaptação da cena e a
+integração com o servidor são etapas posteriores. Quando o controlador
+físico estiver disponível, ele poderá implementar o mesmo contrato.
 Sensores, tempos reais, comportamento em falhas e regras de recuperação no
 hardware precisarão de validação na maquete física.

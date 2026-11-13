@@ -52,7 +52,11 @@ function errorMessage(body: unknown, status: number): string {
   return details.join('\n') || `Não foi possível concluir a operação (HTTP ${status}).`;
 }
 
-export async function request<T>(path: string, body?: unknown, planning = false): Promise<T> {
+export async function request<T>(
+  path: string,
+  body?: unknown,
+  planning: boolean | 'execution' = false,
+): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), planning ? 60_000 : 15_000);
   try {
@@ -62,6 +66,7 @@ export async function request<T>(path: string, body?: unknown, planning = false)
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal,
     });
+    if (response.status === 204) return undefined as T;
     let data: unknown;
     try {
       data = await response.json();
@@ -72,7 +77,7 @@ export async function request<T>(path: string, body?: unknown, planning = false)
       );
     }
     if (
-      planning &&
+      planning === true &&
       response.status === 409 &&
       record(data) &&
       data.code === 'optimality_not_proven' &&
@@ -82,7 +87,12 @@ export async function request<T>(path: string, body?: unknown, planning = false)
     }
     if (!response.ok)
       throw new ApiError(
-        errorMessage(data, response.status),
+        planning === 'execution' &&
+          response.status === 409 &&
+          record(data) &&
+          data.code === 'optimality_not_proven'
+          ? 'O ótimo não foi comprovado. Você pode permitir um plano viável e tentar novamente.'
+          : errorMessage(data, response.status),
         response.status,
         response.status === 503 ? retryDeadline(response.headers.get('Retry-After')) : 0,
       );
@@ -94,13 +104,30 @@ export async function request<T>(path: string, body?: unknown, planning = false)
       : 'Não foi possível conectar à API. Verifique se o backend está em execução.';
     throw new ApiError(
       message +
-        (body !== undefined && !planning
-          ? ' Confira a lista antes de reenviar: o cadastro pode ter sido concluído.'
-          : ''),
+        (planning === 'execution'
+          ? ' Confira o estado da maquete antes de tentar iniciar a ordem novamente.'
+          : body !== undefined && !planning
+            ? ' Confira a lista antes de reenviar: o cadastro pode ter sido concluído.'
+            : ''),
     );
   } finally {
     clearTimeout(timer);
   }
+}
+
+export function startExecution(
+  orderId: number,
+  mapping: Record<number, 'M1' | 'M2' | 'M3'>,
+  allowFeasible: boolean,
+) {
+  return request<{ id: string }>(
+    `/orders/${orderId}/executions`,
+    {
+      machine_mapping: mapping,
+      planning: { optimality_policy: allowFeasible ? 'allow_feasible' : 'require_proof' },
+    },
+    'execution',
+  );
 }
 
 export async function planOrder(orderId: number, allowFeasible: boolean): Promise<Plan> {

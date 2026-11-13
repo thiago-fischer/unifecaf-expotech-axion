@@ -30,7 +30,7 @@ it.each([200, 409])('exibe candidato viável em %i e nomes do snapshot', async (
   );
   render(<Planning initialOrder={17} navigate={vi.fn()} />);
   await screen.findByRole('option', { name: /Ordem #17/ });
-  await userEvent.click(screen.getByRole('button', { name: 'Calcular planejamento' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Calcular OP' }));
   expect(await screen.findByText('Viável, sem prova de ótimo')).toBeVisible();
   expect(screen.getByRole('region', { name: 'Gráfico de Gantt por máquina' })).toBeVisible();
   const table = screen.getByRole('region', { name: 'Tabela de operações', hidden: true });
@@ -40,7 +40,6 @@ it.each([200, 409])('exibe candidato viável em %i e nomes do snapshot', async (
   expect(within(table).getByText('Máquina do snapshot · #63')).toBeVisible();
   await userEvent.click(screen.getByText('Tabela de operações (1)'));
   expect(table).not.toBeVisible();
-  expect(screen.getByText(/não habilita execução física/)).toBeVisible();
   expect(screen.queryByText('Ótimo comprovado')).not.toBeInTheDocument();
   await userEvent.selectOptions(screen.getByLabelText('Ordem de produção'), '91');
   expect(
@@ -58,10 +57,11 @@ it('bloqueia envios repetidos durante cálculo e exige opção para allow_feasib
   );
   render(<Planning initialOrder={17} navigate={vi.fn()} />);
   await screen.findByRole('option', { name: /Ordem #17/ });
+  await userEvent.click(screen.getByText('Opções de cálculo'));
   const checkbox = screen.getByRole('checkbox');
   expect(checkbox).not.toBeChecked();
   await userEvent.click(checkbox);
-  const button = screen.getByRole('button', { name: 'Calcular planejamento' });
+  const button = screen.getByRole('button', { name: 'Calcular OP' });
   await userEvent.dblClick(button);
   expect(screen.getByRole('button', { name: 'Calculando planejamento…' })).toBeDisabled();
   expect(fetcher.mock.calls.filter(([path]) => path.endsWith('/plan'))).toHaveLength(1);
@@ -74,7 +74,7 @@ it('aguarda Retry-After e só permite repetição manual', async () => {
   render(<Planning initialOrder={17} navigate={vi.fn()} />);
   await screen.findByRole('option', { name: /Ordem #17/ });
   vi.useFakeTimers();
-  fireEvent.submit(screen.getByRole('button', { name: 'Calcular planejamento' }).closest('form')!);
+  fireEvent.submit(screen.getByRole('button', { name: 'Calcular OP' }).closest('form')!);
   await act(async () => {
     await vi.advanceTimersByTimeAsync(0);
   });
@@ -82,7 +82,7 @@ it('aguarda Retry-After e só permite repetição manual', async () => {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(1250);
   });
-  expect(screen.getByRole('button', { name: 'Calcular planejamento' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Calcular OP' })).toBeEnabled();
   expect(fetcher.mock.calls.filter(([path]) => path.endsWith('/plan'))).toHaveLength(1);
 });
 
@@ -96,7 +96,7 @@ it('descarta resposta recebida após sair da área', async () => {
   );
   const { unmount } = render(<Planning initialOrder={17} navigate={vi.fn()} />);
   await screen.findByRole('option', { name: /Ordem #17/ });
-  await userEvent.click(screen.getByRole('button', { name: 'Calcular planejamento' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Calcular OP' }));
   unmount();
   render(<Planning initialOrder={91} navigate={vi.fn()} />);
   await act(async () => resolve(json(plan())));

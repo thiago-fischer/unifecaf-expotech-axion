@@ -11,8 +11,9 @@ SPEC-0004 e SPEC-0008.
 O planejamento transitório da SPEC-0005 usa AG obrigatório e certificação
 CP-SAT, com operações e métricas para Gantt. A execução física permanece prevista.
 O [frontend React](frontend/README.md), conforme a SPEC-0006, permite usar
-localmente os catálogos, ordens e planejamento em português, com Gantt por
-máquina, tabela de operações recolhível e identificação de resultados sem prova de ótimo.
+consultar máquinas, cadastrar produtos e criar ordens de até 10 produtos distintos.
+A interface inclui planejamento com Gantt, acompanhamento da maquete virtual
+conectada ao controlador simulado e uma guia Sobre.
 Veja os comandos de instalação,
 execução e testes no [README do backend](backend/README.md).
 As demais funcionalidades descritas abaixo permanecem planejadas.
@@ -74,8 +75,8 @@ O sistema será composto por módulos integrados, cada um com uma responsabilida
 
 Interface responsável pela interação com o usuário.
 
-Implementado em React com TypeScript e Vite para uso local. Cadastro e consulta
-de máquinas, produtos e ordens, além de planejamento em software, estão disponíveis.
+Implementado em React com TypeScript e Vite para uso local. Consulta de máquinas, cadastro e consulta de produtos e ordens, além de
+planejamento e acompanhamento da maquete simulada, estão disponíveis.
 Consulte o [README do frontend](frontend/README.md) e a
 [ADR-007](docs/adr/0007-react-frontend.md). Acompanhamento físico e rastreabilidade
 continuam planejados.
@@ -160,7 +161,14 @@ O projeto deverá demonstrar um cenário com uma vulnerabilidade real de comunic
 
 A maquete representa uma linha de produção inteligente em escala reduzida.
 
-Ela será composta por estações de processamento e por um mecanismo automatizado para movimentação da matéria-prima entre elas.
+O [controlador simulado](controller/README.md) já recebe comandos por HTTP
+e permite testar o percurso das peças sem hardware.
+
+A maquete física comportará até 10 peças e terá três máquinas de processamento
+e uma estação de revisão de qualidade (QA). A mesa deslizante acionada por fuso
+fará o transporte horizontal dos cubos metálicos, coletados por eletroímã.
+O servidor gerará e otimizará a ordem de produção (OP) e enviará os comandos
+à maquete na sequência planejada. [ADR-010](docs/adr/0010-maquete-fisica.md)
 
 No escopo inicial, as máquinas não realizarão transformação física sobre a matéria-prima. O processamento será representado por tempo de operação e por displays instalados nas estações.
 
@@ -173,9 +181,9 @@ Os displays poderão exibir:
 
 ## Rastreabilidade
 
-Cada unidade física de matéria-prima possuirá uma identificação individual.
-
-No início do processo, essa identificação será lida e associada ao produto que a matéria-prima deverá representar durante a ordem de produção.
+Cada cubo terá uma etiqueta RFID com identificador único. Após a coleta no
+armazém, a maquete levará o cubo ao leitor. O sistema associará o ID à unidade
+de produto correspondente na sequência planejada da OP.
 
 Exemplo:
 
@@ -185,7 +193,11 @@ MAT-002 → Produto A
 MAT-003 → Produto B
 ```
 
-Ao final do processo, uma nova leitura será realizada para validar se a unidade corresponde ao item esperado e se percorreu corretamente as etapas definidas.
+Após o processamento, o cubo passará pela estação de QA para nova leitura e
+conferência do histórico das etapas. A maquete terá duas vagas de estoque
+auxiliar e esteiras de entrada e saída com um ponto fixo de acesso cada.
+Peças aprovadas e rejeitadas compartilharão a esteira de saída, com o
+resultado do QA vinculado ao RFID.
 
 ## Estrutura do repositório
 

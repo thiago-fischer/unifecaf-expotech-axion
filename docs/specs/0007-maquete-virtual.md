@@ -39,7 +39,7 @@ continua proposta; esta spec não altera o status das decisões de otimização.
 - Nova área **Simulação** no frontend existente, em português.
 - Cena 3D com aparência própria do Axion e layout inicial fixo.
 - Almoxarifado, três máquinas demonstrativas, estoque auxiliar, transportador,
-  estação de validação e áreas de saída e de unidades rejeitadas.
+  estação de validação e esteira de saída compartilhada.
 - Unidades com identidade individual, cor por produto e receita ordenada.
 - Cenário local determinístico que demonstra máquinas trabalhando em paralelo,
   espera entre etapas e utilização do estoque auxiliar.
@@ -70,28 +70,27 @@ na unidade simulada transportada; não representam uma leitura de sensor real.
 
 | Elemento | Representação e função |
 |---|---|
-| Base | Plataforma industrial com posições demarcadas, rótulos e estrutura de suporte |
-| Almoxarifado | Posições visíveis ocupadas pelas unidades iniciais e contador de saldo |
+| Base | Plataforma industrial compacta, com extensões no piso sob as duas esteiras |
+| Almoxarifado | Esteira de entrada perpendicular ao fuso. As peças avançam em fila até um único ponto de coleta |
 | Máquinas M1, M2 e M3 | Estações distintas, cada uma com uma posição de processamento e display de produto, etapa e tempo restante |
-| Estoque auxiliar | Duas vagas visíveis e identificadas para espera entre operações |
+| Estoque auxiliar | Duas vagas identificadas à direita da esteira de entrada, para espera entre operações |
 | Transportador | Mesa deslizante com fuso visível, um único conjunto móvel e capacidade de uma unidade |
 | Captura vertical | Cabeçote conceitual com animação de aproximação, coleta, elevação e descarga |
-| Leitor RFID demonstrativo | Suporte recuado em direção à ponte e perpendicular ao eixo X, à esquerda de M1, com haste reta avançando para frente; a garra para diante dele por 0,01 segundo simulado; o LED cresce e fica destacado por mais 0,3 segundo simulado, sem leitura física |
-| Validação | Uma posição para conferir identidade e histórico esperado da unidade |
-| Saída | Posições para unidades aprovadas e contador de produtos concluídos |
-| Rejeitados | Área separada para unidades que falhem na validação simulada |
+| Leitor RFID demonstrativo | Centralizado entre a última vaga do estoque auxiliar e M1, com haste perpendicular ao fuso. A garra para diante dele por 0,01 segundo simulado e o LED fica destacado por mais 0,3 segundo simulado |
+| Validação | Estação QA à esquerda da esteira de saída, com o formato das máquinas de processamento e acabamento roxo |
+| Saída | Esteira perpendicular ao fuso com um ponto de depósito. Peças aprovadas e rejeitadas compartilham a esteira e mantêm seus resultados individuais |
 
-Três máquinas e duas vagas são parâmetros do cenário demonstrativo, não uma
-decisão sobre a quantidade definitiva de componentes da maquete física.
-Almoxarifado, saída e rejeitados devem comportar todas as unidades do cenário.
+O escopo da maquete física está registrado na [ADR-010](../adr/0010-maquete-fisica.md).
+Cada esteira tem capacidade para dez cubos. O cenário demonstrativo começa
+com seis unidades na esteira de entrada.
 
 Todas as posições de coleta/entrega devem estar ao alcance do mecanismo
 representado. O layout inicial deve alinhar essas posições ao eixo horizontal;
 não mostrar movimentos laterais que exigiriam um eixo ausente da cena.
 
-O transporte horizontal por fuso segue o escopo do projeto. Movimento vertical
-e captura continuam em estudo: a aparência do cabeçote é ilustrativa, sem
-aprovar garra, eletroímã ou mecanismo definitivo de construção.
+O transporte horizontal por fuso segue o escopo do projeto. A aparência do
+cabeçote virtual é ilustrativa. A ADR-010 define a captura física por
+eletroímã, com o mecanismo de elevação ainda em estudo.
 
 ## 4. Direção visual e animação
 
@@ -148,7 +147,7 @@ O estoque auxiliar recebe peças cuja operação anterior terminou. Retirar uma
 peça no meio de uma operação e retomá-la depois permanece fora do escopo.
 
 O despacho inicial será uma regra determinística demonstrativa: priorizar
-retirada da validação para saída/rejeitados, depois retirada de máquinas com
+retirada da validação para a esteira de saída, depois retirada de máquinas com
 operação concluída, depois peças do estoque auxiliar e, por último, entrada
 de novas peças. Dentro da categoria, usar maior tempo de espera e ID como
 desempate. Somente ações com destino disponível são elegíveis. Essa regra não
@@ -166,8 +165,9 @@ executa outra tarefa. A taxa de quadros não deve alterar a ordem dos eventos
 nem os resultados. Eventos simultâneos usam uma ordem estável documentada.
 
 Na validação final, conferir ID esperado, produto e sequência completa de
-operações. Aprovar somente unidades com histórico compatível; encaminhar as
-demais à área de rejeitados, com motivo. Trata-se de validação lógica simulada,
+operações. Aprovar somente unidades com histórico compatível. Todas seguem
+pela mesma esteira, com registro do resultado e do motivo de rejeição quando
+aplicável. Trata-se de validação lógica simulada,
 sem confirmar qualidade física ou funcionamento de leitores reais.
 
 ## 6. Interface e controles
@@ -184,7 +184,7 @@ sem confirmar qualidade física ou funcionamento de leitores reais.
   etapas concluídas, próxima etapa e histórico.
 - Painel com tempo simulado, unidades aprovadas/rejeitadas, ocupação do estoque
   auxiliar e estados das máquinas. Eventos descrevem origem, destino e motivo.
-- Estado final explícito quando todas as unidades chegarem à saída/rejeitados.
+- Estado final explícito quando todas as unidades chegarem à esteira de saída.
 
 Controles devem funcionar por teclado, com foco visível e nomes acessíveis.
 Em telas pequenas, reorganizar painéis sem cortar controles. A lista textual

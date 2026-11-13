@@ -169,7 +169,9 @@ substituí-los por valores de consultas posteriores ao catálogo.
 Mostrar aviso permanente junto ao resultado: “Planejamento em software; não
 habilita execução física”. `execution_ready: false` não é falha do cálculo.
 Explicar que a prova se refere ao modelo simplificado, sem transporte e setup.
-Não oferecer botão para executar a ordem na maquete.
+O botão **Simular ordem** abre a maquete virtual com a OP selecionada. O
+modo **Execução do servidor** inicia a execução simulada conforme a
+[SPEC-0009](0009-api-controlador-maquete.md).
 
 Resultados são transitórios. Uma nova solicitação substitui a visualização
 anterior; ao trocar de ordem, limpar o resultado para evitar associação

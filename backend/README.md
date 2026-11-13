@@ -285,7 +285,8 @@ Invoke-RestMethod "http://127.0.0.1:8000/orders/$($order.id)"
 ```
 
 O exemplo usa um produto do catálogo inicial, sem presumir seu ID.
-Erros de estrutura e tipos retornam `422` no formato FastAPI/Pydantic.
+Novas ordens aceitam de 1 a 10 produtos distintos, com quantidade por produto.
+Erros de estrutura, tipos e tamanho da lista retornam `422` no formato FastAPI/Pydantic.
 Depois da estrutura, valida-se duplicidade e, por último, existência dos produtos:
 
 - Repetidos: `422`, `{"detail":"Cada produto pode aparecer somente uma vez na ordem."}`.
@@ -369,6 +370,71 @@ Para repetir as medições HTTP reais com banco temporário, a partir de `backen
 ```powershell
 uv run --locked python -m scripts.measure_planning --output ../docs/examples/planning-http-benchmark.json
 ```
+
+### Filas por máquina
+
+`POST /orders/{order_id}/plan/queues` recebe o mesmo corpo e aplica a mesma
+política de otimalidade que `POST /orders/{order_id}/plan`. A resposta contém
+`order_id`, `execution_ready: false` e `machine_queues`. Cada entrada de
+`machine_queues` traz o `machine_id` do catálogo e as operações daquela
+máquina em ordem de início planejado. As operações preservam a unidade, a
+etapa da receita, a duração e o identificador da operação predecessora.
+
+As filas são derivadas no servidor para cada consulta. O coordenador de
+execução poderá usar essa mesma função sobre o plano já calculado.
+O coordenador de execução usa essas filas para despachar comandos ao
+controlador simulado.
+
+### Executar a ordem na maquete simulada
+
+Na raiz do repositório, `docker compose up -d --build` sobe o backend,
+o PostgreSQL e o controlador simulado. Se a porta 8001 já estiver em uso,
+configure `CONTROLLER_PORT` com uma porta livre no ambiente do Compose.
+Ao executar o backend fora do Compose, defina `AXION_CONTROLLER_URL` se o
+controlador estiver em outro endereço. O padrão é `http://127.0.0.1:8001`.
+
+No [Swagger do backend](http://127.0.0.1:8000/docs):
+
+1. Consulte `GET /machines` e `GET /orders` para obter os IDs. Comece com
+   uma ordem pequena e com peças disponíveis no armazém do simulador.
+2. Envie `POST /orders/{order_id}/executions`. Ajuste as chaves de
+   `machine_mapping` aos IDs reais do catálogo.
+
+   ```json
+   {
+     "planning": {"optimality_policy": "allow_feasible"},
+     "machine_mapping": {"1": "M1", "2": "M2", "3": "M3"}
+   }
+   ```
+
+3. Copie o `id` da resposta `202` e consulte
+   `GET /orders/{order_id}/executions/{execution_id}`. A resposta mostra
+   operações concluídas, RFIDs, unidades aprovadas e rejeitadas e o motivo de interrupção,
+   quando houver. O [Swagger do controlador](http://127.0.0.1:8001/docs)
+   também permite consultar a ocupação em `GET /api/status`. Para acompanhar
+   em 3D ou iniciar a OP pela interface, abra **Simulação → Execução do servidor**
+   no frontend.
+
+O coordenador executa uma OP por vez em um único processo. Seu estado fica
+em memória. Se o servidor ou o controlador reiniciar durante uma execução,
+confira o estado da maquete antes de iniciar outra OP. Um bloqueio entre
+máquinas ou uma falha de comunicação pode interromper a execução. Se o RFID
+divergir no QA, a peça é registrada como rejeitada e segue à esteira de
+saída compartilhada.
+
+A simulação usa até 10 peças e mantém o tempo de processamento da receita.
+O estoque de entrada é consumido à medida que as ordens são executadas.
+Entre execuções, use **Restaurar maquete** no frontend ou
+`POST /simulation/reset`. O controlador inicia uma nova sessão, repõe as
+peças na entrada e limpa a saída e os resultados de QA. O painel volta a
+aguardar uma OP. O histórico de execuções segue consultável por ID enquanto
+o backend estiver em execução. Uma OP ativa impede a restauração.
+
+O Compose conecta os eventos HTTP do controlador a `POST /controller/events`.
+Para execução fora do Compose, configure `AXION_CONTROLLER_EVENTS_URL` no
+controlador com o endereço desse endpoint. Se usar
+`AXION_CONTROLLER_EVENTS_TOKEN`, configure o mesmo valor nos dois serviços.
+A interface consulta o estado compartilhado em `GET /simulation/status`.
 
 ## Organização das camadas
 

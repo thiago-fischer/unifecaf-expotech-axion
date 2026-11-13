@@ -2,7 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { colors, positions, pose, RFID_POSITION, type State } from './engine';
+import {
+  bufferWidth,
+  conveyorCapacity,
+  conveyorPitch,
+  positionX,
+  positions,
+  RFID_POSITION,
+  stationWidth,
+  type State,
+} from './sceneState';
 
 export default function Scene({
   state,
@@ -44,11 +53,17 @@ export default function Scene({
     );
     const scene = new T.Scene();
     scene.fog = new T.Fog('#0b141d', 45, 100);
+    const leftPost = positions.IN - 0.9;
+    const rightPost = positions.OUT + 0.9;
+    const centerX = (leftPost + rightPost) / 2;
+    const span = rightPost - leftPost;
+    const conveyorLength = conveyorCapacity * conveyorPitch + 0.35;
+    const conveyorEnd = conveyorLength - 0.5;
     const camera = new T.PerspectiveCamera(38, 1, 0.1, 150);
     camera.position.set(14, 14, 28);
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(3.6, 0, 0);
-    controls.minDistance = 24;
+    controls.target.set(centerX, 0.6, (conveyorEnd - 2.2) / 2);
+    controls.minDistance = 9;
     controls.maxDistance = 100;
     controls.maxPolarAngle = Math.PI * 0.46;
     controls.minPolarAngle = 0.25;
@@ -108,28 +123,36 @@ export default function Scene({
       update(value);
       return Object.assign(update, { sprite });
     }
-    box(32, 0.5, 6.2, 4, -0.3, 0, '#263747');
-    box(31.7, 0.05, 5.9, 4, 0, 0, '#3a4b57');
-    for (const x of [-11, 19]) {
+    function floor(width: number, depth: number, x: number, z: number) {
+      box(width, 0.5, depth, x, -0.3, z, '#263747');
+      box(width, 0.05, depth, x, 0, z, '#3a4b57');
+    }
+    const frontEdge = 2.35;
+    const extensionDepth = conveyorEnd + 0.2 - frontEdge;
+    floor(span + 1.4, frontEdge + 2.2, centerX, (frontEdge - 2.2) / 2);
+    for (const x of [positions.IN, positions.OUT]) {
+      floor(1.85, extensionDepth, x, frontEdge + extensionDepth / 2);
+    }
+    for (const x of [leftPost, rightPost]) {
       box(0.4, 4.7, 0.45, x, 2.1, -0.8, '#687c8c');
       box(1.1, 0.14, 1.2, x, 0.12, -0.8, '#182834');
     }
-    box(30.5, 0.45, 0.45, 4, 4.3, -0.8, '#78909c');
-    box(30.5, 0.12, 0.12, 4, 4.3, -0.49, '#d5e4e9');
+    box(span + 0.4, 0.45, 0.45, centerX, 4.3, -0.8, '#78909c');
+    box(span + 0.4, 0.12, 0.12, centerX, 4.3, -0.49, '#d5e4e9');
     // Visible threaded screw running along the single horizontal axis.
     const screw = new T.Group();
-    screw.position.set(4, 4.3, -0.4);
+    screw.position.set(centerX, 4.3, -0.4);
     scene.add(screw);
     const shaft = new T.Mesh(
-      new T.CylinderGeometry(0.055, 0.055, 30, 12),
+      new T.CylinderGeometry(0.055, 0.055, span, 12),
       new T.MeshStandardMaterial({ color: '#dce5e9', metalness: 0.85, roughness: 0.25 }),
     );
     shaft.rotation.z = Math.PI / 2;
     screw.add(shaft);
-    for (let i = 0; i < 150; i++) {
+    for (let x = -span / 2; x < span / 2; x += 0.2) {
       const ring = new T.Mesh(new T.TorusGeometry(0.075, 0.018, 4, 8), shaft.material);
       ring.rotation.y = Math.PI / 2;
-      ring.position.x = -15 + i * 0.2;
+      ring.position.x = x;
       screw.add(ring);
     }
     const carriage = new T.Group();
@@ -163,7 +186,6 @@ export default function Scene({
     armJoint.castShadow = true;
     scene.add(armJoint);
     box(0.4, 0.1, 0.32, rfidX, 3.19, rfidSensorZ, '#536d7b');
-    box(1.86, 0.05, 0.05, rfidX, 3.01, rfidSensorZ - 0.18, '#52d8bd');
     box(0.32, 0.14, 0.24, rfidX, 3.07, rfidSensorZ, '#1d303e');
     const rfidLed = box(0.07, 0.06, 0.07, rfidX, 3.17, rfidSensorZ, '#56edb9');
     const rfidBeam = box(0.035, 0.42, 1.2, rfidX, 3.03, rfidBeamZ, '#39d6bc');
@@ -175,41 +197,61 @@ export default function Scene({
     const rfidLabel = text('RFID · PRONTO', rfidX, 3.42, rfidSensorZ + 0.13, 1.8, '#66f1cb');
     const displays: Record<string, (s: string) => void> = {};
     const lamps: Record<string, T.Mesh> = {};
+    const conveyorCenter = conveyorLength / 2 - 0.5;
+    const rollers = new T.CylinderGeometry(0.085, 0.085, 1.12, 12);
+    const rollerMaterial = new T.MeshStandardMaterial({
+      color: '#a3b7c6',
+      roughness: 0.28,
+      metalness: 0.78,
+    });
+    for (const [x, label] of [
+      [positions.IN, 'ENTRADA'],
+      [positions.OUT, 'SAÍDA'],
+    ] as const) {
+      box(1.38, 0.22, conveyorLength, x, 0.52, conveyorCenter, '#243747');
+      for (const side of [-1, 1]) {
+        const rail = x + side * 0.66;
+        box(0.13, 0.17, conveyorLength, rail, 0.72, conveyorCenter, '#d79a42');
+        for (const z of [0.15, conveyorEnd / 3, (conveyorEnd * 2) / 3, conveyorEnd - 0.4]) {
+          box(0.15, 0.68, 0.17, rail, 0.29, z, '#334a58');
+        }
+        box(0.14, 0.05, 0.77, rail, 0.83, 0, '#62e6c6');
+      }
+      for (let z = -0.36; z < conveyorLength - 0.55; z += 0.22) {
+        const roller = new T.Mesh(rollers, rollerMaterial);
+        roller.position.set(x, 0.685, z);
+        roller.rotation.z = Math.PI / 2;
+        roller.receiveShadow = true;
+        scene.add(roller);
+      }
+      text(label, x, 0.34, conveyorEnd + 0.2, 2.4);
+    }
     Object.entries(positions).forEach(([name, x]) => {
-      const machine = name.startsWith('M');
-      box(
-        machine ? 2.4 : 0.68,
-        0.65,
-        machine ? 2.2 : 0.85,
-        x,
-        0.35,
-        0,
-        machine ? '#263b4e' : '#1d303e',
-      );
+      if (name === 'IN' || name === 'OUT') return;
+      const qa = name === 'QA';
+      const machine = qa || name.startsWith('M');
+      const baseColor = qa ? '#44345e' : machine ? '#263b4e' : '#1d303e';
+      box(machine ? stationWidth : bufferWidth, 0.65, machine ? 2.2 : 0.85, x, 0.35, 0, baseColor);
       box(machine ? 1.3 : 0.65, 0.09, 0.85, x, 0.73, 0, '#7b8c97');
       if (machine) {
-        box(2.2, 1.8, 0.45, x, 1.3, -1.05, '#435e71');
+        box(2.2, 1.8, 0.45, x, 1.3, -1.05, qa ? '#8064a9' : '#435e71');
         box(1.8, 0.6, 0.08, x, 1.6, -0.79, '#091b25');
-        displays[name] = text('LIVRE', x, 1.65, -0.7, 1.7, '#66f1cb');
+        displays[name] = text('LIVRE', x, 1.65, -0.7, 1.7, qa ? '#e2caff' : '#66f1cb');
         text(name, x, 0.35, 1.3, 1.8);
         lamps[name] = box(0.16, 0.16, 0.18, x + 0.8, 2.35, -1, '#56edb9');
         for (let j = 0; j < 4; j++) box(0.5, 0.035, 0.06, x - 0.4, 1 + j * 0.12, -0.8, '#152c3c');
-      } else if (!/^(IN|OUT|REJ)/.test(name)) text(name, x, 0.3, 1.15, 1.3);
+      } else text(name, x, 0.3, 1.15, 1.3);
     });
-    text('ALMOXARIFADO', -8, 0, 2.1, 4);
-    text('ESTOQUE AUXILIAR', 4.8, 0, 2.1, 3.5);
-    text('VALIDAÇÃO', 7.3, 0, -2, 2.5);
-    text('SAÍDA', 11.5, 0, 2.1, 3);
-    text('REJEITADOS', 17, 0, 2.1, 3);
-    text('AXION  /  NEXUS', 3, -0.1, 3.5, 5, '#e2edf3');
+    text('ESTOQUE AUXILIAR', (positions.B1 + positions.B2) / 2, 0, 2.1, 3.5);
+    text('AXION  /  NEXUS', centerX, -0.1, frontEdge + 0.2, 5, '#e2edf3');
     const meshes: Record<string, T.Mesh> = {};
     const labels: Record<string, T.Sprite> = {};
-    state.current.units.forEach((u) => {
-      const mesh = box(0.52, 0.56, 0.52, positions[u.location], 1.05, 0, colors[u.product]);
+    function addUnit(u: State['units'][number]) {
+      const mesh = box(0.52, 0.56, 0.52, 0, 1.05, 0, '#9ec4d4');
       mesh.userData.id = u.id;
       meshes[u.id] = mesh;
       labels[u.id] = text(u.id.slice(-3), 0, 0, 0, 0.65, '#ffffff').sprite;
-    });
+    }
     const ray = new T.Raycaster();
     let downX = 0,
       downY = 0;
@@ -227,7 +269,7 @@ export default function Scene({
         ),
         camera,
       );
-      const hit = ray.intersectObjects(Object.values(meshes))[0];
+      const hit = ray.intersectObjects(Object.values(meshes).filter((mesh) => mesh.visible))[0];
       if (hit) choose.current(hit.object.userData.id);
     };
     renderer.domElement.addEventListener('pointerdown', down);
@@ -240,7 +282,7 @@ export default function Scene({
       camera.position.copy(
         new T.Vector3(10.4, 14, 28)
           .normalize()
-          .multiplyScalar(Math.max(34, 55 / camera.aspect))
+          .multiplyScalar(Math.max(27, 39 / camera.aspect))
           .add(controls.target),
       );
       controls.update();
@@ -254,49 +296,51 @@ export default function Scene({
       dirty = true;
     });
     let lastTime = -1;
+    let lastSession: string | undefined;
+    let lastFrame = performance.now();
+    let settling = false;
     let raf = 0,
       lastLabels = '',
       lastRfidLabel = 'RFID · PRONTO';
-    const render = () => {
+    const render = (now: number) => {
       const s = state.current;
-      if (!dirty && lastTime === s.time) {
+      const delta = (now - lastFrame) / 1000;
+      lastFrame = now;
+      if (
+        !dirty &&
+        lastTime === s.time &&
+        !settling &&
+        (reduced || now > s.live.movingUntil + 250)
+      ) {
         raf = requestAnimationFrame(render);
         return;
       }
       dirty = false;
+      settling = false;
       lastTime = s.time;
-      const t = s.trip;
-      const phaseTime = t
-        ? Math.max(
-            t.start,
-            ...[
-              t.approach,
-              t.pickup,
-              t.lifted,
-              t.scanStart,
-              t.scanEnd,
-              t.arrived,
-              t.drop,
-              t.end,
-            ].filter((time): time is number => time !== undefined && time <= s.time),
-          )
-        : s.time;
-      const p = pose(reduced ? { ...s, time: phaseTime } : s);
-      carriage.position.x = p.x;
-      screw.rotation.x = p.x * 8;
-      const scannedUnit =
-        s.trip?.scanStart !== undefined &&
-        s.trip.scanEnd !== undefined &&
-        s.time >= s.trip.scanStart &&
-        s.time <= s.trip.scanEnd + 0.3
-          ? s.units.find((u) => u.id === s.trip?.unit)
-          : undefined;
-      const nextRfidLabel = scannedUnit ? `RFID · ${scannedUnit.id}` : 'RFID · PRONTO';
+      const sameSession = lastSession === s.live.session;
+      lastSession = s.live.session;
+      const p = reduced ? s.live.pose : s.live.poseAt(now);
+      const smooth = sameSession && !reduced;
+      const follow = (current: number, target: number, rate: number) => {
+        if (Math.abs(current - target) < 0.002) return target;
+        settling = true;
+        return T.MathUtils.damp(current, target, rate, delta);
+      };
+      const x = smooth ? follow(carriage.position.x, p.x, 30) : p.x;
+      const input = s.units
+        .filter((u) => u.location.startsWith('IN'))
+        .sort((a, b) => a.location.localeCompare(b.location));
+      const outputCount = s.units.filter((u) => u.location.startsWith('OUT')).length;
+      carriage.position.x = x;
+      screw.rotation.x = x * 8;
+      const readRfid = s.live.rfid;
+      const nextRfidLabel = readRfid ? `RFID · ${readRfid}` : 'RFID · PRONTO';
       if (nextRfidLabel !== lastRfidLabel) {
         lastRfidLabel = nextRfidLabel;
         rfidLabel(nextRfidLabel);
       }
-      const rfidActive = scannedUnit !== undefined;
+      const rfidActive = Boolean(readRfid);
       const ledMaterial = rfidLed.material as T.MeshStandardMaterial;
       rfidLed.scale.setScalar(rfidActive ? 4 : 1);
       ledMaterial.color.set(rfidActive ? 'rgb(255, 0, 0)' : '#15fc00');
@@ -304,33 +348,62 @@ export default function Scene({
       ledMaterial.emissiveIntensity = rfidActive ? 1.4 : 0.4;
       beamMaterial.opacity = rfidActive ? 0.38 : 0.06;
       beamMaterial.emissiveIntensity = rfidActive ? 1.1 : 0.3;
-      const y = p.y;
+      const y = smooth ? follow(head.position.y, p.y, 32) : p.y;
       head.position.y = y;
       claws.forEach((c) => (c.position.y = y - 0.22));
       rod.position.y = (4.1 + y) / 2;
       rod.scale.y = (4.1 - y) / 2;
+      const visibleUnits = new Set(s.units.map((u) => u.id));
+      for (const id of Object.keys(meshes)) {
+        const visible = visibleUnits.has(id);
+        meshes[id].visible = labels[id].visible = visible;
+      }
       for (const u of s.units) {
+        const existing = meshes[u.id]?.visible;
+        if (!meshes[u.id]) addUnit(u);
         const m = meshes[u.id];
         if (u.location === 'TRANS') {
-          const t = s.trip!;
-          m.position.set(p.carrying ? p.x : positions[t.to], p.carrying ? y - 0.38 : 1.05, 0);
-        } else m.position.set(positions[u.location], 1.05, 0);
+          m.position.set(x, y - 0.38, 0);
+        } else {
+          const z = u.location.startsWith('IN')
+            ? input.indexOf(u)
+            : u.location.startsWith('OUT')
+              ? outputCount - 1 - Number(u.location.slice(3))
+              : 0;
+          const unitX = positionX(u.location);
+          const unitZ = z * conveyorPitch;
+          m.position.set(
+            unitX,
+            1.05,
+            smooth && existing && m.position.x === unitX ? follow(m.position.z, unitZ, 13) : unitZ,
+          );
+        }
+        (m.material as T.MeshStandardMaterial).color.set(
+          u.location.startsWith('OUT') && u.reviewed
+            ? u.rejected
+              ? '#fa7983'
+              : '#68e2ab'
+            : '#9ec4d4',
+        );
         labels[u.id].position.copy(m.position).add(new T.Vector3(0, 0.5, 0));
       }
-      const labelKey = Math.floor(s.time * 5).toString() + s.status;
+      const labelKey = s.time.toString();
       if (labelKey !== lastLabels) {
         lastLabels = labelKey;
-        for (const name of ['M1', 'M2', 'M3']) {
-          const u = s.units.find((u) => u.location === name);
+        for (const name of Object.keys(displays)) {
+          const machine = s.live.machines[name];
+          const remaining = machine?.tempo_restante_ms;
           displays[name](
-            u
-              ? u.until
-                ? `${u.product} · E${u.step + 1} · ${Math.max(0, u.until - s.time).toFixed(1)}s`
-                : `${u.product} · AGUARDA`
-              : 'LIVRE',
+            remaining != null
+              ? `${(remaining / 1000).toFixed(1)}s`
+              : (machine?.estado ?? 'livre').replaceAll('_', ' ').toUpperCase(),
           );
           (lamps[name].material as T.MeshStandardMaterial).color.set(
-            u?.until ? '#52f5bb' : u ? '#ffc15b' : '#607d8b',
+            remaining != null
+              ? '#52f5bb'
+              : !machine || machine.estado === 'livre'
+                ? '#607d8b'
+                : '#ffc15b',
           );
         }
       }
@@ -338,7 +411,7 @@ export default function Scene({
       renderer.render(scene, camera);
       raf = requestAnimationFrame(render);
     };
-    render();
+    render(performance.now());
     const lost = (e: Event) => {
       e.preventDefault();
       setError(

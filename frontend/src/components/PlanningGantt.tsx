@@ -1,7 +1,18 @@
 import { useId, useState } from 'react';
 import type { Plan } from '../api/types';
 
-const colors = ['#236650', '#416fa3', '#8b5a91', '#a26728', '#477f83', '#9b4d59'];
+const colors = [
+  '#084ce0',
+  '#08774c',
+  '#6e34cc',
+  '#9d5018',
+  '#116a7a',
+  '#a83462',
+  '#516b1e',
+  '#674232',
+  '#6b5577',
+  '#555e70',
+];
 
 export default function PlanningGantt({ plan }: { plan: Plan }) {
   const id = useId();
@@ -61,7 +72,7 @@ export default function PlanningGantt({ plan }: { plan: Plan }) {
                 y={top + index * rowHeight}
                 width={width}
                 height={rowHeight}
-                fill={index % 2 ? '#ffffff' : '#f5f7f1'}
+                fill={index % 2 ? '#ffffff' : '#edf2fa'}
               />
               <text x="12" y={top + index * rowHeight + 28} className="gantt-machine">
                 <title>

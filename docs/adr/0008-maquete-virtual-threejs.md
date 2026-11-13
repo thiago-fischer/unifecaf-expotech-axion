@@ -4,6 +4,10 @@
 - Data: 20/10/2026
 - Relacionada: [SPEC-0007](../specs/0007-maquete-virtual.md)
 
+Na interface atual, a cena Three.js acompanha o controlador simulado via backend,
+conforme a [ADR-011](0011-api-controlador-maquete.md). A decisão abaixo registra
+a implementação original da demonstração local, removida do frontend.
+
 ## Contexto
 
 O responsável autorizou implementar uma maquete animada com acabamento 3D,

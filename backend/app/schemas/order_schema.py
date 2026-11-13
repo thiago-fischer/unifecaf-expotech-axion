@@ -15,7 +15,7 @@ class OrderItemCreate(BaseModel):
 class OrderCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    items: Annotated[list[OrderItemCreate], Field(min_length=1, strict=True)]
+    items: Annotated[list[OrderItemCreate], Field(min_length=1, max_length=10, strict=True)]
 
 
 class OrderItemRead(BaseModel):

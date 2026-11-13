@@ -192,6 +192,13 @@ def test_openapi(client: TestClient) -> None:
         "/orders",
         "/orders/{order_id}",
         "/orders/{order_id}/plan",
+        "/orders/{order_id}/plan/queues",
+        "/orders/{order_id}/executions",
+        "/orders/{order_id}/executions/{execution_id}",
+        "/simulation/status",
+        "/simulation/reset",
+        "/simulation/speed",
+        "/controller/events",
     }
     assert {"201", "422"} <= set(document["paths"]["/products"]["post"]["responses"])
     assert {"200", "404", "422"} <= set(

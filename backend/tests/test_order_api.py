@@ -209,3 +209,20 @@ def test_openapi(client: TestClient) -> None:
         assert schemas[name]["additionalProperties"] is False
     assert set(schemas["OrderRead"]["properties"]) == {"id", "items"}
     assert set(schemas["OrderItemRead"]["properties"]) == {"product_id", "quantity"}
+
+
+def test_order_product_limit(client: TestClient, products: list[dict[str, object]]) -> None:
+    template = {key: value for key, value in products[0].items() if key != "id"}
+    for index in range(8):
+        response = client.post("/products", json={**template, "name": f"Produto {index}"})
+        assert response.status_code == 201
+        products.append(response.json())
+    items = [{"product_id": product["id"], "quantity": 2} for product in products]
+    assert client.post("/orders", json={"items": items}).status_code == 201
+    extra = client.post("/products", json={**template, "name": "Produto extra"}).json()
+    response = client.post(
+        "/orders", json={"items": [*items, {"product_id": extra["id"], "quantity": 1}]}
+    )
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["type"] == "too_long"
+    assert len(client.get("/orders").json()) == 1

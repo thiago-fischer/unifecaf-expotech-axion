@@ -190,6 +190,7 @@ axion/
 - [ADR-005 — SQLAlchemy, Pydantic e Alembic](adr/0005-sqlalchemy-pydantic-alembic.md)
 - [ADR-007 — Frontend React local](adr/0007-react-frontend.md)
 - [ADR-009 — PostgreSQL como banco em rede](adr/0009-postgresql-banco-em-rede.md)
+- [ADR-012 — Captura sanitizada de rede](adr/0012-captura-sanitizada-de-rede.md)
 
 ## Maquete virtual
 

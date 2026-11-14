@@ -6,7 +6,8 @@ import type { Area, Navigate } from './components/Common';
 import logo from './assets/axion.png';
 
 const Simulation = lazy(() => import('./pages/Simulation'));
-const areas: Area[] = ['Produção', 'Planejamento', 'Maquete virtual', 'Sobre'];
+const Network = lazy(() => import('./pages/Network'));
+const areas: Area[] = ['Produção', 'Planejamento', 'Maquete virtual', 'Rede', 'Sobre'];
 
 export default function App() {
   const [area, setArea] = useState<Area>('Produção');
@@ -48,6 +49,11 @@ export default function App() {
         {area === 'Maquete virtual' && (
           <Suspense fallback={<p role="status">Carregando maquete…</p>}>
             <Simulation initialOrder={orderId} />
+          </Suspense>
+        )}
+        {area === 'Rede' && (
+          <Suspense fallback={<p role="status">Carregando painel de rede…</p>}>
+            <Network />
           </Suspense>
         )}
         {area === 'Sobre' && <About />}

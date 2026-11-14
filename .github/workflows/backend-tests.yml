@@ -74,6 +74,9 @@ jobs:
       - name: Run backend tests
         run: uv run --locked pytest -q
 
+      - name: Run sanitized capture parser tests
+        run: uv run --locked python -m unittest discover -s ../network_capture/tests -v
+
       - name: Run optimizer tests
         run: uv run --locked pytest -q ../optimizer/tests
 

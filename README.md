@@ -158,8 +158,8 @@ Métricas previstas:
 A primeira integração de observabilidade usa **Grafana** local em container,
 conectado ao PostgreSQL com uma credencial somente leitura. O dashboard
 provisionado pela [SPEC-0010](docs/specs/0010-grafana-postgresql.md) apresenta
-somente cadastros e ordens persistidos. Métricas da execução simulada ou física,
-telemetria, RFID, QA e rede continuam planejadas.
+cadastros e ordens persistidos. A SPEC-0011 acrescenta métricas agregadas de
+rede; execução física, telemetria, RFID e QA continuam fora desse histórico.
 
 ### Segurança de rede
 
@@ -168,9 +168,11 @@ Responsável pela análise da comunicação entre os componentes conectados da l
 O projeto deverá demonstrar um cenário com uma vulnerabilidade real de comunicação ou infraestrutura, seguido de análise e mitigação.
 
 O painel unificado de rede, a captura sanitizada com TShark e o dashboard
-histórico no Grafana estão propostos na
-[SPEC-0011](docs/specs/0011-painel-redes-tshark-grafana.md). Essa entrega ainda
-não está implementada nem aceita e não define o protocolo da maquete física.
+histórico no Grafana estão implementados conforme a
+[SPEC-0011](docs/specs/0011-painel-redes-tshark-grafana.md). A captura opcional
+é ativada pelo profile `network-lab`; consulte o
+[README do coletor](network_capture/README.md). A entrega não define o protocolo
+da maquete física.
 
 ## Maquete
 

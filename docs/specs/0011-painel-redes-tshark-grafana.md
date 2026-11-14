@@ -1,7 +1,7 @@
 # SPEC-0011 — Painel de redes com TShark e Grafana
 
-> **Status:** Proposta. Aguarda aprovação do responsável do projeto e revisão
-> das decisões de captura, retenção e segurança.
+> **Status:** Implementada e validada localmente em 14/11/2026; aguarda revisão
+> de outro integrante e execução da CI no Pull Request.
 >
 > **Data:** 14/11/2026
 >
@@ -633,28 +633,28 @@ hardware, Wi-Fi ou maquete física.
 
 ## 16. Critérios de aceite
 
-- [ ] Decisões de captura, retenção e capacidades aprovadas.
-- [ ] Serviço TShark usa versão fixa e profile `network-lab`.
-- [ ] Container não usa `privileged`, socket Docker nem porta publicada.
-- [ ] Nenhum PCAP, payload, header sensível ou SQL é persistido.
-- [ ] Endpoint interno exige token e fica bloqueado pelo Nginx.
-- [ ] Lotes repetidos não duplicam métricas.
-- [ ] Migrations criam e removem as tabelas de rede de forma reproduzível.
-- [ ] Backend preserva arquitetura em camadas.
-- [ ] Buffer ao vivo respeita limite e informa rotação.
-- [ ] Retenção remove somente dados expirados.
-- [ ] `/network/overview` representa saúde sem usar o socket Docker.
-- [ ] `/network/events` pagina por sequência e limita resultados.
-- [ ] Frontend possui área `Rede` responsiva e acessível.
-- [ ] Conexões observadas e apenas configuradas são diferenciadas.
-- [ ] Frontend não controla a captura nem executa ataques.
-- [ ] Link para Grafana funciona sem encaminhar credenciais.
-- [ ] Dashboard `Axion — Rede e comunicação` é provisionado.
-- [ ] Consultas do Grafana são somente leitura e usam dados reais.
-- [ ] Role do Grafana não consegue alterar as tabelas de rede.
-- [ ] Falha da captura ou do Grafana não interrompe o Axion.
-- [ ] Testes automatizados e integração local são aprovados.
-- [ ] Documentação informa limites da captura e ausência de hardware real.
+- [x] Decisões de captura, retenção e capacidades aprovadas na ADR-012.
+- [x] Serviço TShark usa versão fixa e profile `network-lab`.
+- [x] Container não usa `privileged`, socket Docker nem porta publicada.
+- [x] Nenhum PCAP, payload, header sensível ou SQL é persistido.
+- [x] Endpoint interno exige token e fica bloqueado pelo Nginx.
+- [x] Lotes repetidos não duplicam métricas.
+- [x] Migrations criam e removem as tabelas de rede de forma reproduzível.
+- [x] Backend preserva arquitetura em camadas.
+- [x] Buffer ao vivo respeita limite e informa rotação.
+- [x] Retenção remove somente dados expirados.
+- [x] `/network/overview` representa saúde sem usar o socket Docker.
+- [x] `/network/events` pagina por sessão e sequência e limita resultados.
+- [x] Frontend possui área `Rede` responsiva e acessível.
+- [x] Conexões observadas e apenas configuradas são diferenciadas.
+- [x] Frontend não controla a captura nem executa ataques.
+- [x] Link para Grafana funciona sem encaminhar credenciais.
+- [x] Dashboard `Axion — Rede e comunicação` é provisionado.
+- [x] Consultas do Grafana são somente leitura e usam dados reais.
+- [x] Role do Grafana não consegue alterar as tabelas de rede.
+- [x] Falha da captura ou do Grafana não interrompe o Axion.
+- [x] Testes automatizados e integração local são aprovados.
+- [x] Documentação informa limites da captura e ausência de hardware real.
 
 ## 17. Sequência de implementação proposta
 
@@ -668,19 +668,18 @@ hardware, Wi-Fi ou maquete física.
 8. Executar validação de segurança, volume, falhas e integração ponta a ponta.
 9. Atualizar status da spec somente com evidências registradas.
 
-## 18. Decisões pendentes
+## 18. Decisões resolvidas e limites mantidos
 
-- versão e imagem-base exatas do TShark;
-- necessidade de ADR específica para captura privilegiada e telemetria;
-- limites finais de retenção após medição de volume;
-- conjunto final de rotas normalizadas;
-- métricas exigidas pelo professor para a disciplina;
-- vulnerabilidade que será demonstrada no pitch;
-- eventual captura adicional no namespace do PostgreSQL;
-- protocolo futuro da maquete física.
-
-Nenhuma dessas possibilidades deve ser apresentada como funcionalidade já
-implementada ou como decisão aceita enquanto esta spec permanecer proposta.
+- Debian 12.12 slim por digest e TShark `4.0.17-0+deb12u3` foram fixados.
+- A [ADR-012](../adr/0012-captura-sanitizada-de-rede.md) registra capacidades,
+  sanitização, retenção, cursor e mitigação da realimentação da captura.
+- A retenção inicial permanece em 24 horas para lotes e 7 dias para agregados,
+  com buckets de 10 segundos e buffer de 200 eventos.
+- Segmentos numéricos e UUID são normalizados; query strings são descartadas.
+- Os oito painéis da seção 11 definem as métricas entregues nesta versão.
+- Captura adicional no namespace do PostgreSQL foi excluída do MVP.
+- A vulnerabilidade do pitch e o protocolo da maquete física permanecem fora do
+  escopo desta implementação e exigem decisão própria quando forem definidos.
 
 ## 19. Referências
 

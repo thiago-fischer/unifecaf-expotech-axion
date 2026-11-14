@@ -18,6 +18,7 @@ DOMAIN_TABLES = (
     "product_steps",
     "production_orders",
     "production_order_items",
+    "network_metric_samples",
 )
 
 
@@ -101,16 +102,24 @@ def prepare_reader(
         cursor.execute(sql.SQL("GRANT USAGE ON SCHEMA public TO {}").format(reader_id))
         cursor.execute(sql.SQL("ALTER ROLE {} SET search_path TO public").format(reader_id))
 
-        for table in tables:
+        cursor.execute(
+            "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename"
+        )
+        approved = set(tables)
+        for (table,) in cursor.fetchall():
             table_id = sql.Identifier("public", table)
             cursor.execute(
                 sql.SQL("REVOKE ALL PRIVILEGES ON TABLE {} FROM {}").format(table_id, reader_id)
             )
-            cursor.execute(sql.SQL("GRANT SELECT ON TABLE {} TO {}").format(table_id, reader_id))
+            if table in approved:
+                cursor.execute(
+                    sql.SQL("GRANT SELECT ON TABLE {} TO {}").format(table_id, reader_id)
+                )
 
         cursor.execute(
             sql.SQL(
-                "ALTER DEFAULT PRIVILEGES FOR ROLE {} IN SCHEMA public GRANT SELECT ON TABLES TO {}"
+                "ALTER DEFAULT PRIVILEGES FOR ROLE {} IN SCHEMA public "
+                "REVOKE SELECT ON TABLES FROM {}"
             ).format(sql.Identifier(owner), reader_id)
         )
 

@@ -5,8 +5,9 @@ Integração local implementada pela
 PostgreSQL com uma role exclusiva e somente de leitura e apresenta cadastros e
 ordens já persistidos pelo backend.
 
-Esta entrega não apresenta planejamento, execução simulada, RFID, QA,
-telemetria, hardware ou métricas de rede, pois esses dados não estão persistidos.
+Além do dashboard de cadastros, a SPEC-0011 provisiona **Axion — Rede e
+comunicação** com agregados sanitizados de tráfego. Planejamento, RFID, QA e
+hardware continuam fora dos dados persistidos no Grafana.
 
 ## Componentes
 
@@ -15,6 +16,7 @@ telemetria, hardware ou métricas de rede, pois esses dados não estão persisti
 - `provisioning/datasources/postgresql.yaml`: datasource `Axion PostgreSQL`.
 - `provisioning/dashboards/dashboards.yaml`: provider de dashboards.
 - `dashboards/dados-persistidos.json`: dashboard inicial com oito painéis.
+- `dashboards/rede-comunicacao.json`: histórico agregado de comunicação.
 - volume `axion_grafana_data`: estado interno local do Grafana.
 
 O datasource e o dashboard são versionados e montados como somente leitura. O

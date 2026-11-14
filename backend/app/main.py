@@ -9,12 +9,14 @@ from sqlalchemy.orm import sessionmaker
 
 from app.config import Settings
 from app.controllers.machine_controller import router
+from app.controllers.network_controller import router as network_router
 from app.controllers.order_controller import router as order_router
 from app.controllers.planning_controller import router as planning_router
 from app.controllers.product_controller import router as product_router
 from app.database.database import build_engine
 from app.services.controller_client import ControllerClient
 from app.services.execution_service import ExecutionManager
+from app.services.network_service import NetworkEventBuffer
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +37,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application = FastAPI(title="Axion API", version="0.1.0", lifespan=lifespan)
     application.state.session_factory = sessionmaker(engine, expire_on_commit=False)
     application.state.execution_manager = execution_manager
+    application.state.settings = settings
+    application.state.network_event_buffer = NetworkEventBuffer(settings.network_event_buffer_size)
     application.include_router(router)
     application.include_router(product_router)
     application.include_router(order_router)
     application.include_router(planning_router)
+    application.include_router(network_router)
 
     @application.exception_handler(SQLAlchemyError)
     async def persistence_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:

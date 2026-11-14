@@ -122,9 +122,15 @@ test('guia Sobre apresenta o projeto e a busca pelo menor tempo', async ({ page 
     'Produção',
     'Planejamento',
     'Maquete virtual',
+    'Rede',
     'Sobre',
   ]);
   await expect(page.getByRole('img', { name: 'AXION' })).toBeVisible();
+  await nav.getByRole('button', { name: 'Rede' }).click();
+  await expect(page.getByRole('heading', { name: 'Rede' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Componentes' })).toBeVisible();
+  await page.getByRole('tab', { name: 'Captura ao vivo' }).click();
+  await expect(page.getByText('Captura desativada')).toBeVisible();
   await nav.getByRole('button', { name: 'Sobre' }).click();
   await expect(page.getByRole('heading', { name: 'Sobre o Axion' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Como funciona' })).toBeVisible();

@@ -554,3 +554,19 @@ PostgreSQL 17 e cria bancos descartáveis, usando migrations Alembic, `TestClien
 e um subprocesso controlado. Ela não acessa o banco de desenvolvimento, serviços
 externos ou a maquete. As credenciais são locais ao job e não são secrets de
 produção. Esta etapa não realiza deploy nem valida integração com hardware.
+## API de rede e captura sanitizada
+
+A SPEC-0011 adiciona `POST /network/capture/events`, o heartbeat interno,
+`GET /network/overview` e `GET /network/events`. O endpoint de eventos exige
+`X-Axion-Capture-Token`; o frontend bloqueia os dois caminhos internos.
+
+As migrations criam `network_capture_batches` para idempotência e
+`network_metric_samples` para agregados. Eventos individuais ficam somente no
+buffer circular do processo. As configurações e limites estão no `.env.example`
+da raiz.
+
+Testes focados:
+
+```powershell
+uv run --locked pytest -q tests/test_network_api.py tests/test_grafana_reader.py tests/test_grafana_provisioning.py
+```

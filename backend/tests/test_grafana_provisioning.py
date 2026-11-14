@@ -6,6 +6,7 @@ from app.config import BACKEND_DIR
 ROOT = BACKEND_DIR.parent
 GRAFANA_DIR = ROOT / "infrastructure" / "grafana"
 DASHBOARD_PATH = GRAFANA_DIR / "dashboards" / "dados-persistidos.json"
+NETWORK_DASHBOARD_PATH = GRAFANA_DIR / "dashboards" / "rede-comunicacao.json"
 DATASOURCE_PATH = GRAFANA_DIR / "provisioning" / "datasources" / "postgresql.yaml"
 DASHBOARD_PROVIDER_PATH = GRAFANA_DIR / "provisioning" / "dashboards" / "dashboards.yaml"
 
@@ -53,3 +54,25 @@ def test_grafana_provisioning_uses_environment_and_read_only_mount_paths() -> No
     assert "grafana_reader_local" not in datasource
     assert "path: /etc/grafana/dashboards" in provider
     assert "allowUiUpdates: false" in provider
+
+
+def test_network_dashboard_uses_aggregate_metrics_and_time_macros() -> None:
+    dashboard = json.loads(NETWORK_DASHBOARD_PATH.read_text(encoding="utf-8"))
+    assert dashboard["uid"] == "axion-rede-comunicacao"
+    assert dashboard["title"] == "Axion — Rede e comunicação"
+    assert dashboard["editable"] is False
+    assert {panel["title"] for panel in dashboard["panels"]} == {
+        "Requisições por minuto",
+        "Erros por classe de status",
+        "Bytes observados por conexão",
+        "Latência média ponderada por conexão",
+        "Retransmissões TCP por intervalo",
+        "Distribuição por protocolo",
+        "Disponibilidade de amostras por origem e destino",
+        "Agregados recentes",
+    }
+    queries = [target["rawSql"] for panel in dashboard["panels"] for target in panel["targets"]]
+    assert all(query.lstrip().upper().startswith("SELECT ") for query in queries)
+    assert all("network_metric_samples" in query for query in queries)
+    assert all("$__timeFilter(bucket_start)" in query for query in queries)
+    assert "SUM(latency_sum_ms) / NULLIF(SUM(latency_count), 0)" in "\n".join(queries)

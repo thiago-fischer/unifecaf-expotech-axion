@@ -57,8 +57,15 @@ def test_grafana_role_is_idempotent_and_read_only(migrated_database: URL) -> Non
                     for panel in dashboard["panels"]:
                         cursor.execute(panel["targets"][0]["rawSql"])
                         cursor.fetchall()
-                    cursor.execute(sql.SQL("SELECT * FROM {}").format(sql.Identifier(future_table)))
-                    assert cursor.fetchall() == []
+                    cursor.execute("SELECT COUNT(*) FROM network_metric_samples")
+                    assert cursor.fetchone() == (0,)
+
+                for forbidden_table in (future_table, "network_capture_batches"):
+                    with connection.cursor() as cursor, pytest.raises(errors.InsufficientPrivilege):
+                        cursor.execute(
+                            sql.SQL("SELECT * FROM {}").format(sql.Identifier(forbidden_table))
+                        )
+                    connection.rollback()
 
                 mutations = (
                     "INSERT INTO machines (name) VALUES ('Não permitida')",

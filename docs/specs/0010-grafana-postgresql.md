@@ -1,7 +1,7 @@
 # SPEC-0010 — Grafana com PostgreSQL
 
-> **Status:** Aceita para implementação pelo responsável do projeto em
-> 14/11/2026. Implementação e validação pendentes.
+> **Status:** Implementada e validada localmente em 14/11/2026; execução da CI
+> e revisão por outro integrante pendentes.
 >
 > **Data:** 14/11/2026
 >
@@ -326,26 +326,48 @@ física, comunicação sem fio nem observabilidade da execução real.
 
 ## 13. Critérios de aceite
 
-- [ ] Serviço Grafana usa `grafana/grafana:13.3.1`, sem tag `latest`.
-- [ ] Grafana sobe pelo Compose e atinge estado saudável.
-- [ ] Porta do Grafana é publicada somente em `127.0.0.1` por padrão.
-- [ ] Estado interno do Grafana usa volume nomeado próprio.
-- [ ] Datasource PostgreSQL é provisionado automaticamente.
-- [ ] Dashboard `Axion — Dados persistidos` é provisionado automaticamente.
-- [ ] Role exclusiva do Grafana é criada ou atualizada de forma idempotente.
-- [ ] Role do Grafana consegue executar os `SELECT` necessários.
-- [ ] Role do Grafana não consegue alterar relações de domínio.
-- [ ] Backend permanece o único caminho para mutações de negócio.
-- [ ] Dashboard não apresenta estado em memória como dado persistido.
-- [ ] Painéis obrigatórios funcionam com catálogo-base e com banco sem ordens.
-- [ ] Credenciais reais não são versionadas nem exibidas em logs.
-- [ ] Cadastro público e acesso anônimo permanecem desabilitados.
-- [ ] PostgreSQL e Grafana não são expostos à LAN na configuração padrão.
-- [ ] Comandos de instalação, execução e validação estão documentados.
-- [ ] Testes e validações executados são registrados sem alegar hardware real.
+- [x] Serviço Grafana usa `grafana/grafana:13.3.1`, sem tag `latest`.
+- [x] Grafana sobe pelo Compose e atinge estado saudável.
+- [x] Porta do Grafana é publicada somente em `127.0.0.1` por padrão.
+- [x] Estado interno do Grafana usa volume nomeado próprio.
+- [x] Datasource PostgreSQL é provisionado automaticamente.
+- [x] Dashboard `Axion — Dados persistidos` é provisionado automaticamente.
+- [x] Role exclusiva do Grafana é criada ou atualizada de forma idempotente.
+- [x] Role do Grafana consegue executar os `SELECT` necessários.
+- [x] Role do Grafana não consegue alterar relações de domínio.
+- [x] Backend permanece o único caminho para mutações de negócio.
+- [x] Dashboard não apresenta estado em memória como dado persistido.
+- [x] Painéis obrigatórios funcionam com catálogo-base e com banco sem ordens.
+- [x] Credenciais reais não são versionadas nem exibidas em logs.
+- [x] Cadastro público e acesso anônimo permanecem desabilitados.
+- [x] PostgreSQL e Grafana não são expostos à LAN na configuração padrão.
+- [x] Comandos de instalação, execução e validação estão documentados.
+- [x] Testes e validações executados são registrados sem alegar hardware real.
 
-Os itens permanecem desmarcados porque esta spec está aceita, mas ainda não foi
-implementada.
+### 13.1 Evidências da validação local
+
+Validação executada em 14/11/2026:
+
+- `docker compose config --quiet`: configuração válida;
+- `docker compose up -d --build`: ambiente completo iniciado;
+- Grafana 13.3.1 saudável em `127.0.0.1:3000`;
+- datasource `Axion PostgreSQL`: `Database Connection OK`;
+- dashboard provisionado com oito painéis e todas as consultas respondendo
+  `200` pela API do Grafana;
+- role `grafana_reader`: leitura permitida e `INSERT` rejeitado por permissão;
+- preparação da role repetida com sucesso em volume PostgreSQL existente;
+- reinício do Grafana preservando e reprovisionando o dashboard;
+- acesso ao dashboard sem autenticação rejeitado com `401`;
+- cadastro público e acesso anônimo confirmados como desabilitados;
+- credenciais administrativas e do datasource ausentes dos logs consultados;
+- inspeção headless do dashboard sem erro de plugin ou datasource;
+- 269 testes do backend aprovados;
+- 56 testes do otimizador aprovados;
+- Ruff lint e formatação aprovados para backend e otimizador.
+
+Os testes são de software e rede local. Nenhuma validação em hardware real foi
+executada. A execução da CI e a revisão por outro integrante continuam
+pendentes.
 
 ## 14. Rollback
 

@@ -14,6 +14,8 @@ O [frontend React](frontend/README.md), conforme a SPEC-0006, permite usar
 consultar máquinas, cadastrar produtos e criar ordens de até 10 produtos distintos.
 A interface inclui planejamento com Gantt, acompanhamento da maquete virtual
 conectada ao controlador simulado e uma guia Sobre.
+O Grafana local consulta os dados persistidos no PostgreSQL com uma credencial
+somente de leitura e carrega um dashboard provisionado pela SPEC-0010.
 Veja os comandos de instalação,
 execução e testes no [README do backend](backend/README.md).
 As demais funcionalidades descritas abaixo permanecem planejadas.
@@ -22,9 +24,10 @@ A proposta integra software, dispositivos embarcados, inteligência computaciona
 
 ## Execução completa com Docker Compose
 
-O Compose da raiz constrói e inicia o frontend, o backend e o PostgreSQL. Ele
-também aplica as migrations Alembic em uma etapa separada antes de liberar a
-API. O pacote Python local de otimização é incluído na imagem do backend.
+O Compose da raiz constrói e inicia o frontend, o backend, o controlador
+simulado, o PostgreSQL e o Grafana. Ele aplica as migrations Alembic, prepara a
+credencial somente leitura do Grafana e somente então libera os consumidores do
+banco. O pacote Python local de otimização é incluído na imagem do backend.
 
 ```powershell
 Copy-Item .env.example .env
@@ -36,6 +39,9 @@ saudáveis, acesse a interface em <http://127.0.0.1:5173> e a documentação da
 API em <http://127.0.0.1:8000/docs>. As portas podem ser alteradas no `.env`.
 O frontend serve o build estático pelo Nginx e encaminha `/api` internamente
 para o backend, sem expor o PostgreSQL à rede local.
+O Grafana fica em <http://127.0.0.1:3000>, com as credenciais locais definidas
+no `.env`, e abre o dashboard **Axion — Dados persistidos** na pasta **Axion**.
+Consulte o [README do Grafana](infrastructure/grafana/README.md).
 
 Para executar em segundo plano ou encerrar:
 
@@ -149,12 +155,11 @@ Métricas previstas:
 - taxa de aprovação na validação final;
 - falhas registradas.
 
-A ferramenta prevista para acompanhamento das métricas é o **Grafana**.
-
-A primeira integração local do Grafana com o PostgreSQL está aceita para
-implementação na [SPEC-0010](docs/specs/0010-grafana-postgresql.md). Essa
-entrega consultará somente dados persistidos com uma credencial de leitura;
-container e dashboards ainda não estão implementados.
+A primeira integração de observabilidade usa **Grafana** local em container,
+conectado ao PostgreSQL com uma credencial somente leitura. O dashboard
+provisionado pela [SPEC-0010](docs/specs/0010-grafana-postgresql.md) apresenta
+somente cadastros e ordens persistidos. Métricas da execução simulada ou física,
+telemetria, RFID, QA e rede continuam planejadas.
 
 ### Segurança de rede
 

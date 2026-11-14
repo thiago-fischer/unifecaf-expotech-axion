@@ -131,16 +131,16 @@ O protocolo de comunicação ainda não foi definido.
 
 ### Observabilidade
 
-**Tecnologia prevista:**
+**Tecnologia implementada para dados persistidos:**
 
 - Grafana
 
 Responsável pela visualização das métricas do processo produtivo.
 
-A primeira entrega está aceita para implementação na
+A primeira entrega está implementada pela
 [SPEC-0010](specs/0010-grafana-postgresql.md): Grafana local em container,
 datasource PostgreSQL somente leitura e dashboard restrito aos dados já
-persistidos. Container, provisioning e dashboards permanecem pendentes.
+persistidos. Telemetria e métricas da execução permanecem planejadas.
 
 ## Organização do Repositório
 

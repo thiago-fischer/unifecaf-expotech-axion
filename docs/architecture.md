@@ -137,6 +137,11 @@ O protocolo de comunicação ainda não foi definido.
 
 Responsável pela visualização das métricas do processo produtivo.
 
+A primeira entrega está aceita para implementação na
+[SPEC-0010](specs/0010-grafana-postgresql.md): Grafana local em container,
+datasource PostgreSQL somente leitura e dashboard restrito aos dados já
+persistidos. Container, provisioning e dashboards permanecem pendentes.
+
 ## Organização do Repositório
 
 O projeto utilizará monorepo.

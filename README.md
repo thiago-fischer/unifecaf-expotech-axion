@@ -151,6 +151,11 @@ Métricas previstas:
 
 A ferramenta prevista para acompanhamento das métricas é o **Grafana**.
 
+A primeira integração local do Grafana com o PostgreSQL está aceita para
+implementação na [SPEC-0010](docs/specs/0010-grafana-postgresql.md). Essa
+entrega consultará somente dados persistidos com uma credencial de leitura;
+container e dashboards ainda não estão implementados.
+
 ### Segurança de rede
 
 Responsável pela análise da comunicação entre os componentes conectados da linha de produção.

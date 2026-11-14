@@ -167,6 +167,11 @@ Responsável pela análise da comunicação entre os componentes conectados da l
 
 O projeto deverá demonstrar um cenário com uma vulnerabilidade real de comunicação ou infraestrutura, seguido de análise e mitigação.
 
+O painel unificado de rede, a captura sanitizada com TShark e o dashboard
+histórico no Grafana estão propostos na
+[SPEC-0011](docs/specs/0011-painel-redes-tshark-grafana.md). Essa entrega ainda
+não está implementada nem aceita e não define o protocolo da maquete física.
+
 ## Maquete
 
 A maquete representa uma linha de produção inteligente em escala reduzida.

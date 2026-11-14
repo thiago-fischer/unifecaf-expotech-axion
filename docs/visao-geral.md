@@ -235,6 +235,11 @@ Essa vulnerabilidade será analisada e posteriormente mitigada, permitindo demon
 
 Os protocolos, ferramentas, técnicas de captura e mecanismos de proteção ainda serão definidos durante o desenvolvimento.
 
+A [SPEC-0011](specs/0011-painel-redes-tshark-grafana.md) propõe, sem status de
+decisão aceita, um painel local com metadados sanitizados do TShark e métricas
+históricas no Grafana. A proposta não cobre captura Wi-Fi nem define o protocolo
+dos dispositivos físicos.
+
 ## 12. Arquitetura de Software
 
 O sistema possuirá uma arquitetura documentada que represente a integração entre interface, backend, persistência, inteligência computacional, observabilidade, dispositivos embarcados e infraestrutura de comunicação.

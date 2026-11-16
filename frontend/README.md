@@ -172,3 +172,11 @@ estados também em texto. **Movimento reduzido** limita as mudanças de posiçã
 A cena é carregada ao abrir a guia. O build pode emitir aviso sobre o tamanho
 do módulo 3D. O contrato e o fluxo do controlador estão na
 [ADR-011](../docs/adr/0011-api-controlador-maquete.md).
+## Painel Rede
+
+A área `Rede` é carregada sob demanda e apresenta visão geral, captura ao vivo e
+indicadores de segurança. Ela consulta somente o backend em `/api/network/*` e
+abre o dashboard histórico do Grafana em outra aba, sem encaminhar credenciais.
+
+O polling usa sessão e sequência, reduz a frequência quando não recebe eventos e
+interrompe timers ao sair da visão. A lista local é limitada a 200 itens.

@@ -1,0 +1,147 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+      "fieldConfig": { "defaults": { "unit": "reqpm" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT $__timeGroupAlias(bucket_start, '1m'), source_service || ' → ' || destination_service AS metric, SUM(request_count) AS value FROM network_metric_samples WHERE $__timeFilter(bucket_start) GROUP BY 1, 2 ORDER BY 1",
+        "refId": "A"
+      }],
+      "title": "Requisições por minuto",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT $__timeGroupAlias(bucket_start, '1m'), COALESCE(status_class, 'sem status') AS metric, SUM(error_count) AS value FROM network_metric_samples WHERE $__timeFilter(bucket_start) GROUP BY 1, 2 ORDER BY 1",
+        "refId": "A"
+      }],
+      "title": "Erros por classe de status",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+      "id": 3,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT $__timeGroupAlias(bucket_start, '1m'), source_service || ' → ' || destination_service AS metric, SUM(bytes_total) AS value FROM network_metric_samples WHERE $__timeFilter(bucket_start) GROUP BY 1, 2 ORDER BY 1",
+        "refId": "A"
+      }],
+      "title": "Bytes observados por conexão",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT $__timeGroupAlias(bucket_start, '1m'), source_service || ' → ' || destination_service AS metric, SUM(latency_sum_ms) / NULLIF(SUM(latency_count), 0) AS value FROM network_metric_samples WHERE $__timeFilter(bucket_start) GROUP BY 1, 2 ORDER BY 1",
+        "refId": "A"
+      }],
+      "title": "Latência média ponderada por conexão",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "id": 5,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT $__timeGroupAlias(bucket_start, '1m'), source_service || ' → ' || destination_service AS metric, SUM(retransmission_count) AS value FROM network_metric_samples WHERE $__timeFilter(bucket_start) GROUP BY 1, 2 ORDER BY 1",
+        "refId": "A"
+      }],
+      "title": "Retransmissões TCP por intervalo",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "id": 6,
+      "options": { "displayLabels": ["name", "percent"], "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT protocol AS metric, SUM(request_count + retransmission_count) AS value FROM network_metric_samples WHERE $__timeFilter(bucket_start) GROUP BY protocol ORDER BY value DESC",
+        "refId": "A"
+      }],
+      "title": "Distribuição por protocolo",
+      "type": "piechart"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "id": 7,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [{
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+        "format": "time_series",
+        "rawQuery": true,
+        "rawSql": "SELECT $__timeGroupAlias(bucket_start, '1m'), source_service || ' → ' || destination_service AS metric, COUNT(*) AS value FROM network_metric_samples WHERE $__timeFilter(bucket_start) GROUP BY 1, 2 ORDER BY 1",
+        "refId": "A"
+      }],
+      "title": "Disponibilidade de amostras por origem e destino",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "id": 8,
+      "options": { "showHeader": true },
+      "targets": [{
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "axion-postgresql" },
+        "format": "table",
+        "rawQuery": true,
+        "rawSql": "SELECT bucket_start AS horário, source_service AS origem, destination_service AS destino, protocol AS protocolo, status_class AS status, request_count AS requisições, error_count AS erros, bytes_total AS bytes, retransmission_count AS retransmissões, latency_sum_ms / NULLIF(latency_count, 0) AS latência_ms FROM network_metric_samples WHERE $__timeFilter(bucket_start) ORDER BY bucket_start DESC LIMIT 100",
+        "refId": "A"
+      }],
+      "title": "Agregados recentes",
+      "type": "table"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 42,
+  "tags": ["axion", "rede", "laboratório"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "Axion — Rede e comunicação",
+  "uid": "axion-rede-comunicacao",
+  "version": 1
+}

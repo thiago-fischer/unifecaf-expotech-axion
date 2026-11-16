@@ -1,0 +1,23 @@
+apiVersion: 1
+
+datasources:
+  - name: Axion PostgreSQL
+    uid: axion-postgresql
+    type: postgres
+    access: proxy
+    url: database:5432
+    user: $__env{GRAFANA_DB_USER}
+    isDefault: true
+    editable: false
+    version: 1
+    jsonData:
+      database: $__env{POSTGRES_DB}
+      sslmode: disable
+      postgresVersion: 1700
+      timescaledb: false
+      maxOpenConns: 5
+      maxIdleConns: 2
+      maxIdleConnsAuto: false
+      connMaxLifetime: 14400
+    secureJsonData:
+      password: $__env{GRAFANA_DB_PASSWORD}

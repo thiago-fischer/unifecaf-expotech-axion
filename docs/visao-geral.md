@@ -233,7 +233,13 @@ Essa vulnerabilidade será analisada e posteriormente mitigada, permitindo demon
 
 `Comunicação vulnerável → Captura/análise → Vulnerabilidade identificada → Mitigação → Comunicação protegida`
 
-Os protocolos, ferramentas, técnicas de captura e mecanismos de proteção ainda serão definidos durante o desenvolvimento.
+O protocolo da maquete física, a vulnerabilidade do pitch e seus mecanismos de
+proteção ainda serão definidos durante o desenvolvimento.
+
+A [SPEC-0011](specs/0011-painel-redes-tshark-grafana.md) implementa um painel
+local com metadados sanitizados do TShark e métricas históricas no Grafana. A
+entrega não cobre captura Wi-Fi nem define o protocolo
+dos dispositivos físicos.
 
 ## 12. Arquitetura de Software
 

@@ -31,6 +31,19 @@ services:
     networks:
       - axion
 
+  grafana-db-init:
+    image: axion-backend
+    command: ["python", "scripts/prepare_grafana_reader.py"]
+    environment:
+      AXION_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-axion}:${POSTGRES_PASSWORD:-axion_local}@database:5432/${POSTGRES_DB:-axion}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:-grafana_reader}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:-grafana_reader_local}
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    networks:
+      - axion
+
   backend:
     image: axion-backend
     build:
@@ -40,6 +53,15 @@ services:
       AXION_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-axion}:${POSTGRES_PASSWORD:-axion_local}@database:5432/${POSTGRES_DB:-axion}
       AXION_CONTROLLER_URL: http://controller:8001
       AXION_CONTROLLER_EVENTS_TOKEN: ${AXION_CONTROLLER_EVENTS_TOKEN:-}
+      AXION_CAPTURE_TOKEN: ${AXION_CAPTURE_TOKEN:-}
+      AXION_NETWORK_CAPTURE_ENABLED: ${AXION_NETWORK_CAPTURE_ENABLED:-false}
+      AXION_NETWORK_EVENT_BUFFER_SIZE: ${AXION_NETWORK_EVENT_BUFFER_SIZE:-200}
+      AXION_NETWORK_BUCKET_SECONDS: ${AXION_NETWORK_BUCKET_SECONDS:-10}
+      AXION_NETWORK_METRICS_RETENTION_HOURS: ${AXION_NETWORK_METRICS_RETENTION_HOURS:-168}
+      AXION_NETWORK_BATCH_RETENTION_HOURS: ${AXION_NETWORK_BATCH_RETENTION_HOURS:-24}
+      AXION_GRAFANA_URL: http://grafana:3000
+      AXION_GRAFANA_PUBLIC_URL: http://127.0.0.1:${GRAFANA_PORT:-3000}
+      AXION_GRAFANA_NETWORK_DASHBOARD_UID: axion-rede-comunicacao
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     healthcheck:
@@ -59,6 +81,26 @@ services:
         condition: service_completed_successfully
     networks:
       - axion
+
+  network-capture:
+    profiles: [network-lab]
+    build:
+      context: .
+      dockerfile: network_capture/Dockerfile
+    environment:
+      AXION_CAPTURE_TOKEN: ${AXION_CAPTURE_TOKEN:-}
+      AXION_CAPTURE_ENDPOINT: http://127.0.0.1:8000
+    network_mode: "service:backend"
+    depends_on:
+      backend:
+        condition: service_healthy
+    cap_drop: [ALL]
+    cap_add: [NET_ADMIN, NET_RAW, SETGID, SETPCAP, SETUID]
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
 
   controller:
     build:
@@ -92,8 +134,44 @@ services:
     networks:
       - axion
 
+  grafana:
+    image: grafana/grafana:13.3.1
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-grafana_admin_local}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      POSTGRES_DB: ${POSTGRES_DB:-axion}
+      GRAFANA_DB_USER: ${GRAFANA_DB_USER:-grafana_reader}
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:-grafana_reader_local}
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - axion_grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/grafana/dashboards:/etc/grafana/dashboards:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --output-document=/dev/null http://127.0.0.1:3000/api/health",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    depends_on:
+      grafana-db-init:
+        condition: service_completed_successfully
+    networks:
+      - axion
+
 volumes:
   axion_postgres_data:
+  axion_grafana_data:
 
 networks:
   axion:

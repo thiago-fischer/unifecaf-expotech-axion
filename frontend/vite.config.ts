@@ -9,7 +9,13 @@ export default defineConfig(({ mode }) => {
       target: env.AXION_API_TARGET || 'http://127.0.0.1:8000',
       changeOrigin: true,
       rewrite: (path: string) =>
-        path === '/api/controller/events' ? '/not-found' : path.replace(/^\/api/, ''),
+        [
+          '/api/controller/events',
+          '/api/network/capture/events',
+          '/api/network/capture/heartbeat',
+        ].includes(path)
+          ? '/not-found'
+          : path.replace(/^\/api/, ''),
       timeout: 60_000,
       proxyTimeout: 60_000,
     },

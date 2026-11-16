@@ -14,6 +14,8 @@ O [frontend React](frontend/README.md), conforme a SPEC-0006, permite usar
 consultar máquinas, cadastrar produtos e criar ordens de até 10 produtos distintos.
 A interface inclui planejamento com Gantt, acompanhamento da maquete virtual
 conectada ao controlador simulado e uma guia Sobre.
+O Grafana local consulta os dados persistidos no PostgreSQL com uma credencial
+somente de leitura e carrega um dashboard provisionado pela SPEC-0010.
 Veja os comandos de instalação,
 execução e testes no [README do backend](backend/README.md).
 As demais funcionalidades descritas abaixo permanecem planejadas.
@@ -22,9 +24,10 @@ A proposta integra software, dispositivos embarcados, inteligência computaciona
 
 ## Execução completa com Docker Compose
 
-O Compose da raiz constrói e inicia o frontend, o backend e o PostgreSQL. Ele
-também aplica as migrations Alembic em uma etapa separada antes de liberar a
-API. O pacote Python local de otimização é incluído na imagem do backend.
+O Compose da raiz constrói e inicia o frontend, o backend, o controlador
+simulado, o PostgreSQL e o Grafana. Ele aplica as migrations Alembic, prepara a
+credencial somente leitura do Grafana e somente então libera os consumidores do
+banco. O pacote Python local de otimização é incluído na imagem do backend.
 
 ```powershell
 Copy-Item .env.example .env
@@ -36,6 +39,9 @@ saudáveis, acesse a interface em <http://127.0.0.1:5173> e a documentação da
 API em <http://127.0.0.1:8000/docs>. As portas podem ser alteradas no `.env`.
 O frontend serve o build estático pelo Nginx e encaminha `/api` internamente
 para o backend, sem expor o PostgreSQL à rede local.
+O Grafana fica em <http://127.0.0.1:3000>, com as credenciais locais definidas
+no `.env`, e abre o dashboard **Axion — Dados persistidos** na pasta **Axion**.
+Consulte o [README do Grafana](infrastructure/grafana/README.md).
 
 Para executar em segundo plano ou encerrar:
 
@@ -149,13 +155,24 @@ Métricas previstas:
 - taxa de aprovação na validação final;
 - falhas registradas.
 
-A ferramenta prevista para acompanhamento das métricas é o **Grafana**.
+A primeira integração de observabilidade usa **Grafana** local em container,
+conectado ao PostgreSQL com uma credencial somente leitura. O dashboard
+provisionado pela [SPEC-0010](docs/specs/0010-grafana-postgresql.md) apresenta
+cadastros e ordens persistidos. A SPEC-0011 acrescenta métricas agregadas de
+rede; execução física, telemetria, RFID e QA continuam fora desse histórico.
 
 ### Segurança de rede
 
 Responsável pela análise da comunicação entre os componentes conectados da linha de produção.
 
 O projeto deverá demonstrar um cenário com uma vulnerabilidade real de comunicação ou infraestrutura, seguido de análise e mitigação.
+
+O painel unificado de rede, a captura sanitizada com TShark e o dashboard
+histórico no Grafana estão implementados conforme a
+[SPEC-0011](docs/specs/0011-painel-redes-tshark-grafana.md). A captura opcional
+é ativada pelo profile `network-lab`; consulte o
+[README do coletor](network_capture/README.md). A entrega não define o protocolo
+da maquete física.
 
 ## Maquete
 

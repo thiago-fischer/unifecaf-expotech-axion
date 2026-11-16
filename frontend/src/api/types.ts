@@ -46,3 +46,53 @@ export interface Plan {
   };
   operations: Operation[];
 }
+
+export type NetworkHealth = 'online' | 'degraded' | 'offline' | 'disabled' | 'unknown';
+export interface NetworkOverview {
+  capture_session_id: string | null;
+  last_event_at: string | null;
+  last_batch_age_ms: number | null;
+  services: Record<string, { state: NetworkHealth; detail: string | null }>;
+  connections: {
+    source: string;
+    destination: string;
+    visibility: 'observed' | 'configured' | 'unavailable';
+  }[];
+  security: {
+    controller_token_configured: boolean;
+    capture_token_configured: boolean;
+    local_http_without_tls: boolean;
+    ports_restricted_to_host: boolean;
+    raw_capture_storage_disabled: boolean;
+    accepted_batches: number;
+    blocked_batches: number;
+  };
+  grafana_public_url: string;
+  grafana_dashboard_uid: string;
+}
+export interface NetworkEvent {
+  capture_session_id: string;
+  sequence: number;
+  observed_at: string;
+  source_service: string;
+  destination_service: string;
+  source_port: number;
+  destination_port: number;
+  protocol: 'HTTP' | 'PostgreSQL' | 'TCP';
+  tcp_stream: number;
+  frame_length: number;
+  http_method: string | null;
+  http_path: string | null;
+  status_code: number | null;
+  latency_ms: number | null;
+  retransmission: boolean;
+  reset: boolean;
+}
+export interface NetworkEventsResponse {
+  capture_session_id: string | null;
+  events: NetworkEvent[];
+  next_sequence: number;
+  history_lost: boolean;
+  session_changed: boolean;
+  last_batch_age_ms: number | null;
+}
